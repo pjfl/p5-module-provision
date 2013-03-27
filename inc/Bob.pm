@@ -10,7 +10,7 @@ sub whimper { print {*STDOUT} $_[ 0 ]."\n"; exit 0 }
 
 BEGIN { my $reason; $reason = CPANTesting::should_abort and whimper $reason; }
 
-use version; our $VERSION = qv( '1.7' );
+use version; our $VERSION = qv( '1.8' );
 
 use File::Spec::Functions qw(catfile);
 use Module::Build;
@@ -68,11 +68,13 @@ sub __get_cleanup_list {
 }
 
 sub __get_git_repository {
-   my ($info, $repo, $vcs); require Git::Class;
+   my ($repo, $vcs); require Git::Class;
 
    $vcs = Git::Class::Worktree->new( path => q(.) )
-      and $info = $vcs->git( q(remote) )
-      and $repo = ($info !~ m{ \A file: }mx) ? $info : undef
+      and $repo = (split q( ), (map  { s{ : }{/}mx; s{ @ }{://}mx; $_ }
+                                grep { m{ fetch }mx }
+                                split  m{ [\n]  }mx,
+                                $vcs->git( qw(remote -v) ))[ 0 ])[ 1 ]
       and return $repo;
 
    return;
