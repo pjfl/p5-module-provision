@@ -1,4 +1,8 @@
 Revision history for Module::Provision
 
-0.1    2013-03-27
-       - Created
+0.1.2   2013-03-27
+        - Fixed repository for Git in metadata
+        - Updated inc::Bob to 1.8
+
+0.1.1   2013-03-27
+        - Created
