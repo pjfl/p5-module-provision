@@ -1,4 +1,4 @@
-# @(#)Ident: Bob.pm 2013-03-27 23:41 pjf ;
+# @(#)Ident: Bob.pm 2013-03-28 19:08 pjf ;
 
 package Bob;
 
@@ -76,7 +76,7 @@ sub __get_git_repository {
 
    $vcs = Git::Class::Worktree->new( path => q(.) )
       and $repo = (split q( ), (map  { s{ : }{/}mx; s{ @ }{://}mx; $_ }
-                                grep { m{ fetch }mx }
+                                grep { m{ \A origin \s+ .+ fetch }mx }
                                 split  m{ [\n]  }mx,
                                 $vcs->git( qw(remote -v) ))[ 0 ])[ 1 ]
       and return $repo;

@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 # Version
 
-0.1.$Revision: 26 $
+0.1.$Revision: 29 $
 
 # Synopsis
 
