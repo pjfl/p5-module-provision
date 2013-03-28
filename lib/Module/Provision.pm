@@ -1,9 +1,9 @@
-# @(#)$Id: Provision.pm 25 2013-03-26 22:42:17Z pjf $
+# @(#)Ident: Provision.pm 2013-03-27 23:41 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 25 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 26 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -467,19 +467,22 @@ __END__
 
 =pod
 
+=encoding utf-8
+
 =head1 Name
 
 Module::Provision - Create Perl distributions with VCS and Module::Build toolchain
 
 =head1 Version
 
-0.1.$Revision: 25 $
+0.1.$Revision: 26 $
 
 =head1 Synopsis
 
    use Module::Provision;
 
-   exit Module::Provision->new_with_options( nodebug => 1 )->run;
+   exit Module::Provision->new_with_options
+      ( appclass => 'Module::Provision', nodebug => 1 )->run;
 
 =head1 Description
 
@@ -611,7 +614,7 @@ Peter Flanigan, C<< <Support at RoxSoft dot co dot uk> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2012 Peter Flanigan. All rights reserved
+Copyright (c) 2013 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>

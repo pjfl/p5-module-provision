@@ -1,8 +1,8 @@
-# @(#)$Id: 07podspelling.t 9 2012-11-06 11:14:23Z pjf $
+# @(#)Ident: 07podspelling.t 2013-03-27 23:44 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 9 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 10 $ =~ /\d+/gmx );
 use File::Spec::Functions qw(catdir catfile updir);
 use FindBin qw( $Bin );
 use lib catdir( $Bin, updir, q(lib) );

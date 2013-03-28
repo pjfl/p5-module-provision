@@ -1,8 +1,8 @@
-# @(#)$Id: test_script.t 2 2012-11-05 20:16:55Z pjf $
+# @(#)Ident: test_script.t 2013-03-27 23:44 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 3 $ =~ /\d+/gmx );
 use File::Spec::Functions;
 use FindBin qw( $Bin );
 use lib catdir( $Bin, updir, q(lib) );

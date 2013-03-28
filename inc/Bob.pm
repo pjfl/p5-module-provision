@@ -1,4 +1,4 @@
-# @(#)$Id: Bob.pm 25 2013-03-26 22:42:17Z pjf $
+# @(#)Ident: Bob.pm 2013-03-27 23:41 pjf ;
 
 package Bob;
 
@@ -46,6 +46,10 @@ sub new {
 
 # Private functions
 
+sub __is_src { # Is this the developer authoring a module?
+   return -f q(MANIFEST.SKIP);
+}
+
 sub __get_build_class { # Which subclass of M::B should we create?
    my $p = shift; exists $p->{build_class} and return $p->{build_class};
 
@@ -89,8 +93,11 @@ sub __get_no_index {
 sub __get_notes {
    my $p = shift; my $notes = exists $p->{notes} ? $p->{notes} : {};
 
+   # Optionally create README.md and / or README.pod files
+   $notes->{create_readme_md } = $p->{create_readme_md } || 0;
    $notes->{create_readme_pod} = $p->{create_readme_pod} || 0;
    $notes->{is_cpan_testing  } = CPANTesting::is_testing();
+   # Add a note to stop CPAN testing if requested in Build.PL
    $notes->{stop_tests       } = CPANTesting::test_exceptions( $p );
    $notes->{version          } = $VERSION;
    return $notes;
@@ -112,14 +119,13 @@ sub __get_resources {
                  ? $p->{bugtracker}
                  : q(http://rt.cpan.org/NoAuth/Bugs.html?Dist=);
    my $resources = $p->{resources} || {};
-   my $repo;
 
    $tracker and $resources->{bugtracker} = $tracker.$distname;
    $p->{home_page} and $resources->{homepage} = $p->{home_page};
    $resources->{license} ||= q(http://dev.perl.org/licenses/);
 
    # Only get repository info when authoring a distribution
-   -f q(MANIFEST.SKIP) and $repo = __get_repository
+   my $repo; __is_src and $repo = __get_repository
       and $resources->{repository} = $repo;
 
    return { resources => $resources };

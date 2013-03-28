@@ -1,8 +1,8 @@
-# @(#)$Id: 03podcoverage.t 2 2012-11-05 20:16:55Z pjf $
+# @(#)Ident: 03podcoverage.t 2013-03-27 23:45 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 3 $ =~ /\d+/gmx );
 use File::Spec::Functions;
 use FindBin qw( $Bin );
 use lib catdir( $Bin, updir, q(lib) );
@@ -18,7 +18,7 @@ BEGIN {
 
 eval "use Test::Pod::Coverage 1.04";
 
-plan skip_all => 'Test::Pod::Coverage 1.04 required' if ($EVAL_ERROR);
+$EVAL_ERROR and plan skip_all => 'Test::Pod::Coverage 1.04 required';
 
 all_pod_coverage_ok();
 
