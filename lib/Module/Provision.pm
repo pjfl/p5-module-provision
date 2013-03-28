@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-03-27 23:41 pjf ;
+# @(#)Ident: Provision.pm 2013-03-28 16:01 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 26 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 25 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -475,7 +475,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-0.1.$Revision: 26 $
+0.1.$Revision: 25 $
 
 =head1 Synopsis
 
