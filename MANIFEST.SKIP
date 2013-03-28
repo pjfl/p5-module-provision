@@ -6,6 +6,7 @@
 \B\.cvsignore$
 \B\.git\b
 \B\.gitignore$
+\B\.gitattributes$
 
 # Avoid Makemaker generated and utility files.
 \bMakefile$
