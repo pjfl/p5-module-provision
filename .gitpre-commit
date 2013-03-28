@@ -1,36 +1,29 @@
 #!/usr/bin/env perl
-# @(#)Ident: git_revision 2013-03-28 16:18 pjf ;
+# @(#)Ident: .gitpre-commit 2013-03-28 17:46 pjf ;
 
 use strict;
 use warnings;
 use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
-use Git::Class;
 use English qw(-no_match_vars);
 
-my $vcs = Git::Class::Worktree->new( path => '.' );
+if (qx{ git branch 2>/dev/null } =~ m{ \A [*] \s+ master }mx) {
+   my @stat = split m{ \n }mx, qx{ git status --porcelain };
 
-grep { m{ [*] \s+ master }mx } $vcs->git( 'branch' ) or exit 0;
+   for my $path (map { s{ \A .+ \s+ }{}mx; $_ } grep { m{ \A [AM] }mx } @stat) {
+      open my $in,  '<', $path or die "Path ${path} cannot open: ${OS_ERROR}";
 
-my $status = qx{ git status --porcelain };
+      my $content = do { local $RS = undef; <$in> }; close $in;
 
-for my $path (map  { s{ \A .+ \s+ }{}mx; $_ }
-              grep { m { \A [AM] }mx } split m{ \n }mx, $status) {
-   open my $in,  '<', $path or die "Path ${path} cannot open: ${OS_ERROR}";
+      $content =~ m{ \$ (Rev (?:ision)?) : \s+ (\d+) \s+ \$ }mx or next;
+      $content =~ s{ \$ (Rev (?:ision)?) : \s+ (\d+) \s+ \$ }{\$$1\$}gmx;
 
-   my $content = do { local $RS = undef; <$in> }; close $in;
+      my $rev = ($2 || 0) + 1;
 
-   $content =~ m{ \$ (Rev (?:ision)?) : \s+ (\d+) \s+ \$ }mx or next;
-
-   $content =~ s{ \$ (Rev (?:ision)?) : \s+ (\d+) \s+ \$ }{\$$1\$}gmx;
-
-   my $rev = ($2 || 0) + 1;
-
-   $content =~ s{ \$ (Rev (ision)?) \$ }{\$$1: $rev \$}gmx;
-
-   open my $out, '>', $path or die "Path ${path} cannot open: ${OS_ERROR}";
-
-   print {$out} $content; close $out;
+      $content =~ s{ \$ (Rev (ision)?) \$ }{\$$1: $rev \$}gmx;
+      open my $out, '>', $path or die "Path ${path} cannot open: ${OS_ERROR}";
+      print {$out} $content; close $out;
+   }
 }
 
 exit 0;
