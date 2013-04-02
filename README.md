@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 # Version
 
-0.1.$Revision: 29 $
+0.1.$Revision: 30 $
 
 # Synopsis
 
@@ -38,6 +38,12 @@ Defines the following list of attributes;
 - `force`
 
     Overwrite the output file if it already exists
+
+- `perms`
+
+    Permissions used to create files. Defaults to `644`. Directories and
+    programs have the execute bit turned on if the coresponding read bit
+    is on
 
 - `repository`
 

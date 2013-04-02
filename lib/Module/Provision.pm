@@ -1,18 +1,18 @@
-# @(#)Ident: Provision.pm 2013-03-28 18:18 pjf ;
+# @(#)Ident: Provision.pm 2013-04-01 02:14 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 28 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 30 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
-use Class::Usul::Functions       qw(class2appdir classdir classfile distname
-                                    home2appldir prefix2class throw trim);
+use Class::Usul::Functions       qw(classdir classfile distname home2appldir
+                                    prefix2class throw trim);
 use Class::Usul::Time            qw(time2str);
 use Cwd                          qw(getcwd);
 use English                      qw(-no_match_vars);
-use File::DataClass::Constraints qw(Directory Path);
+use File::DataClass::Constraints qw(Directory OctalNum Path);
 use File::Spec::Functions        qw(catdir);
 use Template;
 use User::pwent;
@@ -28,19 +28,20 @@ has 'base'        => is => 'lazy', isa => Path, coerce => TRUE,
    documentation  => 'The directory which will contain the new project',
    default        => sub { $_[ 0 ]->config->my_home };
 
-has 'branch'      => is => 'ro',   isa => NonEmptySimpleStr,
+has 'branch'      => is => 'lazy', isa => NonEmptySimpleStr,
    documentation  => 'The name of the initial branch to create',
-   default        => 'trunk';
-
-has 'create_mask' => is => 'ro',   isa => PositiveInt, default => 0750,
-   documentation  => 'Default permission for directory creation';
+   default        => sub { $_[ 0 ]->vcs eq 'git' ? 'master' : 'trunk' };
 
 has 'force'       => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Overwrite the output file if it already exists',
    traits         => [ 'Getopt' ], cmd_aliases => q(f), cmd_flag => 'force';
 
+has 'perms'       => is => 'ro',   isa => OctalNum, coerce => TRUE,
+   documentation  => 'Default permission for file / directory creation',
+   default        => '640';
+
 has 'repository'  => is => 'ro',   isa => NonEmptySimpleStr,
-   documentation  => 'Name of the directory containing the VCS repository',
+   documentation  => 'Name of the directory containing the SVN repository',
    default        => 'repository';
 
 has 'templates'   => is => 'ro',   isa => NonEmptySimpleStr,
@@ -49,11 +50,11 @@ has 'templates'   => is => 'ro',   isa => NonEmptySimpleStr,
 
 has 'vcs'         => is => 'ro',   isa => NonEmptySimpleStr,
    documentation  => 'The version control system to use',
-   default        => 'svn';
+   default        => 'git';
 
 
 has '_appbase'       => is => 'lazy', isa => NonEmptySimpleStr,
-   default           => sub { class2appdir $_[ 0 ]->appclass };
+   default           => sub { distname $_[ 0 ]->appclass };
 
 has '_appldir'       => is => 'lazy', isa => Path, coerce => TRUE;
 
@@ -94,12 +95,12 @@ has '_testdir'       => is => 'lazy', isa => Path, coerce => TRUE,
    default           => sub { [ $_[ 0 ]->_appldir, 't' ] };
 
 sub create_directories {
-   my ($self, $args) = @_; my $perms = $self->create_mask;
+   my ($self, $args) = @_; my $perms = $self->_exec_perms;
 
    $self->_appldir->exists or $self->_appldir->mkpath( $perms );
-   $self->_homedir->exists or $self->_homedir->mkpath( $perms );
    $self->_incdir->exists  or $self->_incdir->mkpath( $perms );
    $self->_testdir->exists or $self->_testdir->mkpath( $perms );
+   $self->_homedir->parent->exists or $self->_homedir->parent->mkpath( $perms );
    return;
 }
 
@@ -128,16 +129,21 @@ sub post_hook {
 
    $self->_initialize_vcs( $args );
    $self->_initialize_distribution( $args );
+
+   my $mdf; $self->vcs eq 'git' and $mdf = 'README.md'
+      and $self->_appldir->catfile( $mdf )->exists
+      and $self->_add_to_git( { target => $mdf } );
+
    $self->_test_distribution( $args );
    return;
 }
 
 sub pre_hook {
-   my ($self, $args) = @_; $args ||= {};
+   my ($self, $args) = @_; $args ||= {}; umask $self->_create_mask;
 
    my $appbase = $args->{appbase} = $self->base->catdir( $self->_appbase );
 
-   $appbase->exists or $appbase->mkpath( $self->create_mask );
+   $appbase->exists or $appbase->mkpath( $self->_exec_perms );
 
    __chdir( $appbase ); $args->{templates} = $self->template_list;
 
@@ -151,6 +157,7 @@ sub program : method {
 
    $self->stash->{program_name} = $program;
    $target = $self->_render_template( 'perl_program.pl', $target );
+   chmod $self->_exec_perms, $target->pathname;
    $self->_add_to_vcs( { target => $target, type => 'program' } );
    return OK;
 }
@@ -187,7 +194,11 @@ sub _add_to_git {
    my $params = $self->quiet ? {} : { out => 'stdout' };
 
    $self->run_cmd( "git add ${target}", $params );
-   return;
+
+   my $cmd; $args->{commit}
+      and $cmd = "git commit -m 'Created ${target}' ${target}"
+      and $self->run_cmd( $cmd, $params );
+   return TRUE;
 }
 
 sub _add_to_svn {
@@ -206,7 +217,7 @@ sub _add_to_svn {
 sub _add_to_vcs {
    my ($self, $args) = @_; $args ||= {};
 
-  $args->{target} or throw 'SVN target not specified';
+   $args->{target} or throw 'VCS target not specified';
 
    $self->vcs eq 'git' and $self->_add_to_git( $args );
    $self->vcs eq 'svn' and $self->_add_to_svn( $args );
@@ -221,7 +232,10 @@ sub _build_appclass {
 }
 
 sub _build__appldir {
-   return [ $_[ 0 ]->base, $_[ 0 ]->_appbase, $_[ 0 ]->branch ];
+   my $self = shift;
+
+   return $self->vcs eq 'git' ? [ $self->base, $self->_appbase ]
+                              : [ $self->base, $self->_appbase, $self->branch ];
 }
 
 sub _build__author {
@@ -304,6 +318,7 @@ sub _build__template_list {
              [ 'MANIFEST.SKIP',   '_appldir'     ],
              [ 'Bob.pm',          '_incdir'      ],
              [ 'CPANTesting.pm',  '_incdir'      ],
+             [ 'SubClass.pm',     '_incdir'      ],
              [ 'perl_module.pm',  '_dist_module' ],
              [ '01always_pass.t', '_testdir'     ],
              [ '02pod.t',         '_testdir'     ],
@@ -312,11 +327,22 @@ sub _build__template_list {
              [ '05kwalitee.t',    '_testdir'     ],
              [ '06yaml.t',        '_testdir'     ],
              [ '07podspelling.t', '_testdir'     ],
-             [ 'test_script.t',   '_testdir'     ], ];
+             [ '10test_script.t', '_testdir'     ], ];
+
+   $self->vcs eq 'git' and unshift @{ $list }, [ '.gitignore',     '_appldir' ],
+                                               [ '.gitpre-commit', '_appldir' ];
 
    $self->file->data_dump( data => { templates => $list }, path => $index,
                            storage_class => 'Any' );
    return $list;
+}
+
+sub _create_mask {
+   my $self = shift; return oct q(0777) ^ $self->_exec_perms;
+}
+
+sub _exec_perms {
+   my $self = shift; return (($self->perms & oct q(0444)) >> 2) | $self->perms;
 }
 
 sub _find_appldir {
@@ -335,13 +361,13 @@ sub _find_appldir {
 sub _get_target {
    my ($self, $dir, $f) = @_;
 
-   my $car    = shift @{ $self->extra_argv } or throw 'No target specified';
+   my $car = shift @{ $self->extra_argv } or throw 'No target specified';
 
    $self->extra_argv->[ 0 ] or $self->_push_appclass;
 
    my $target = $self->$dir->catfile( $f ? $f->( $car ) : $car );
 
-   $target->assert_filepath;
+   $target->perms( $self->perms )->assert_filepath;
    return $target;
 }
 
@@ -360,11 +386,16 @@ sub _initialize_distribution {
 sub _initialize_git {
    my ($self, $args) = @_; __chdir( $self->_appldir );
 
-   my $branch = $self->branch; my $msg = "Created ${branch}";
+   my $branch = $self->branch; $self->run_cmd( 'git init' );
 
-   $self->run_cmd( 'git init' ); $self->run_cmd( 'git add .' );
+   if (-e '.gitpre-commit') {
+      my $hook = $self->_appldir->catfile( qw(.git hooks pre-commit) );
 
-   $self->run_cmd( "git commit -m '${msg}' ." );
+      chmod $self->_exec_perms, '.gitpre-commit'; link '.gitpre-commit', $hook;
+   }
+
+   $self->run_cmd( 'git add .' );
+   $self->run_cmd( "git commit -m 'Created ${branch}' ." );
    return;
 }
 
@@ -375,9 +406,9 @@ sub _initialize_svn {
 
    $self->run_cmd( "svnadmin create ${repository}" );
 
-   my $branch     = $self->branch;
-   my $msg        = "Imported ${branch}";
-   my $url        = 'file://'.catdir( $repository, $branch );
+   my $branch = $self->branch;
+   my $msg    = "Imported ${branch}";
+   my $url    = 'file://'.catdir( $repository, $branch );
 
    $self->run_cmd( "svn import ${branch} ${url} -m '${msg}'" );
 
@@ -417,27 +448,30 @@ sub _render_template {
 
    $target->exists and $target->is_dir
       and $target = $target->catfile( $template );
-   $template  = $self->_template_dir->catfile( $template );
+   $template = $self->_template_dir->catfile( $template );
 
    $template->exists or
       return $self->log->warn( $self->loc( 'Path [_1] not found', $template ) );
 
-   my $prompt; $target->exists and not $self->force
-      and $prompt = $self->add_leader( 'Specified file exists, overwrite?' )
-      and not $self->yorn( $prompt, FALSE, FALSE )
+   my $file  = $target->filename; my $prompt;
+
+   $target->exists and not $self->force
+      and $prompt = $self->add_leader( "File ${file} exists, overwrite?" )
+      and not $self->yorn( $prompt, FALSE, TRUE )
       and return $target;
 
-   my $conf   = { ABSOLUTE => TRUE, };
+   my $conf  = { ABSOLUTE => TRUE, };
 
    $conf->{VARIABLES}->{loc} = sub { return $self->loc( @_ ) };
 
-   my $tmplt  = Template->new( $conf ) or throw $Template::ERROR;
-   my $text   = NUL;
+   my $tmplt = Template->new( $conf ) or throw $Template::ERROR;
+   my $text  = NUL;
 
    $tmplt->process( $template->pathname, $self->stash, \$text )
       or throw $tmplt->error();
 
-   $target->print( $text );
+   $target->perms( $self->perms )->print( $text );
+
    return $target;
 }
 
@@ -475,7 +509,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-0.1.$Revision: 28 $
+0.1.$Revision: 30 $
 
 =head1 Synopsis
 
@@ -511,6 +545,12 @@ The name of the initial branch to create. Defaults to F<trunk>
 =item C<force>
 
 Overwrite the output file if it already exists
+
+=item C<perms>
+
+Permissions used to create files. Defaults to C<644>. Directories and
+programs have the execute bit turned on if the coresponding read bit
+is on
 
 =item C<repository>
 
