@@ -1,4 +1,4 @@
-# @(#)Ident: Bob.pm 2013-04-03 11:15 pjf ;
+# @(#)Ident: Bob.pm 2013-04-01 14:34 pjf ;
 
 package Bob;
 
@@ -10,7 +10,7 @@ sub whimper { print {*STDOUT} $_[ 0 ]."\n"; exit 0 }
 
 BEGIN { my $reason; $reason = CPANTesting::should_abort and whimper $reason; }
 
-use version; our $VERSION = qv( '1.10' );
+use version; our $VERSION = qv( '1.9' );
 
 use File::Spec::Functions qw(catfile);
 use Module::Build;
@@ -41,8 +41,7 @@ sub new {
         notes              => __get_notes( $p ),
         recommends         => $p->{recommends},
         requires           => $p->{requires},
-        sign               => defined $p->{sign} ? $p->{sign} : 1,
-        share_dir          => __get_share_dir( $p ), );
+        sign               => defined $p->{sign} ? $p->{sign} : 1, );
 }
 
 # Private functions
@@ -124,12 +123,6 @@ sub __get_resources {
       and $resources->{repository} = $repo;
 
    return { resources => $resources };
-}
-
-sub __get_share_dir {
-   my $p = shift; defined $p->{share_dir} and return $p->{share_dir};
-
-   return -d q(share) ? q(share) : undef;
 }
 
 sub __get_svn_repository {
