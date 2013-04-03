@@ -1,19 +1,20 @@
-# @(#)Ident: Provision.pm 2013-04-01 02:14 pjf ;
+# @(#)Ident: Provision.pm 2013-04-03 13:48 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 30 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 32 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
 use Class::Usul::Functions       qw(classdir classfile distname home2appldir
-                                    prefix2class throw trim);
+                                    is_arrayref prefix2class throw trim);
 use Class::Usul::Time            qw(time2str);
 use Cwd                          qw(getcwd);
 use English                      qw(-no_match_vars);
 use File::DataClass::Constraints qw(Directory OctalNum Path);
 use File::Spec::Functions        qw(catdir);
+use File::ShareDir                 ();
 use Template;
 use User::pwent;
 
@@ -89,7 +90,7 @@ has '_template_list' => is => 'lazy', isa => ArrayRef,
    reader            => 'template_list';
 
 has '_template_dir'  => is => 'lazy', isa => Directory, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_home, $_[ 0 ]->templates ] };
+   reader            => 'template_dir';
 
 has '_testdir'       => is => 'lazy', isa => Path, coerce => TRUE,
    default           => sub { [ $_[ 0 ]->_appldir, 't' ] };
@@ -167,9 +168,18 @@ sub render_templates {
 
    for my $tuple (@{ $templates }) {
       for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
-         my $method = $tuple->[ $i ];
+         if (is_arrayref $tuple->[ $i ]) {
+            my $method = $tuple->[ $i ]->[ 0 ];
 
-         '_' eq substr $method, 0, 1 and $tuple->[ $i ] = $self->$method();
+            '_' eq substr $method, 0, 1
+               and $tuple->[ $i ]->[ 0 ] = $self->$method();
+            $tuple->[ $i ] = $self->io( $tuple->[ $i ] );
+         }
+         else {
+            my $method = $tuple->[ $i ];
+
+            '_' eq substr $method, 0, 1 and $tuple->[ $i ] = $self->$method();
+         }
       }
 
       $self->_render_template( @{ $tuple } );
@@ -239,7 +249,7 @@ sub _build__appldir {
 }
 
 sub _build__author {
-   my $path      = $_[ 0 ]->_template_dir->catfile( 'author' );
+   my $path      = $_[ 0 ]->template_dir->catfile( 'author' );
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
    $from_file and return $from_file;
@@ -253,7 +263,7 @@ sub _build__author {
 }
 
 sub _build__author_email {
-   my $path  = $_[ 0 ]->_template_dir->catfile( 'author_email' );
+   my $path  = $_[ 0 ]->template_dir->catfile( 'author_email' );
 
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
@@ -265,7 +275,7 @@ sub _build__author_email {
 }
 
 sub _build__home_page {
-   my $path = $_[ 0 ]->_template_dir->catfile( 'home_page' );
+   my $path = $_[ 0 ]->template_dir->catfile( 'home_page' );
 
    return $path->exists ? trim $path->getline : 'http://example.com';
 }
@@ -275,7 +285,7 @@ sub _build__homedir {
 }
 
 sub _build__project_file {
-   my $self = shift; my $templates = $self->_template_dir;
+   my $self = shift; my $templates = $self->template_dir;
 
    return $templates->catfile( 'Build.PL'    )->exists ? 'Build.PL'
         : $templates->catfile( 'Makefile.PL' )->exists ? 'Makefile.PL'
@@ -305,8 +315,20 @@ sub _build__stash {
             prefix         => (split m{ :: }mx, lc $appclass)[ -1 ], };
 }
 
+sub _build__template_dir {
+   my $self = shift; my $dir = $self->io( [ $self->_home, $self->templates ] );
+
+   $dir->exists and return $dir; $dir->mkpath( $self->_exec_perms );
+
+   my $dist = $self->io( File::ShareDir::dist_dir( distname __PACKAGE__ ) );
+
+   $_->copy( $dir ) for ($dist->all_files);
+
+   return $dir;
+}
+
 sub _build__template_list {
-   my $self = shift; my $index = $self->_template_dir->catfile( 'index.json' );
+   my $self = shift; my $index = $self->template_dir->catfile( 'index.json' );
 
    my $list; $index->exists and $list = $self->file->data_load
       ( paths => [ $index ], storage_class => 'Any' )->{templates};
@@ -329,9 +351,11 @@ sub _build__template_list {
              [ '07podspelling.t', '_testdir'     ],
              [ '10test_script.t', '_testdir'     ], ];
 
-   $self->vcs eq 'git' and unshift @{ $list }, [ '.gitignore',     '_appldir' ],
-                                               [ '.gitpre-commit', '_appldir' ];
+   $self->vcs eq 'git' and unshift @{ $list },
+      [ 'gitignore',     [ '_appldir', '.gitignore'     ] ],
+      [ 'gitpre-commit', [ '_appldir', '.gitpre-commit' ] ];
 
+   $self->output( "Creating index ${index}" );
    $self->file->data_dump( data => { templates => $list }, path => $index,
                            storage_class => 'Any' );
    return $list;
@@ -391,11 +415,11 @@ sub _initialize_git {
    if (-e '.gitpre-commit') {
       my $hook = $self->_appldir->catfile( qw(.git hooks pre-commit) );
 
-      chmod $self->_exec_perms, '.gitpre-commit'; link '.gitpre-commit', $hook;
+      link '.gitpre-commit', $hook; chmod $self->_exec_perms, '.gitpre-commit';
    }
 
    $self->run_cmd( 'git add .' );
-   $self->run_cmd( "git commit -m 'Created ${branch}' ." );
+   $self->run_cmd( "git commit -m 'Created ${branch}'" );
    return;
 }
 
@@ -429,6 +453,7 @@ sub _initialize_svn {
 sub _initialize_vcs {
    my ($self, $args) = @_;
 
+   $self->output( 'Initializing VCS' );
    $self->vcs eq 'git' and $self->_initialize_git( $args );
    $self->vcs eq 'svn' and $self->_initialize_svn( $args );
    return;
@@ -448,7 +473,7 @@ sub _render_template {
 
    $target->exists and $target->is_dir
       and $target = $target->catfile( $template );
-   $template = $self->_template_dir->catfile( $template );
+   $template = $self->template_dir->catfile( $template );
 
    $template->exists or
       return $self->log->warn( $self->loc( 'Path [_1] not found', $template ) );
@@ -470,7 +495,7 @@ sub _render_template {
    $tmplt->process( $template->pathname, $self->stash, \$text )
       or throw $tmplt->error();
 
-   $target->perms( $self->perms )->print( $text );
+   $target->perms( $self->perms )->print( $text ); $target->close;
 
    return $target;
 }
@@ -509,7 +534,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-0.1.$Revision: 30 $
+0.1.$Revision: 32 $
 
 =head1 Synopsis
 
