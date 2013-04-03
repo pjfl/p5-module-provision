@@ -1,4 +1,4 @@
-# @(#)Ident: Bob.pm 2013-04-03 11:15 pjf ;
+# @(#)Ident: Bob.pm 2013-04-03 17:46 pjf ;
 
 package Bob;
 
@@ -10,7 +10,7 @@ sub whimper { print {*STDOUT} $_[ 0 ]."\n"; exit 0 }
 
 BEGIN { my $reason; $reason = CPANTesting::should_abort and whimper $reason; }
 
-use version; our $VERSION = qv( '1.10' );
+use version; our $VERSION = qv( '1.11' );
 
 use File::Spec::Functions qw(catfile);
 use Module::Build;
@@ -94,6 +94,8 @@ sub __get_notes {
    $notes->{is_cpan_testing  } = CPANTesting::is_testing();
    # Add a note to stop CPAN testing if requested in Build.PL
    $notes->{stop_tests       } = CPANTesting::test_exceptions( $p );
+   $notes->{url_prefix       } = defined $p->{url_prefix} ? $p->{url_prefix}
+                               : q(https://metacpan.org/module/);
    $notes->{version          } = $VERSION;
    return $notes;
 }

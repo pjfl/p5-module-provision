@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 # Version
 
-0.1.$Revision: 30 $
+This documents version v0.1.$Rev: 33 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -101,7 +101,7 @@ Creates a new program specified by the program name on the command line
     $self->render_templates( $args );
 
 Renders the list of templates in `<$args-`templates>> be repeatedly calling
-calling [Template](http://search.cpan.org/perldoc?Template) passing in the `stash`
+calling [Template](https://metacpan.org/module/Template) passing in the `stash`
 
 ## test
 
@@ -115,9 +115,9 @@ None
 
 # Dependencies
 
-- [Class::Usul](http://search.cpan.org/perldoc?Class::Usul)
-- [File::DataClass](http://search.cpan.org/perldoc?File::DataClass)
-- [Template](http://search.cpan.org/perldoc?Template)
+- [Class::Usul](https://metacpan.org/module/Class::Usul)
+- [File::DataClass](https://metacpan.org/module/File::DataClass)
+- [Template](https://metacpan.org/module/Template)
 
 # Incompatibilities
 
@@ -142,7 +142,7 @@ Peter Flanigan, `<Support at RoxSoft dot co dot uk>`
 Copyright (c) 2013 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself. See [perlartistic](http://search.cpan.org/perldoc?perlartistic)
+under the same terms as Perl itself. See [perlartistic](https://metacpan.org/module/perlartistic)
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT WARRANTY; without even the implied warranty of
