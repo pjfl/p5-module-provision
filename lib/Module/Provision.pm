@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-04-03 17:30 pjf ;
+# @(#)Ident: Provision.pm 2013-04-04 14:46 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 33 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 34 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -352,6 +352,7 @@ sub _build__template_list {
              [ '10test_script.t', '_testdir'     ], ];
 
    $self->vcs eq 'git' and unshift @{ $list },
+      [ 'gitcommit-msg', [ '_appldir', '.gitcommit-msg' ] ],
       [ 'gitignore',     [ '_appldir', '.gitignore'     ] ],
       [ 'gitpre-commit', [ '_appldir', '.gitpre-commit' ] ];
 
@@ -534,7 +535,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.1.$Rev: 33 $ of L<Module::Provision>
+This documents version v0.1.$Rev: 34 $ of L<Module::Provision>
 
 =head1 Synopsis
 
