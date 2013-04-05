@@ -8,6 +8,7 @@
 \B\.gitignore$
 \B\.gitattributes$
 \B\.gitpre-commit$
+\B\.gitcommit-msg$
 
 # Avoid Makemaker generated and utility files.
 \bMakefile$

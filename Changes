@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+          Renamed t/test_script.t to t/10test_script.t for consistancy
+
 0.1.35    2013-04-05 13:37:11
           Automated git commit messages from Changes file
 
