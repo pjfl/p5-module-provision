@@ -1,5 +1,12 @@
 Revision history for Module::Provision
 
+0.1.35    2013-04-05 13:37:11
+          Automated git commit messages from Changes file
+
+0.1.34    2013-04-02
+          Added commit-msg hook
+          Updated inc::Bob to v1.11
+
 0.1.30    2013-04-02
           Updated inc::Bob to v1.9
           Add global revision number to .gitpre-commit
@@ -10,4 +17,4 @@ Revision history for Module::Provision
           Updated inc::Bob to 1.8
 
 0.1.1     2013-03-27
-          Created
+          Created master

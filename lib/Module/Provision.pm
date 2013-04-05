@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-04-04 14:46 pjf ;
+# @(#)Ident: Provision.pm 2013-04-04 18:52 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 34 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 35 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -198,6 +198,15 @@ sub test : method {
 
 # Private methods
 
+sub _add_hook {
+   my ($self, $hook) = @_; -e ".git${hook}" or return;
+
+   my $path = $self->_appldir->catfile( qw(.git hooks), $hook );
+
+   link ".git${hook}", $path; chmod $self->_exec_perms, ".git${hook}";
+   return;
+}
+
 sub _add_to_git {
    my ($self, $args) = @_; my $target = $args->{target};
 
@@ -205,9 +214,6 @@ sub _add_to_git {
 
    $self->run_cmd( "git add ${target}", $params );
 
-   my $cmd; $args->{commit}
-      and $cmd = "git commit -m 'Created ${target}' ${target}"
-      and $self->run_cmd( $cmd, $params );
    return TRUE;
 }
 
@@ -411,16 +417,13 @@ sub _initialize_distribution {
 sub _initialize_git {
    my ($self, $args) = @_; __chdir( $self->_appldir );
 
-   my $branch = $self->branch; $self->run_cmd( 'git init' );
+   my $branch = $self->branch;
 
-   if (-e '.gitpre-commit') {
-      my $hook = $self->_appldir->catfile( qw(.git hooks pre-commit) );
-
-      link '.gitpre-commit', $hook; chmod $self->_exec_perms, '.gitpre-commit';
-   }
-
-   $self->run_cmd( 'git add .' );
-   $self->run_cmd( "git commit -m 'Created ${branch}'" );
+   $self->run_cmd  ( 'git init'   );
+   $self->_add_hook( 'commit-msg' );
+   $self->_add_hook( 'pre-commit' );
+   $self->run_cmd  ( 'git add .'  );
+   $self->run_cmd  ( "git commit -m 'Created Git ${branch}'" );
    return;
 }
 
@@ -432,7 +435,7 @@ sub _initialize_svn {
    $self->run_cmd( "svnadmin create ${repository}" );
 
    my $branch = $self->branch;
-   my $msg    = "Imported ${branch}";
+   my $msg    = "Created SVN ${branch}";
    my $url    = 'file://'.catdir( $repository, $branch );
 
    $self->run_cmd( "svn import ${branch} ${url} -m '${msg}'" );
@@ -535,7 +538,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.1.$Rev: 34 $ of L<Module::Provision>
+This documents version v0.1.$Rev: 35 $ of L<Module::Provision>
 
 =head1 Synopsis
 
