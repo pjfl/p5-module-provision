@@ -2,7 +2,7 @@
 
 package [% module %];
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 31 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.2.%d', q$Rev: 37 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -27,7 +27,7 @@ __END__
 
 =head1 Version
 
-This documents version v0.1.$Rev: 31 $ of L<[% module %]>
+This documents version v0.2.$Rev: 37 $ of L<[% module %]>
 
 =head1 Description
 

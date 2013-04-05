@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-04-04 18:52 pjf ;
+# @(#)Ident: Provision.pm 2013-04-05 12:55 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 35 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.2.%d', q$Rev: 37 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -538,7 +538,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.1.$Rev: 35 $ of L<Module::Provision>
+This documents version v0.2.$Rev: 37 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -578,7 +578,7 @@ Overwrite the output file if it already exists
 =item C<perms>
 
 Permissions used to create files. Defaults to C<644>. Directories and
-programs have the execute bit turned on if the coresponding read bit
+programs have the execute bit turned on if the corresponding read bit
 is on
 
 =item C<repository>
