@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 # Version
 
-This documents version v0.1.$Rev: 36 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.3.$Rev: 38 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -42,7 +42,7 @@ Defines the following list of attributes;
 - `perms`
 
     Permissions used to create files. Defaults to `644`. Directories and
-    programs have the execute bit turned on if the coresponding read bit
+    programs have the execute bit turned on if the corresponding read bit
     is on
 
 - `repository`

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# @(#)Ident: .gitpre-commit 2013-04-05 12:32 pjf ;
+# @(#)Ident: .gitpre-commit 2013-04-06 15:13 pjf ;
 
 use strict;
 use warnings;
@@ -10,16 +10,31 @@ use Date::Format          qw(time2str);
 use English               qw(-no_match_vars);
 use File::Spec::Functions qw(catfile updir);
 use Module::Metadata;
+use Perl::Version;
 
-my ($module, $rev);
+sub __read_all_from ($) {
+   my $path = shift;
 
-my $file = -f 'Build.PL'    ? 'Build.PL'    :
-           -f 'Makefile.PL' ? 'Makefile.PL' : undef;
+   open my $fh, '<', $path or die 'Path ${path} cannot open: ${OS_ERROR}';
 
-if (defined $file) {
-   open my $in, '<', $file or die 'File ${file} cannot open: ${OS_ERROR}';
+   my $content = do { local $RS = undef; <$fh> }; close $fh; return $content;
+}
 
-   my $content = do { local $RS = undef; <$in> }; close $in;
+sub __write_data_to ($$) {
+   my ($path, $data) = @_;
+
+   open my $fh, '>', $path or die "Path ${path} cannot open: ${OS_ERROR}";
+
+   print {$fh} $data; close $fh; return;
+}
+
+my ($module, $rev, $rev_file);
+
+my $project_file = -f 'Build.PL'    ? 'Build.PL'    :
+                   -f 'Makefile.PL' ? 'Makefile.PL' : undef;
+
+if (defined $project_file) {
+   my $content  = __read_all_from $project_file;
 
    $module = (map    { eval $_ }
               map    { m{ \A \s* (?:module|name) \s* => \s* (.+) [,] }imx }
@@ -28,65 +43,64 @@ if (defined $file) {
 
    my $distname = lc $module; $distname =~ s{ :: }{-}gmx;
 
-   $file = catfile( updir, ".${distname}.rev" );
+   $rev_file = catfile( updir, ".${distname}.rev" );
 
-   if (-f $file) {
-      open $in, '<', $file or die "Path ${file} cannot open: ${OS_ERROR}";
-      $rev = do { local $RS = undef; <$in> }; close $in; chomp $rev; $rev++;
-   }
+   if (-f $rev_file) { $rev = __read_all_from $rev_file; chomp $rev; $rev++ }
 }
 
 if (defined $rev and qx{ git branch 2>/dev/null } =~ m{ \A [*] \s+ master }mx) {
    my @stat = split m{ \n }mx, qx{ git status --porcelain }; my $found = 0;
 
-   for my $path (map { s{ \A .+ \s+ }{}mx; $_ } grep { m{ \A [AM] }mx } @stat) {
-      open my $in,  '<', $path or die "Path ${path} cannot open: ${OS_ERROR}";
+   my $ignore; my $ignore_rev_file = '.gitignore-rev';
 
-      my $content = do { local $RS = undef; <$in> }; close $in;
+   if (-f $ignore_rev_file) {
+      my $paths = __read_all_from $ignore_rev_file; chomp $paths;
+
+      $ignore = join '|', split m{ [\n] }mx, $paths;
+   }
+
+   for my $path (map { s{ \A .+ \s+ }{}mx; $_ } grep { m{ \A [AM] }mx } @stat) {
+      $ignore and $path =~ m{ (?: $ignore ) }mx and next;
+
+      my $content = __read_all_from $path;
 
       $content =~ m{ \$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$ }mx or next;
       $content =~ s{ \$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$ }{\$$1\$}gmx;
-
       $rev < ($2 || 0) + 1 and $rev = ($2 || 0) + 1;
-
       $content =~ s{ \$ (Rev (?:ision)?) \$ }{\$$1: $rev \$}gmx;
-      open my $out, '>', $path or die "Path ${path} cannot open: ${OS_ERROR}";
-      print {$out} $content; close $out;
+      __write_data_to $path, $content;
 
       my $cmd = "git add ${path}"; qx{ $cmd }; $found = 1;
    }
 
-   if ($found) {
-      open my $out, '>', $file or die "Path ${file} cannot open: ${OS_ERROR}";
-      print ${out} "${rev}\n"; close $out;
-   }
+   $found and __write_data_to $rev_file, "${rev}\n";
 }
 
-$file = -f 'Changes' ? 'Changes' : undef;
+my $changes_file = 'Changes';
 
-if (defined $file) {
-   open my $in, '<', $file or die "File ${file} cannot open: ${OS_ERROR}";
-
-   my $changes     = do { local $RS = undef; <$in> }; close $in;
+if (-f $changes_file) {
+   my $changes     = __read_all_from $changes_file;
    my $changes_ver = qv( (split q( ),
-                          (grep { m{ \A v?[0-9._]+ \s+ }mx } split m{ [\n] }mx,
+                          (grep { m{ \A v?[0-9._]+ }mx } split m{ [\n] }mx,
                            $changes)[ 0 ] || q())[ 0 ] || '0.1.1' );
    my $meta        = defined $module
                    ? Module::Metadata->new_from_module( $module ) : undef;
-      $meta or warn "No meta object for module ${module}";
    my $module_ver  = $meta ? $meta->version : qv( '0.1.1' );
+
+   $meta or warn "No meta object for module ${module}";
 
    if ($module_ver > $changes_ver) {
       my $stamp  = time2str( '%Y-%m-%d %H:%M:%S', time );
-      my $header = sprintf "\n%-9.9s %s", $module_ver, $stamp;
+      my $header = sprintf "%-9.9s %s", $module_ver, $stamp;
+      my $pmv    = Perl::Version->new( $module_ver  ); $pmv->components( 2 );
+      my $pcv    = Perl::Version->new( $changes_ver ); $pcv->components( 2 );
 
-      $changes =~ s{ ^ $ }{$header}mx;
+      if ($pmv > $pcv) { $changes =~ s{ ^ $ }{\n$header}mx }
+      else { $changes =~ s{ ^ v?[0-9._]+ \s* [^\n]* $ }{$header}mx }
 
-      open my $out, '>', $file or die "File ${file} cannot open: ${OS_ERROR}";
+      __write_data_to $changes_file, $changes;
 
-      print {$out} $changes; close $out;
-
-      my $cmd = "git add ${file}"; qx{ $cmd };
+      my $cmd = "git add ${changes_file}"; qx{ $cmd };
    }
 }
 

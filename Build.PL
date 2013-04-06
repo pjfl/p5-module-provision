@@ -1,9 +1,9 @@
-# @(#)Ident: Build.PL 2013-04-04 18:26 pjf ;
+# @(#)Ident: Build.PL 2013-04-05 14:56 pjf ;
 
 use strict;
 use warnings;
 use inc::Bob; # Module::Build subclass
-use version; our $VERSION = qv( sprintf '0.2.%d', q$Rev: 37 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 38 $ =~ /\d+/gmx );
 
 Bob->new( {
    module    => q(Module::Provision),
@@ -16,6 +16,7 @@ Bob->new( {
       'File::DataClass'  => q(0.15.0),
       'File::ShareDir'   => 1.02,
       'Module::Metadata' => 1.000011,
+      'Perl::Version'    => 1.011,
       'Pod::Markdown'    => 1.322,
       'Template'         => 2.22, },
    recommends            => {

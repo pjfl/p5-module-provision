@@ -14,7 +14,7 @@ BEGIN {
    do $path or die $EVAL_ERROR || "Path ${path} not done\n";
 }
 
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 31 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use [% appclass %];
 
@@ -48,7 +48,7 @@ Lists the methods available in this program
 
 =head1 VERSION
 
-This documents version v0.1.$Rev: 31 $ of L<[% appclass %]>
+This documents version v0.1.$Rev: 1 $ of L<[% appclass %]>
 
 =head1 DESCRIPTION
 

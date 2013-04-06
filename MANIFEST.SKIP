@@ -2,13 +2,14 @@
 \bRCS\b
 \bCVS\b
 ,v$
-\B\.svn\b
 \B\.cvsignore$
 \B\.git\b
-\B\.gitignore$
 \B\.gitattributes$
-\B\.gitpre-commit$
 \B\.gitcommit-msg$
+\B\.gitignore$
+\B\.gitignore-rev$
+\B\.gitpre-commit$
+\B\.svn\b
 
 # Avoid Makemaker generated and utility files.
 \bMakefile$

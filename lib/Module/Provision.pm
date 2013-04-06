@@ -3,7 +3,7 @@
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.2.%d', q$Rev: 37 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 38 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -538,7 +538,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.2.$Rev: 37 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 38 $ of L<Module::Provision>
 
 =head1 Synopsis
 

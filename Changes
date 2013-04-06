@@ -1,5 +1,9 @@
 Revision history for Module::Provision
 
+0.3.38    2013-04-06 16:13:59
+          Added .gitignore-rev to skip Rev keyword expansion in share dir
+          Use Perl::Version for better changelog headers
+
 0.2.37    2013-04-05 14:00:09
           Releasing
           Renamed t/test_script.t to t/10test_script.t for consistancy
