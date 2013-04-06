@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-04-06 18:10 pjf ;
+# @(#)Ident: Provision.pm 2013-04-06 22:23 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 39 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 40 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -48,9 +48,8 @@ has 'repository'  => is => 'ro',   isa => NonEmptySimpleStr,
    documentation  => 'Name of the directory containing the SVN repository',
    default        => 'repository';
 
-has 'templates'   => is => 'ro',   isa => NonEmptySimpleStr,
-   documentation  => 'Location of the code templates in the users home dir',
-   default        => '.code_templates';
+has 'templates'   => is => 'ro',   isa => SimpleStr, default => NUL,
+   documentation  => 'Non default location of the code templates';
 
 has 'vcs'         => is => 'ro',   isa => NonEmptySimpleStr,
    documentation  => 'The version control system to use',
@@ -81,6 +80,9 @@ has '_home_page'     => is => 'lazy', isa => NonEmptySimpleStr;
 
 has '_incdir'        => is => 'lazy', isa => Path, coerce => TRUE,
    default           => sub { [ $_[ 0 ]->_appldir, 'inc' ] };
+
+has '_initial_wd'    => is => 'ro',   isa => Directory, coerce => TRUE,
+   default           => sub { [ getcwd ] };
 
 has '_libdir'        => is => 'lazy', isa => Path, coerce => TRUE,
    default           => sub { [ $_[ 0 ]->_appldir, 'lib' ] };
@@ -144,7 +146,8 @@ sub post_hook {
 sub pre_hook {
    my ($self, $args) = @_; $args ||= {}; umask $self->_create_mask;
 
-   my $appbase = $args->{appbase} = $self->base->catdir( $self->_appbase );
+   my $base    = $self->base->absolute( $self->_initial_wd );
+   my $appbase = $args->{appbase} = $base->catdir( $self->_appbase );
 
    $appbase->exists or $appbase->mkpath( $self->_exec_perms );
 
@@ -251,10 +254,10 @@ sub _build_appclass {
 }
 
 sub _build__appldir {
-   my $self = shift;
+   my $self = shift; my $base = $self->base->absolute( $self->_initial_wd );
 
-   return $self->vcs eq 'git' ? [ $self->base, $self->_appbase ]
-                              : [ $self->base, $self->_appbase, $self->branch ];
+   return $self->vcs eq 'git' ? [ $base, $self->_appbase ]
+                              : [ $base, $self->_appbase, $self->branch ];
 }
 
 sub _build__author {
@@ -325,7 +328,10 @@ sub _build__stash {
 }
 
 sub _build__template_dir {
-   my $self = shift; my $dir = $self->io( [ $self->_home, $self->templates ] );
+   my $self = shift;
+   my $dir  = $self->templates
+            ? $self->io( [ $self->templates ] )->absolute( $self->_initial_wd )
+            : $self->io( [ $self->_home, '.code_templates' ] );
 
    $dir->exists and return $dir; $dir->mkpath( $self->_exec_perms );
 
@@ -542,7 +548,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.3.$Rev: 39 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 40 $ of L<Module::Provision>
 
 =head1 Synopsis
 
