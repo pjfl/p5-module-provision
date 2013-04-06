@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# @(#)Ident: .gitpre-commit 2013-04-06 14:31 pjf ;
+# @(#)Ident: .gitpre-commit 2013-04-06 15:13 pjf ;
 
 use strict;
 use warnings;
@@ -98,9 +98,9 @@ if (-f $changes_file) {
       if ($pmv > $pcv) { $changes =~ s{ ^ $ }{\n$header}mx }
       else { $changes =~ s{ ^ v?[0-9._]+ \s* [^\n]* $ }{$header}mx }
 
-      __write_data_to $change_file, $changes;
+      __write_data_to $changes_file, $changes;
 
-      my $cmd = "git add ${change_file}"; qx{ $cmd };
+      my $cmd = "git add ${changes_file}"; qx{ $cmd };
    }
 }
 
