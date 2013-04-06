@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-04-05 12:55 pjf ;
+# @(#)Ident: Provision.pm 2013-04-06 18:10 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 38 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 39 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -36,6 +36,9 @@ has 'branch'      => is => 'lazy', isa => NonEmptySimpleStr,
 has 'force'       => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Overwrite the output file if it already exists',
    traits         => [ 'Getopt' ], cmd_aliases => q(f), cmd_flag => 'force';
+
+has 'novcs'       => is => 'ro',   isa => Bool, default => FALSE,
+   documentation  => 'Do not create or use a VCS';
 
 has 'perms'       => is => 'ro',   isa => OctalNum, coerce => TRUE,
    documentation  => 'Default permission for file / directory creation',
@@ -131,9 +134,8 @@ sub post_hook {
    $self->_initialize_vcs( $args );
    $self->_initialize_distribution( $args );
 
-   my $mdf; $self->vcs eq 'git' and $mdf = 'README.md'
-      and $self->_appldir->catfile( $mdf )->exists
-      and $self->_add_to_git( { target => $mdf } );
+   my $mdf = 'README.md'; $self->_appldir->catfile( $mdf )->exists
+      and $self->_add_to_vcs( { target => $mdf } );
 
    $self->_test_distribution( $args );
    return;
@@ -235,6 +237,7 @@ sub _add_to_vcs {
 
    $args->{target} or throw 'VCS target not specified';
 
+   $self->novcs and return;
    $self->vcs eq 'git' and $self->_add_to_git( $args );
    $self->vcs eq 'svn' and $self->_add_to_svn( $args );
    return;
@@ -357,7 +360,7 @@ sub _build__template_list {
              [ '07podspelling.t', '_testdir'     ],
              [ '10test_script.t', '_testdir'     ], ];
 
-   $self->vcs eq 'git' and unshift @{ $list },
+   not $self->novcs and $self->vcs eq 'git' and unshift @{ $list },
       [ 'gitcommit-msg', [ '_appldir', '.gitcommit-msg' ] ],
       [ 'gitignore',     [ '_appldir', '.gitignore'     ] ],
       [ 'gitpre-commit', [ '_appldir', '.gitpre-commit' ] ];
@@ -457,6 +460,7 @@ sub _initialize_svn {
 sub _initialize_vcs {
    my ($self, $args) = @_;
 
+   $self->novcs and return;
    $self->output( 'Initializing VCS' );
    $self->vcs eq 'git' and $self->_initialize_git( $args );
    $self->vcs eq 'svn' and $self->_initialize_svn( $args );
@@ -538,22 +542,50 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.3.$Rev: 38 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 39 $ of L<Module::Provision>
 
 =head1 Synopsis
 
-   use Module::Provision;
+   # To reduce typing define a shell alias
+   alias mp='module_provision --base ~/Projects'
 
-   exit Module::Provision->new_with_options
-      ( appclass => 'Module::Provision', nodebug => 1 )->run;
+   # Create a new distribution in your Projects directory
+   mp dist Foo::Bar
+
+   # Add another module
+   cd ~/Projects/Foo-Bar
+   mp module Foo::Bat
+
+   # Add a program to the bin directory
+   mp program foo-cli
+
+   # Add another test script
+   mp test 11another-one.t
+
+   # Command line help
+   mp -? | -H | -h [sub-command] | list_methods | dump_self
 
 =head1 Description
 
-Create Perl distributions with VCS and Module::Build toolchain
+L<Module::Provision> is used to create a skeletal CPAN distribution,
+including basic builder scripts, tests, documentation, and module
+code. It creates a VCS repository and, in the Git case, installs some
+hooks that mimic the RCS Revision keyword expansion
+
+On first use the directory F<~/.code_templates> is created and
+populated with templates and an index file F<index.json>. The author
+name and email are derived from the system and stored in the F<author>
+and F<author_email> files
+
+The project file F<Build.PL> loads C<inc::Bob> which instantiates an
+inline subclass of L<Module::Build>. The code for the subclass is in
+C<inc::SubClass>. The file C<inc::CPANTesting> allows for fine grained
+control over which tests are run by which CPAN Testing smokers
 
 =head1 Configuration and Environment
 
-Defines the following list of attributes;
+Defines the following list of attributes which can be set from the
+command line;
 
 =over 3
 
@@ -569,11 +601,16 @@ home directory
 
 =item C<branch>
 
-The name of the initial branch to create. Defaults to F<trunk>
+The name of the initial branch to create. Defaults to F<master> for
+Git and F<trunk> for SVN
 
 =item C<force>
 
-Overwrite the output file if it already exists
+Overwrite the output files if they already exist
+
+=item C<novcs>
+
+Do not create or use a VCS. Used by the test script
 
 =item C<perms>
 
@@ -583,7 +620,7 @@ is on
 
 =item C<repository>
 
-Name of the directory containing the VCS repository. Defaults to F<repository>
+Name of the directory containing the SVN repository. Defaults to F<repository>
 
 =item C<templates>
 
@@ -592,11 +629,13 @@ F<.code_templates>
 
 =item C<vcs>
 
-The version control system to use. Defaults to C<vcs>
+The version control system to use. Defaults to C<git>
 
 =back
 
 =head1 Subroutines/Methods
+
+The following methods constitute the public API
 
 =head2 create_directories
 
@@ -649,7 +688,7 @@ Creates a new test specified by the test file name on the command line
 
 =head1 Diagnostics
 
-None
+Add C<-D> to command line to turn on debug output
 
 =head1 Dependencies
 
@@ -657,7 +696,17 @@ None
 
 =item L<Class::Usul>
 
+=item L<Date::Format>
+
 =item L<File::DataClass>
+
+=item L<File::ShareDir>
+
+=item L<Module::Metadata>
+
+=item L<Perl::Version>
+
+=item L<Pod::Markdown>
 
 =item L<Template>
 
@@ -669,13 +718,16 @@ There are no known incompatibilities in this module
 
 =head1 Bugs and Limitations
 
-There are no known bugs in this module.
-Please report problems to the address below.
-Patches are welcome
+There are no known bugs in this module.  Please report problems to
+http://rt.cpan.org/NoAuth/Bugs.html?Dist=Module-Provision.  Source
+code is on Github git://github.com/pjfl/Module-Provision.git. Patches
+and pull requests are welcome
 
 =head1 Acknowledgements
 
 Larry Wall - For the Perl programming language
+
+L<Module::Starter> - For some of the documentation and tests
 
 =head1 Author
 

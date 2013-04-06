@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.3.38    2013-04-06 16:13:59
+0.3.39    2013-04-06 19:15:21
+          Updated POD. Added novcs attribute
           Propagated .gitpre-commit to share dir
           Added .gitignore-rev to skip Rev keyword expansion in share dir
           Use Perl::Version for better changelog headers
