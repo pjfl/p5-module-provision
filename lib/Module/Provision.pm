@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-04-06 22:23 pjf ;
+# @(#)Ident: Provision.pm 2013-04-09 15:13 pjf ;
 # Must patch Module::Build from Class::Usul/inc/M_B_*
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 40 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 41 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -22,8 +22,9 @@ extends q(Class::Usul::Programs);
 
 MooseX::Getopt::OptionTypeMap->add_option_type_to_map( Path, '=s' );
 
-has 'appclass'    => is => 'lazy', isa => NonEmptySimpleStr,
-   documentation  => 'The class name of the new project';
+enum 'Module::Provision::Builder' => qw(DZ MB MI);
+
+# Public attributes
 
 has 'base'        => is => 'lazy', isa => Path, coerce => TRUE,
    documentation  => 'The directory which will contain the new project',
@@ -33,9 +34,16 @@ has 'branch'      => is => 'lazy', isa => NonEmptySimpleStr,
    documentation  => 'The name of the initial branch to create',
    default        => sub { $_[ 0 ]->vcs eq 'git' ? 'master' : 'trunk' };
 
+has 'builder'     => is => 'ro',   isa => 'Module::Provision::Builder',
+   documentation  => 'Which of the three build systems to use',
+   default        => 'MB';
+
 has 'force'       => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Overwrite the output file if it already exists',
    traits         => [ 'Getopt' ], cmd_aliases => q(f), cmd_flag => 'force';
+
+has 'license'     => is => 'ro',   isa => NonEmptySimpleStr, default => 'perl',
+   documentation  => 'License used for the project';
 
 has 'novcs'       => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Do not create or use a VCS';
@@ -43,6 +51,9 @@ has 'novcs'       => is => 'ro',   isa => Bool, default => FALSE,
 has 'perms'       => is => 'ro',   isa => OctalNum, coerce => TRUE,
    documentation  => 'Default permission for file / directory creation',
    default        => '640';
+
+has 'project'     => is => 'lazy', isa => NonEmptySimpleStr,
+   documentation  => 'The class name of the new project';
 
 has 'repository'  => is => 'ro',   isa => NonEmptySimpleStr,
    documentation  => 'Name of the directory containing the SVN repository',
@@ -55,9 +66,10 @@ has 'vcs'         => is => 'ro',   isa => NonEmptySimpleStr,
    documentation  => 'The version control system to use',
    default        => 'git';
 
+# Private attributes
 
 has '_appbase'       => is => 'lazy', isa => NonEmptySimpleStr,
-   default           => sub { distname $_[ 0 ]->appclass };
+   default           => sub { distname $_[ 0 ]->project };
 
 has '_appldir'       => is => 'lazy', isa => Path, coerce => TRUE;
 
@@ -87,6 +99,9 @@ has '_initial_wd'    => is => 'ro',   isa => Directory, coerce => TRUE,
 has '_libdir'        => is => 'lazy', isa => Path, coerce => TRUE,
    default           => sub { [ $_[ 0 ]->_appldir, 'lib' ] };
 
+has '_license_keys'  => is => 'ro',   isa => HashRef,
+   builder           => '_build_license_keys';
+
 has '_project_file'  => is => 'lazy', isa => NonEmptySimpleStr;
 
 has '_stash'         => is => 'lazy', isa => HashRef, reader => 'stash';
@@ -104,7 +119,8 @@ sub create_directories {
    my ($self, $args) = @_; my $perms = $self->_exec_perms;
 
    $self->_appldir->exists or $self->_appldir->mkpath( $perms );
-   $self->_incdir->exists  or $self->_incdir->mkpath( $perms );
+   $self->builder eq 'MB' and ($self->_incdir->exists
+                               or $self->_incdir->mkpath( $perms ));
    $self->_testdir->exists or $self->_testdir->mkpath( $perms );
    $self->_homedir->parent->exists or $self->_homedir->parent->mkpath( $perms );
    return;
@@ -117,6 +133,10 @@ sub dist : method {
    $self->render_templates( $args );
    $self->post_hook( $args );
    return OK;
+}
+
+sub init_templates : method {
+   my $self = shift; $self->template_list; return OK;
 }
 
 sub module : method {
@@ -135,10 +155,6 @@ sub post_hook {
 
    $self->_initialize_vcs( $args );
    $self->_initialize_distribution( $args );
-
-   my $mdf = 'README.md'; $self->_appldir->catfile( $mdf )->exists
-      and $self->_add_to_vcs( { target => $mdf } );
-
    $self->_test_distribution( $args );
    return;
 }
@@ -246,13 +262,6 @@ sub _add_to_vcs {
    return;
 }
 
-sub _build_appclass {
-   my $appclass = $_[ 0 ]->extra_argv->[ 0 ]
-      or throw 'Application class not specified';
-
-   return $appclass
-}
-
 sub _build__appldir {
    my $self = shift; my $base = $self->base->absolute( $self->_initial_wd );
 
@@ -264,13 +273,13 @@ sub _build__author {
    my $path      = $_[ 0 ]->template_dir->catfile( 'author' );
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
-   $from_file and return $from_file;
+   if ($from_file) { $from_file =~ s{ [\'] }{\'}gmx; return $from_file }
 
    my $user      = getpwuid( $UID );
    my $fullname  = (split m{ \s* , \s * }msx, $user->gecos)[ 0 ];
    my $author    = $ENV{AUTHOR} || $fullname || $user->name;
 
-   $path->print( $author );
+   $path->print( $author ); $author =~ s{ [\'] }{\'}gmx;
    return $author;
 }
 
@@ -279,10 +288,11 @@ sub _build__author_email {
 
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
-   $from_file and return $from_file;
+   if ($from_file) { $from_file =~ s{ [\'] }{\'}gmx; return $from_file }
 
-   my $email = $ENV{EMAIL} || 'dave@example.com'; $path->print( $email );
+   my $email = $ENV{EMAIL} || 'dave@example.com';
 
+   $path->print( $email ); $email =~ s{ [\'] }{\'}gmx;
    return $email;
 }
 
@@ -293,38 +303,54 @@ sub _build__home_page {
 }
 
 sub _build__homedir {
-   return [ $_[ 0 ]->_libdir, classdir $_[ 0 ]->appclass ];
+   return [ $_[ 0 ]->_libdir, classdir $_[ 0 ]->project ];
+}
+
+sub _build_license_keys {
+   return {
+      perl       => 'Perl_5',
+      perl_5     => 'Perl_5',
+      apache     => [ map { "Apache_$_" } qw(1_1 2_0) ],
+      artistic   => 'Artistic_1_0',
+      artistic_2 => 'Artistic_2_0',
+      lgpl       => [ map { "LGPL_$_" } qw(2_1 3_0) ],
+      bsd        => 'BSD',
+      gpl        => [ map { "GPL_$_" } qw(1 2 3) ],
+      mit        => 'MIT',
+      mozilla    => [ map { "Mozilla_$_" } qw(1_0 1_1) ], };
+}
+
+sub _build_project {
+   my $project = $_[ 0 ]->extra_argv->[ 0 ]
+      or throw 'Project class not specified';
+
+   return $project;
 }
 
 sub _build__project_file {
-   my $self = shift; my $templates = $self->template_dir;
-
-   return $templates->catfile( 'Build.PL'    )->exists ? 'Build.PL'
-        : $templates->catfile( 'Makefile.PL' )->exists ? 'Makefile.PL'
-        : NUL;
+   return $_[ 0 ]->builder eq 'MB' ? 'Build.PL' : 'Makefile.PL';
 }
 
 sub _build__stash {
-   my $self     = shift;
-   my $appclass = $self->appclass;
-   my $author   = $self->_author;
+   my $self = shift; my $project = $self->project; my $author = $self->_author;
 
    return { appbase        => $self->_appbase,
-            appclass       => $appclass,
             author         => $author,
             author_email   => $self->_author_email,
             copyright      => $ENV{ORGANIZATION} || $author,
             copyright_year => time2str( '%Y' ),
             creation_date  => time2str,
-            dist_module    => $self->_dist_module,
-            distname       => distname $appclass,
+            dist_module    => $self->_dist_module->abs2rel( $self->_appldir ),
+            distname       => distname $project,
             first_name     => lc ((split SPC, $author)[ 0 ]),
             home_page      => $self->_home_page,
             last_name      => lc ((split SPC, $author)[ -1 ]),
-            license        => 'perl',
-            module         => $appclass,
+            license        => $self->license,
+            license_class  => $self->_license_keys->{ $self->license },
+            module         => $project,
             perl           => $],
-            prefix         => (split m{ :: }mx, lc $appclass)[ -1 ], };
+            prefix         => (split m{ :: }mx, lc $project)[ -1 ],
+            project        => $project, };
 }
 
 sub _build__template_dir {
@@ -345,36 +371,40 @@ sub _build__template_dir {
 sub _build__template_list {
    my $self = shift; my $index = $self->template_dir->catfile( 'index.json' );
 
-   my $list; $index->exists and $list = $self->file->data_load
-      ( paths => [ $index ], storage_class => 'Any' )->{templates};
+   my $data; $index->exists and $data = $self->file->data_load
+      ( paths => [ $index ], storage_class => 'Any' )
+      and return $self->_merge_lists( $data );
 
-   $list and return $list;
+   my $builders  = {
+      DZ => [ [ 'dist.ini',           '_appldir' ], ],
+      MB => [ [ 'Build.PL',           '_appldir' ],
+              [ 'Bob.pm',             '_incdir'  ],
+              [ 'CPANTesting.pm',     '_incdir'  ],
+              [ 'SubClass.pm',        '_incdir'  ], ],
+      MI => [ [ 'MI_Makefile.PL',   [ '_appldir', 'Makefile.PL' ], ], ], };
+   my $templates = [ [ 'Changes',         '_appldir'     ],
+                     [ 'MANIFEST.SKIP',   '_appldir'     ],
+                     [ 'perl_module.pm',  '_dist_module' ],
+                     [ '01always_pass.t', '_testdir'     ],
+                     [ '02pod.t',         '_testdir'     ],
+                     [ '03podcoverage.t', '_testdir'     ],
+                     [ '04critic.t',      '_testdir'     ],
+                     [ '05kwalitee.t',    '_testdir'     ],
+                     [ '06yaml.t',        '_testdir'     ],
+                     [ '07podspelling.t', '_testdir'     ],
+                     [ '10test_script.t', '_testdir'     ], ];
+   my $vcs = {
+      git => [ [ 'gitcommit-msg', [ '_appldir', '.gitcommit-msg' ] ],
+               [ 'gitignore',     [ '_appldir', '.gitignore'     ] ],
+               [ 'gitpre-commit', [ '_appldir', '.gitpre-commit' ] ], ],
+      svn => [], };
 
-   $list = [ [ '_project_file',   '_appldir'     ],
-             [ 'Changes',         '_appldir'     ],
-             [ 'MANIFEST.SKIP',   '_appldir'     ],
-             [ 'Bob.pm',          '_incdir'      ],
-             [ 'CPANTesting.pm',  '_incdir'      ],
-             [ 'SubClass.pm',     '_incdir'      ],
-             [ 'perl_module.pm',  '_dist_module' ],
-             [ '01always_pass.t', '_testdir'     ],
-             [ '02pod.t',         '_testdir'     ],
-             [ '03podcoverage.t', '_testdir'     ],
-             [ '04critic.t',      '_testdir'     ],
-             [ '05kwalitee.t',    '_testdir'     ],
-             [ '06yaml.t',        '_testdir'     ],
-             [ '07podspelling.t', '_testdir'     ],
-             [ '10test_script.t', '_testdir'     ], ];
-
-   not $self->novcs and $self->vcs eq 'git' and unshift @{ $list },
-      [ 'gitcommit-msg', [ '_appldir', '.gitcommit-msg' ] ],
-      [ 'gitignore',     [ '_appldir', '.gitignore'     ] ],
-      [ 'gitpre-commit', [ '_appldir', '.gitpre-commit' ] ];
-
+   $data = { builders => $builders, templates => $templates, vcs => $vcs };
    $self->output( "Creating index ${index}" );
-   $self->file->data_dump( data => { templates => $list }, path => $index,
-                           storage_class => 'Any' );
-   return $list;
+   $self->file->data_dump
+      ( data => $data, path => $index, storage_class => 'Any' );
+
+   return $self->_merge_lists( $data );
 }
 
 sub _create_mask {
@@ -403,7 +433,11 @@ sub _get_target {
 
    my $car = shift @{ $self->extra_argv } or throw 'No target specified';
 
-   $self->extra_argv->[ 0 ] or $self->_push_appclass;
+   unless ($self->extra_argv->[ 0 ]) {
+      my $meta = $self->get_meta( $self->_find_appldir );
+
+      push @{ $self->extra_argv }, prefix2class $meta->name;
+   }
 
    my $target = $self->$dir->catfile( $f ? $f->( $car ) : $car );
 
@@ -412,14 +446,28 @@ sub _get_target {
 }
 
 sub _initialize_distribution {
-   my ($self, $args) = @_; __chdir( $self->_appldir );
+   my ($self, $args) = @_; my $mdf; __chdir( $self->_appldir );
 
-   my $builder = $self->_project_file eq 'Build.PL' ? './Build' : 'make';
+   if ($self->builder eq 'DZ') {
+      $self->run_cmd( 'dzil build' );
+      $mdf = 'README.mkdn';
+   }
+   elsif ($self->builder eq 'MB') {
+      $self->run_cmd( 'perl '.$self->_project_file );
+      $self->run_cmd( './Build manifest'  );
+      $self->run_cmd( './Build distmeta'  );
+      $self->run_cmd( './Build distclean' );
+      $mdf = 'README.md';
+   }
+   elsif ($self->builder eq 'MI') {
+      $self->run_cmd( 'perl '.$self->_project_file );
+      $self->run_cmd( 'make manifest' );
+      $self->run_cmd( 'make clean' );
+      $mdf = 'README.mkdn';
+   }
 
-   $self->run_cmd( 'perl '.$self->_project_file );
-   $self->run_cmd( "${builder} manifest" );
-   $self->run_cmd( "${builder} distmeta" );
-   $self->run_cmd( "${builder} distclean" );
+   $mdf and $self->_appldir->catfile( $mdf )->exists
+        and $self->_add_to_vcs( { target => $mdf } );
    return;
 }
 
@@ -473,10 +521,13 @@ sub _initialize_vcs {
    return;
 }
 
-sub _push_appclass {
-   my $self = shift; my $meta = $self->get_meta( $self->_find_appldir );
+sub _merge_lists {
+   my ($self, $data) = @_; my $list = $data->{templates};
 
-   return push @{ $self->extra_argv }, prefix2class $meta->name;
+   push @{ $list }, @{ $data->{builders}->{ $self->builder } };
+   not $self->novcs and push @{ $list }, @{ $data->{vcs}->{ $self->vcs } };
+
+   return $list;
 }
 
 sub _render_template {
@@ -519,7 +570,12 @@ sub _test_distribution {
 
    $ENV{TEST_SPELLING} = TRUE;
    $self->output ( 'Testing '.$self->_appldir );
-   $self->run_cmd( 'prove t', $self->quiet ? {} : { out => 'stdout' } );
+
+   if ($self->builder eq 'DZ') {
+      $self->run_cmd( 'dzil test', $self->quiet ? {} : { out => 'stdout' } );
+   }
+   else { $self->run_cmd( 'prove t', $self->quiet ? {} : { out => 'stdout' } ) }
+
    return;
 }
 
@@ -548,7 +604,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.3.$Rev: 40 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 41 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -580,7 +636,8 @@ hooks that mimic the RCS Revision keyword expansion
 
 On first use the directory F<~/.code_templates> is created and
 populated with templates and an index file F<index.json>. The author
-name and email are derived from the system and stored in the F<author>
+name and email are derived from the system (the environment variables
+C<AUTHOR> and C<EMAIL> take precedence) and stored in the F<author>
 and F<author_email> files
 
 The project file F<Build.PL> loads C<inc::Bob> which instantiates an
@@ -595,11 +652,6 @@ command line;
 
 =over 3
 
-=item C<appclass>
-
-The class name of the new project. Should be the first extra argument on the
-command line
-
 =item C<base>
 
 The directory which will contain the new project. Defaults to the users
@@ -610,19 +662,34 @@ home directory
 The name of the initial branch to create. Defaults to F<master> for
 Git and F<trunk> for SVN
 
+=item C<builder>
+
+Which of the three build systems to use. Defaults to C<MB>, which is
+L<Module::Build>. Can be C<EUMM> for L<ExtUtils::MakeMaker> or C<MI>
+for L<Module::Install>
+
 =item C<force>
 
 Overwrite the output files if they already exist
 
+=item C<license>
+
+The name of the license used on the project. Defaults to C<perl>
+
 =item C<novcs>
 
-Do not create or use a VCS. Used by the test script
+Do not create or use a VCS. Defaults to C<FALSE>. Used by the test script
 
 =item C<perms>
 
 Permissions used to create files. Defaults to C<644>. Directories and
 programs have the execute bit turned on if the corresponding read bit
 is on
+
+=item C<project>
+
+The class name of the new project. Should be the first extra argument on the
+command line
 
 =item C<repository>
 
@@ -654,6 +721,12 @@ Creates the required directories for the new distribution
    $exit_code = $self->dist;
 
 Create a new distribution specified by the module name on the command line
+
+=head2 init_templates
+
+   $exit_code = $self->init_templates;
+
+Initialise the F<.code_templates> directory and create the F<index.json> file
 
 =head2 module
 

@@ -17,7 +17,7 @@ BEGIN {
             and plan skip_all => $current->notes->{stop_tests};
 }
 
-use_ok '[% appclass %]';
+use_ok '[% project %]';
 
 done_testing;
 

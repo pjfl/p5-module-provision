@@ -41,4 +41,4 @@ done_testing();
 __DATA__
 [% first_name %]
 [% last_name %]
-[% appclass %]
+[% project %]

@@ -16,9 +16,9 @@ BEGIN {
 
 use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
-use [% appclass %];
+use [% project %];
 
-exit [% appclass %]->new_with_options( appclass => '[% appclass %]' )->run;
+exit [% project %]->new_with_options( appclass => '[% project %]' )->run;
 
 __END__
 
@@ -48,7 +48,7 @@ Lists the methods available in this program
 
 =head1 VERSION
 
-This documents version v0.1.$Rev: 1 $ of L<[% appclass %]>
+This documents version v0.1.$Rev: 1 $ of L<[% project %]>
 
 =head1 DESCRIPTION
 

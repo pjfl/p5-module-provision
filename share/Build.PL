@@ -6,7 +6,7 @@ use inc::Bob; # Module::Build subclass
 use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 Bob->new( {
-   module    => q([% appclass %]),
+   module    => q([% project %]),
    home_page => q([% home_page %]),
    requires  => {
       'perl'             => 5.010,
@@ -30,6 +30,6 @@ Bob->new( {
 # Local Variables:
 # eval: (load-project-state "[% appbase %]")
 # mode: perl
-# tab-title: [% appclass %]
+# tab-title: [% project %]
 # tab-width: 3
 # End:
