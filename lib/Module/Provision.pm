@@ -1,14 +1,14 @@
-# @(#)Ident: Provision.pm 2013-04-09 15:13 pjf ;
-# Must patch Module::Build from Class::Usul/inc/M_B_*
+# @(#)Ident: Provision.pm 2013-04-11 14:44 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 41 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 42 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
-use Class::Usul::Functions       qw(classdir classfile distname home2appldir
-                                    is_arrayref prefix2class throw trim);
+use Class::Usul::Functions       qw(class2appdir classdir classfile distname
+                                    home2appldir is_arrayref prefix2class
+                                    throw trim);
 use Class::Usul::Time            qw(time2str);
 use Cwd                          qw(getcwd);
 use English                      qw(-no_match_vars);
@@ -76,6 +76,8 @@ has '_appldir'       => is => 'lazy', isa => Path, coerce => TRUE;
 has '_author'        => is => 'lazy', isa => NonEmptySimpleStr;
 
 has '_author_email'  => is => 'lazy', isa => NonEmptySimpleStr;
+
+has '_author_id'     => is => 'lazy', isa => NonEmptySimpleStr;
 
 has '_binsdir'       => is => 'lazy', isa => Path, coerce => TRUE,
    default           => sub { [ $_[ 0 ]->_appldir, 'bin' ] };
@@ -284,8 +286,7 @@ sub _build__author {
 }
 
 sub _build__author_email {
-   my $path  = $_[ 0 ]->template_dir->catfile( 'author_email' );
-
+   my $path      = $_[ 0 ]->template_dir->catfile( 'author_email' );
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
    if ($from_file) { $from_file =~ s{ [\'] }{\'}gmx; return $from_file }
@@ -294,6 +295,18 @@ sub _build__author_email {
 
    $path->print( $email ); $email =~ s{ [\'] }{\'}gmx;
    return $email;
+}
+
+sub _build__author_id {
+   my $path      = $_[ 0 ]->template_dir->catfile( 'author_id' );
+   my $from_file = $path->exists ? trim $path->getline : FALSE;
+
+   $from_file and return $from_file;
+
+   my $author_id = $ENV{USER} || getpwuid( $UID )->name;
+
+   $path->print( $author_id );
+   return $author_id;
 }
 
 sub _build__home_page {
@@ -335,8 +348,10 @@ sub _build__stash {
    my $self = shift; my $project = $self->project; my $author = $self->_author;
 
    return { appbase        => $self->_appbase,
+            appdir         => class2appdir $self->_appbase,
             author         => $author,
             author_email   => $self->_author_email,
+            author_id      => $self->_author_id,
             copyright      => $ENV{ORGANIZATION} || $author,
             copyright_year => time2str( '%Y' ),
             creation_date  => time2str,
@@ -450,6 +465,7 @@ sub _initialize_distribution {
 
    if ($self->builder eq 'DZ') {
       $self->run_cmd( 'dzil build' );
+      $self->run_cmd( 'dzil clean' );
       $mdf = 'README.mkdn';
    }
    elsif ($self->builder eq 'MB') {
@@ -604,7 +620,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 =head1 Version
 
-This documents version v0.3.$Rev: 41 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 42 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -810,7 +826,7 @@ L<Module::Starter> - For some of the documentation and tests
 
 =head1 Author
 
-Peter Flanigan, C<< <Support at RoxSoft dot co dot uk> >>
+Peter Flanigan, C<< @ <Support at RoxSoft dot co dot uk> >>
 
 =head1 License and Copyright
 

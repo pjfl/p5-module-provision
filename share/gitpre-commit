@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# @(#)Ident: .gitpre-commit 2013-04-06 15:13 pjf ;
+# @(#)Ident: gitpre-commit 2013-04-12 11:26 pjf ;
 
 use strict;
 use warnings;
@@ -17,7 +17,7 @@ sub __read_all_from ($) {
 
    open my $fh, '<', $path or die 'Path ${path} cannot open: ${OS_ERROR}';
 
-   my $content = do { local $RS = undef; <$fh> }; close $fh; return $content;
+   local $RS = undef; my $content = <$fh>; close $fh; return $content;
 }
 
 sub __write_data_to ($$) {
@@ -26,6 +26,14 @@ sub __write_data_to ($$) {
    open my $fh, '>', $path or die "Path ${path} cannot open: ${OS_ERROR}";
 
    print {$fh} $data; close $fh; return;
+}
+
+sub __get_ignore_rev_regex () {
+   my $ignore_rev_file = '.gitignore-rev'; -f $ignore_rev_file or return;
+
+   my $paths = __read_all_from $ignore_rev_file; chomp $paths;
+
+   return join '|', split m{ [\n] }mx, $paths;
 }
 
 my ($module, $rev, $rev_file);
@@ -49,15 +57,9 @@ if (defined $project_file) {
 }
 
 if (defined $rev and qx{ git branch 2>/dev/null } =~ m{ \A [*] \s+ master }mx) {
-   my @stat = split m{ \n }mx, qx{ git status --porcelain }; my $found = 0;
-
-   my $ignore; my $ignore_rev_file = '.gitignore-rev';
-
-   if (-f $ignore_rev_file) {
-      my $paths = __read_all_from $ignore_rev_file; chomp $paths;
-
-      $ignore = join '|', split m{ [\n] }mx, $paths;
-   }
+   my @stat   = split m{ \n }mx, qx{ git status --porcelain };
+   my $ignore = __get_ignore_rev_regex;
+   my $found  = 0;
 
    for my $path (map { s{ \A .+ \s+ }{}mx; $_ } grep { m{ \A [AM] }mx } @stat) {
       $ignore and $path =~ m{ (?: $ignore ) }mx and next;

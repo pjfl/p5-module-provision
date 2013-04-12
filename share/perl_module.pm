@@ -1,4 +1,4 @@
-# @(#)Ident: perl_module.pm 2013-04-01 02:18 pjf ;
+# @(#)Ident: perl_module.pm 2013-04-09 17:04 pjf ;
 
 package [% module %];
 
@@ -61,7 +61,7 @@ Larry Wall - For the Perl programming language
 
 =head1 Author
 
-[% author %], C<< <[% author_email %]> >>
+[% author %], C<< @ <[% author_email %]> >>
 
 =head1 License and Copyright
 

@@ -35,7 +35,7 @@ resources
      #homepage   => '[% home_page %]',
      #IRC        => 'irc://irc.perl.org/#[% distname %]',
      license    => 'http://dev.perl.org/licenses/',
-     #repository => 'git://github.com/[% author %]/[% distname %].git',
+     #repository => 'git://github.com/[% author_id %]/[% distname %].git',
      );
 
 readme_from '[% dist_module %]';

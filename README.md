@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and Module::Build toolcha
 
 # Version
 
-This documents version v0.3.$Rev: 41 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.3.$Rev: 42 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -195,7 +195,7 @@ Larry Wall - For the Perl programming language
 
 # Author
 
-Peter Flanigan, `<Support at RoxSoft dot co dot uk>`
+Peter Flanigan, `@ <Support at RoxSoft dot co dot uk>`
 
 # License and Copyright
 

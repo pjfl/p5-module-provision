@@ -1,4 +1,4 @@
-# @(#)$Ident: Build.PL 2013-04-04 18:26 pjf ;
+# @(#)$Ident: Build.PL 2013-04-11 14:45 pjf ;
 
 use strict;
 use warnings;
@@ -28,7 +28,7 @@ Bob->new( {
 } )->create_build_script; # Goal!
 
 # Local Variables:
-# eval: (load-project-state "[% appbase %]")
+# eval: (load-project-state "[% appdir %]")
 # mode: perl
 # tab-title: [% project %]
 # tab-width: 3
