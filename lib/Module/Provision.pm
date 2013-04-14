@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-11 14:44 pjf ;
+# @(#)Ident: Provision.pm 2013-04-14 19:05 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 42 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 43 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -616,11 +616,11 @@ __END__
 
 =head1 Name
 
-Module::Provision - Create Perl distributions with VCS and Module::Build toolchain
+Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.3.$Rev: 42 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 43 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -652,14 +652,29 @@ hooks that mimic the RCS Revision keyword expansion
 
 On first use the directory F<~/.code_templates> is created and
 populated with templates and an index file F<index.json>. The author
-name and email are derived from the system (the environment variables
-C<AUTHOR> and C<EMAIL> take precedence) and stored in the F<author>
-and F<author_email> files
+name, id, and email are derived from the system (the environment
+variables C<AUTHOR> and C<EMAIL> take precedence) and stored in the
+F<author>, F<author_id>, and F<author_email> files
 
-The project file F<Build.PL> loads C<inc::Bob> which instantiates an
-inline subclass of L<Module::Build>. The code for the subclass is in
+If the default builder (C<MB>) is used, then the project file
+F<Build.PL> loads C<inc::Bob> which instantiates an inline subclass of
+L<Module::Build>. The code for the subclass is in
 C<inc::SubClass>. The file C<inc::CPANTesting> allows for fine grained
 control over which tests are run by which CPAN Testing smokers
+
+If the Git VCS is used C<precommit> and C<commit-msg> hooks are
+installed. The C<precommit> hook will expand the RCS Revision keyword
+in files on the master branch if the file F<.distribution_name.rev>
+exists in the parent of the working tree. The C<precommit> hook will
+also update the version number and date/time stamp in the change log
+(F<Changes>).  The C<commit-msg> hook will extract the first comment
+line from the change log and use it as the commit message header. The
+remainder of the commit message (if any) is used as the commit message
+body. This means that so long as one detail line is added to the
+change log no other commit message text is required. The following
+makes for a suitable C<git log> alias:
+
+   alias gl='git log -10 --pretty=format:"%h %ci %s"'
 
 =head1 Configuration and Environment
 
@@ -681,8 +696,8 @@ Git and F<trunk> for SVN
 =item C<builder>
 
 Which of the three build systems to use. Defaults to C<MB>, which is
-L<Module::Build>. Can be C<EUMM> for L<ExtUtils::MakeMaker> or C<MI>
-for L<Module::Install>
+L<Module::Build>. Can be C<DZ> for L<Dist::Zilla> or C<MI> for
+L<Module::Install>
 
 =item C<force>
 
@@ -718,7 +733,7 @@ F<.code_templates>
 
 =item C<vcs>
 
-The version control system to use. Defaults to C<git>
+The version control system to use. Defaults to C<git>, can be C<svn>
 
 =back
 
@@ -826,7 +841,7 @@ L<Module::Starter> - For some of the documentation and tests
 
 =head1 Author
 
-Peter Flanigan, C<< @ <Support at RoxSoft dot co dot uk> >>
+Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 

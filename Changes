@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.3.42    2013-04-12 12:36:04
+0.3.43    2013-04-14 20:11:51
+          Bumped Class::Usul version number. Updated POD
           Added author_id to stash
           Added DZ and MI builders
           Can create a test distribution in t with relative paths

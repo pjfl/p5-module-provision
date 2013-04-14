@@ -1,10 +1,10 @@
 # Name
 
-Module::Provision - Create Perl distributions with VCS and Module::Build toolchain
+Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.3.$Rev: 42 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.3.$Rev: 43 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -36,14 +36,29 @@ hooks that mimic the RCS Revision keyword expansion
 
 On first use the directory `~/.code\_templates` is created and
 populated with templates and an index file `index.json`. The author
-name and email are derived from the system (the environment variables
-`AUTHOR` and `EMAIL` take precedence) and stored in the `author`
-and `author\_email` files
+name, id, and email are derived from the system (the environment
+variables `AUTHOR` and `EMAIL` take precedence) and stored in the
+`author`, `author\_id`, and `author\_email` files
 
-The project file `Build.PL` loads `inc::Bob` which instantiates an
-inline subclass of [Module::Build](https://metacpan.org/module/Module::Build). The code for the subclass is in
+If the default builder (`MB`) is used, then the project file
+`Build.PL` loads `inc::Bob` which instantiates an inline subclass of
+[Module::Build](https://metacpan.org/module/Module::Build). The code for the subclass is in
 `inc::SubClass`. The file `inc::CPANTesting` allows for fine grained
 control over which tests are run by which CPAN Testing smokers
+
+If the Git VCS is used `precommit` and `commit-msg` hooks are
+installed. The `precommit` hook will expand the RCS Revision keyword
+in files on the master branch if the file `.distribution\_name.rev`
+exists in the parent of the working tree. The `precommit` hook will
+also update the version number and date/time stamp in the change log
+(`Changes`).  The `commit-msg` hook will extract the first comment
+line from the change log and use it as the commit message header. The
+remainder of the commit message (if any) is used as the commit message
+body. This means that so long as one detail line is added to the
+change log no other commit message text is required. The following
+makes for a suitable `git log` alias:
+
+    alias gl='git log -10 --pretty=format:"%h %ci %s"'
 
 # Configuration and Environment
 
@@ -63,8 +78,8 @@ command line;
 - `builder`
 
     Which of the three build systems to use. Defaults to `MB`, which is
-    [Module::Build](https://metacpan.org/module/Module::Build). Can be `EUMM` for [ExtUtils::MakeMaker](https://metacpan.org/module/ExtUtils::MakeMaker) or `MI`
-    for [Module::Install](https://metacpan.org/module/Module::Install)
+    [Module::Build](https://metacpan.org/module/Module::Build). Can be `DZ` for [Dist::Zilla](https://metacpan.org/module/Dist::Zilla) or `MI` for
+    [Module::Install](https://metacpan.org/module/Module::Install)
 
 - `force`
 
@@ -100,7 +115,7 @@ command line;
 
 - `vcs`
 
-    The version control system to use. Defaults to `git`
+    The version control system to use. Defaults to `git`, can be `svn`
 
 # Subroutines/Methods
 
@@ -195,7 +210,7 @@ Larry Wall - For the Perl programming language
 
 # Author
 
-Peter Flanigan, `@ <Support at RoxSoft dot co dot uk>`
+Peter Flanigan, `<pjfl@cpan.org>`
 
 # License and Copyright
 

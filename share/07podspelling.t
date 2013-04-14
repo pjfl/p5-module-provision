@@ -1,4 +1,4 @@
-# @(#)Ident: 07podspelling.t 2013-03-27 23:44 pjf ;
+# @(#)Ident: 07podspelling.t 2013-04-12 18:57 pjf ;
 
 use strict;
 use warnings;
@@ -11,7 +11,8 @@ use English qw(-no_match_vars);
 use Test::More;
 
 BEGIN {
-   ! -e catfile( $Bin, updir, q(MANIFEST.SKIP) )
+   not (-e catfile( $Bin, updir, 'MANIFEST.SKIP' )
+     or -e catfile( $Bin, updir, updir, updir, 'MANIFEST.SKIP'))
       and plan skip_all => 'POD spelling test only for developers';
 }
 
