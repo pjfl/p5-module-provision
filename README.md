@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.3.$Rev: 45 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.3.$Rev: 46 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -59,6 +59,60 @@ change log no other commit message text is required. The following
 makes for a suitable `git log` alias:
 
     alias gl='git log -10 --pretty=format:"%h %ci %s"'
+
+The templates contain comment lines like:
+
+    # @(#)Ident: Provision.pm 2013-04-15 13:52 pjf ;
+
+These are expanded automatically by Emacs using this Lisp code:
+
+    (setq time-stamp-active     t
+          time-stamp-line-limit 10
+          time-stamp-format     " %f %04y-%02m-%02d %02H:%02M %u "
+          time-stamp-start      "Ident:"
+          time-stamp-time-zone  "GMT"
+          time-stamp-end        ";")
+
+The alias:
+
+    alias ident='ack "@\(#\)"'
+
+uses the [App::Ack](https://metacpan.org/module/App::Ack) program to implement the old SYSV R4 `ident`
+command
+
+The template for `Build.PL` contains the following comment which is
+interpreted by Emacs:
+
+    # Local Variables:
+    # eval: (load-project-state "[% appdir %]")
+    # mode: perl
+    # tab-title: [% project %]
+    # tab-width: 3
+    # End:
+
+Perl mode is prefered over C-Perl mode since the former has better
+syntax highlighting. Tabs are expanded to three spaces. The
+`tab-title` variable is used by [Yakuake::Sessions](https://metacpan.org/module/Yakuake::Sessions) to set the tab
+title for the terminal emulator. The `load-project-state` Lisp looks
+like this:
+
+    (defun load-project-state (state-file) "Recovers the TinyDesk state from file"
+      (let ((session-path (concat "~/.emacs.d/config/state." state-file)))
+        (if (file-exists-p session-path) (tinydesk-recover-state session-path)
+          (message (concat "Not found: " state-file)))))
+
+It assumes that the TinyDesk state file containing the list of files to edit
+for the project has been saved in `~/.emacs.d/config/state.\[% appdir %\]`. To
+work on a project; change directory to the working copy, edit the project
+file `Build.PL` with Emacs, this will load all of the other files in the
+project into separate buffers displaying each in the tab bar. This Lisp code
+will load TinyDesk and turn tab bar mode on whenever a Perl file is edited:
+
+    (add-hook 'perl-mode-hook
+              '(lambda ()
+                (require 'fic-mode) (turn-on-fic-mode) (diminish 'fic-mode nil)
+                (require 'psvn) (require 'tinydesk) (tabbar-mode t)
+                (require 'tinyperl) (diminish 'tinyperl-mode nil)))
 
 # Configuration and Environment
 
