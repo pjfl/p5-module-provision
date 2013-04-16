@@ -54,4 +54,4 @@ TAGS
 Thumbs.db
 
 # Avoid archives of this distribution
-\bModule-Provision-[\d\.\_]+
+\bModule-Provision-v?[\d\.\_]+
