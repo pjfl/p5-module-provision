@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-21 15:24 pjf ;
+# @(#)Ident: Provision.pm 2013-04-21 16:21 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 47 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 48 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -621,7 +621,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.4.$Rev: 47 $ of L<Module::Provision>
+This documents version v0.4.$Rev: 48 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -675,7 +675,7 @@ body. This means that so long as one detail line is added to the
 change log no other commit message text is required. The following
 makes for a suitable C<git log> alias:
 
-   alias gl='git log -10 --pretty=format:"%h %ci %s"'
+   alias gl='git log -10 --pretty=format:"%h %ci %s" | cut -c1-79'
 
 The templates contain comment lines like:
 

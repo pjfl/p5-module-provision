@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# @(#)$Ident: .gitcommit-msg 2013-04-06 14:35 pjf ;
+# @(#)$Ident: gitcommit-msg 2013-04-21 16:22 pjf ;
 
 use strict;
 use warnings;
@@ -22,7 +22,7 @@ if (-f $file) {
       $entry ||= 'Updated'; $ver ||= '0.1.1';
    my $line    = (grep { m{ \A [ \t] }mx } split m{ [\n] }mx, $entry)[ 0 ];
       $line  ||= q(); $line =~ s{ \A [ \t]+ }{}mx;
-   my $header  = substr "${ver} ${line}", 0, 45;
+   my $header  = "${ver} ${line}";
    my $message = length $body > 1 ? "${header}\n\n${body}" : $header;
 
    open my $out, '>', $msgf or die "Path ${msgf} cannot open: ${OS_ERROR}";

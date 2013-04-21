@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.4.47    2013-04-21 16:41:37
+0.4.48    2013-04-21 21:08:57
+          Removed 45 character restriction on Git log header lines
           Added support for command line abstracts
 
 0.3.46    2013-04-16 23:18:07
