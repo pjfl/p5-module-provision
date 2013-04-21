@@ -4,22 +4,22 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.3.$Rev: 46 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.4.$Rev: 47 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
     # To reduce typing define a shell alias
     alias mp='module_provision --base ~/Projects'
 
-    # Create a new distribution in your Projects directory
-    mp dist Foo::Bar
+    # Create a new distribution in your Projects directory with Git VCS
+    mp dist Foo::Bar [ 'Optional one line abstract' ]
 
     # Add another module
     cd ~/Projects/Foo-Bar
-    mp module Foo::Bat
+    mp module Foo::Bat [ 'Optional one line abstract' ]
 
     # Add a program to the bin directory
-    mp program foo-cli
+    mp program bar-cli [ 'Optional one line abstract' ]
 
     # Add another test script
     mp test 11another-one.t
@@ -177,7 +177,7 @@ The following methods constitute the public API
 
 ## create\_directories
 
-    $self->create_directories( $args );
+    $self->create_directories;
 
 Creates the required directories for the new distribution
 
@@ -201,13 +201,13 @@ Creates a new module specified by the class name on the command line
 
 ## post\_hook
 
-    $self->post_hook( $args );
+    $self->post_hook;
 
 Runs after the new distribution has been created
 
 ## pre\_hook
 
-    $args = $self->pre_hook( {} );
+    $self->pre_hook;
 
 Runs before the new distribution is created
 
@@ -219,10 +219,10 @@ Creates a new program specified by the program name on the command line
 
 ## render\_templates
 
-    $self->render_templates( $args );
+    $self->render_templates;
 
-Renders the list of templates in `<$args-`templates>> be repeatedly calling
-calling [Template](https://metacpan.org/module/Template) passing in the `stash`
+Renders the list of templates in `$self->_template_list` be
+repeatedly calling calling [Template](https://metacpan.org/module/Template) passing in the `$self->_stash`
 
 ## test
 
