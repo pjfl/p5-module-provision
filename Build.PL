@@ -1,9 +1,9 @@
-# @(#)Ident: Build.PL 2013-04-21 20:04 pjf ;
+# @(#)Ident: Build.PL 2013-04-22 01:29 pjf ;
 
 use strict;
 use warnings;
 use inc::Bob; # Module::Build subclass
-use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 48 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 49 $ =~ /\d+/gmx );
 
 Bob->new( {
    module    => q(Module::Provision),
@@ -26,7 +26,8 @@ Bob->new( {
       'Module::Install::AutoLicense'           => 0.08,
       'Module::Install::ReadmeFromPod'         => 0.20,
       'Module::Install::ReadmeMarkdownFromPod' => 0.03,
-      'Template'         => 2.22, },
+      'Template'         => 2.22,
+      'Text::Format'     => 0.53, },
    recommends            => {
       'App::cpanminus'   => 1.6005, },
    configure_requires    => {
