@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-21 16:21 pjf ;
+# @(#)Ident: Provision.pm 2013-04-22 14:14 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 48 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 50 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -23,6 +23,7 @@ extends q(Class::Usul::Programs);
 MooseX::Getopt::OptionTypeMap->add_option_type_to_map( Path, '=s' );
 
 enum 'Module::Provision::Builder' => qw(DZ MB MI);
+enum 'Module::Provision:VCS'      => qw(git svn);
 
 # Public attributes
 
@@ -62,7 +63,7 @@ has 'repository'  => is => 'ro',   isa => NonEmptySimpleStr,
 has 'templates'   => is => 'ro',   isa => SimpleStr, default => NUL,
    documentation  => 'Non default location of the code templates';
 
-has 'vcs'         => is => 'ro',   isa => NonEmptySimpleStr,
+has 'vcs'         => is => 'ro',   isa => 'Module::Provision:VCS',
    documentation  => 'The version control system to use',
    default        => 'git';
 
@@ -110,7 +111,8 @@ has '_project_file'  => is => 'lazy', isa => NonEmptySimpleStr;
 
 has '_stash'         => is => 'lazy', isa => HashRef;
 
-has '_template_list' => is => 'lazy', isa => ArrayRef;
+has '_template_list' => is => 'lazy', isa => ArrayRef, traits => [ 'Array' ],
+   handles           => { all_templates => 'elements', };
 
 has '_template_dir'  => is => 'lazy', isa => Directory, coerce => TRUE;
 
@@ -155,6 +157,7 @@ sub post_hook {
 
    $self->_initialize_vcs;
    $self->_initialize_distribution;
+   $self->vcs eq 'svn' and $self->_svn_ignore_meta_files;
    $self->_test_distribution;
    return;
 }
@@ -180,7 +183,7 @@ sub program : method {
 sub render_templates {
    my $self = shift;
 
-   for my $tuple (@{ $self->_template_list }) {
+   for my $tuple ($self->all_templates) {
       for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
          if (is_arrayref $tuple->[ $i ]) {
             my $method = $tuple->[ $i ]->[ 0 ];
@@ -488,13 +491,13 @@ sub _initialize_distribution {
 }
 
 sub _initialize_git {
-   my $self = shift; my $branch = $self->branch; __chdir( $self->_appldir );
+   my $self = shift; __chdir( $self->_appldir );
 
    $self->run_cmd  ( 'git init'   );
    $self->_add_hook( 'commit-msg' );
    $self->_add_hook( 'pre-commit' );
    $self->run_cmd  ( 'git add .'  );
-   $self->run_cmd  ( "git commit -m 'Created Git ${branch}'" );
+   $self->run_cmd  ( "git commit -m 'Initialized by ".__PACKAGE__."'" );
    return;
 }
 
@@ -506,7 +509,7 @@ sub _initialize_svn {
    $self->run_cmd( "svnadmin create ${repository}" );
 
    my $branch = $self->branch;
-   my $msg    = "Created SVN ${branch}";
+   my $msg    = 'Initialized by '.__PACKAGE__;
    my $url    = 'file://'.catdir( $repository, $branch );
 
    $self->run_cmd( "svn import ${branch} ${url} -m '${msg}'" );
@@ -520,8 +523,10 @@ sub _initialize_svn {
       $self->run_cmd( "svn propset svn:keywords 'Id Revision Auth' ${target}" );
    }
 
-   $msg = "Add RCS keywords to ${branch}";
+   $msg = "Add RCS keywords to project files";
    $self->run_cmd( "svn commit ${branch} -m '${msg}'" );
+   __chdir( $self->_appldir );
+   $self->run_cmd( 'svn update' );
    return;
 }
 
@@ -576,6 +581,17 @@ sub _render_template {
    return $target;
 }
 
+sub _svn_ignore_meta_files {
+   my $self = shift; __chdir( $self->_appldir );
+
+   my $ignores = "LICENSE\nMANIFEST\nMETA.json\nMETA.yml\nREADME";
+
+   $self->run_cmd( "svn propset svn:ignore '${ignores}' ." );
+   $self->run_cmd( 'svn commit -m "Ignoring meta files" .' );
+   $self->run_cmd( 'svn update' );
+   return;
+}
+
 sub _test_distribution {
    my $self = shift; __chdir( $self->_appldir );
 
@@ -621,7 +637,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.4.$Rev: 48 $ of L<Module::Provision>
+This documents version v0.4.$Rev: 50 $ of L<Module::Provision>
 
 =head1 Synopsis
 
