@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-22 15:00 pjf ;
+# @(#)Ident: Provision.pm 2013-04-22 17:53 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 52 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 53 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -637,7 +637,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.4.$Rev: 52 $ of L<Module::Provision>
+This documents version v0.4.$Rev: 53 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -730,9 +730,9 @@ title for the terminal emulator. The C<load-project-state> Lisp looks
 like this:
 
    (defun load-project-state (state-file) "Recovers the TinyDesk state from file"
-     (let ((session-path (concat "~/.emacs.d/config/state." state-file)))
-       (if (file-exists-p session-path) (tinydesk-recover-state session-path)
-         (message (concat "Not found: " state-file)))))
+      (let ((session-path (concat "~/.emacs.d/config/state." state-file)))
+         (if (file-exists-p session-path) (tinydesk-recover-state session-path)
+            (message (concat "Not found: " state-file)))))
 
 It assumes that the TinyDesk state file containing the list of files to edit
 for the project has been saved in F<~/.emacs.d/config/state.[% appdir %]>. To
@@ -743,9 +743,15 @@ will load TinyDesk and turn tab bar mode on whenever a Perl file is edited:
 
    (add-hook 'perl-mode-hook
              '(lambda ()
-               (require 'fic-mode) (turn-on-fic-mode) (diminish 'fic-mode nil)
-               (require 'psvn) (require 'tinydesk) (tabbar-mode t)
-               (require 'tinyperl) (diminish 'tinyperl-mode nil)))
+                (require 'fic-mode) (turn-on-fic-mode) (diminish 'fic-mode nil)
+                (require 'psvn) (require 'tinydesk) (tabbar-mode t)
+                (require 'tinyperl) (diminish 'tinyperl-mode nil)))
+
+This Lisp code will do likewise when a F<dist.ini> file is edited:
+
+   (add-hook 'conf-windows-mode-hook
+             '(lambda ()
+                (require 'tinydesk) (tabbar-mode t)))
 
 =head1 Configuration and Environment
 
