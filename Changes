@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.4.50    2013-04-22 15:17:08
+0.4.51    2013-04-22 16:01:06
+          - Updated usage strings
           - Ignore meta files if VCS is SVN
           - Added 50 character text formatting to gitcommit-msg
           - Removed 45 character restriction on Git log header lines
