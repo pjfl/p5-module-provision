@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-22 17:53 pjf ;
+# @(#)Ident: Provision.pm 2013-04-22 23:06 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 53 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 54 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -597,7 +597,7 @@ sub _test_distribution {
 
    my $cmd = $self->builder eq 'DZ' ? 'dzil test' : 'prove t';
 
-   $ENV{TEST_SPELLING} = TRUE;
+   $ENV{AUTHOR_TESTING} = TRUE; $ENV{TEST_SPELLING} = TRUE;
    $self->output ( 'Testing '.$self->_appldir );
    $self->run_cmd( $cmd, $self->quiet ? {} : { out => 'stdout' } );
    return;
@@ -637,7 +637,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.4.$Rev: 53 $ of L<Module::Provision>
+This documents version v0.4.$Rev: 54 $ of L<Module::Provision>
 
 =head1 Synopsis
 
