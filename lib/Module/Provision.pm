@@ -2,7 +2,7 @@
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 51 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.4.%d', q$Rev: 52 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -637,7 +637,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.4.$Rev: 51 $ of L<Module::Provision>
+This documents version v0.4.$Rev: 52 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -723,7 +723,7 @@ interpreted by Emacs:
    # tab-width: 3
    # End:
 
-Perl mode is prefered over C-Perl mode since the former has better
+Perl mode is preferred over C-Perl mode since the former has better
 syntax highlighting. Tabs are expanded to three spaces. The
 C<tab-title> variable is used by L<Yakuake::Sessions> to set the tab
 title for the terminal emulator. The C<load-project-state> Lisp looks

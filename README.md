@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.4.$Rev: 47 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.4.$Rev: 52 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -58,7 +58,7 @@ body. This means that so long as one detail line is added to the
 change log no other commit message text is required. The following
 makes for a suitable `git log` alias:
 
-    alias gl='git log -10 --pretty=format:"%h %ci %s"'
+    alias gl='git log -10 --pretty=format:"%h %ci %s" | cut -c1-79'
 
 The templates contain comment lines like:
 
@@ -90,7 +90,7 @@ interpreted by Emacs:
     # tab-width: 3
     # End:
 
-Perl mode is prefered over C-Perl mode since the former has better
+Perl mode is preferred over C-Perl mode since the former has better
 syntax highlighting. Tabs are expanded to three spaces. The
 `tab-title` variable is used by [Yakuake::Sessions](https://metacpan.org/module/Yakuake::Sessions) to set the tab
 title for the terminal emulator. The `load-project-state` Lisp looks
