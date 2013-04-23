@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-23 02:47 pjf ;
+# @(#)Ident: Provision.pm 2013-04-23 13:23 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 55 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 56 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -220,6 +220,7 @@ sub update_copyright_year : method {
    my $prefix = 'Copyright (c)';
 
    for my $path (map { $self->io( (split m{ \s+ }mx, $_)[ 0 ] ) } @lines) {
+      $path->exists or next;
       $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
    }
 
@@ -235,6 +236,7 @@ sub update_version : method {
    my $suffix_r = '.$Rev';
 
    for my $path (map { $self->io( (split m{ \s+ }mx, $_)[ 0 ] ) } @lines) {
+      $path->exists or next;
       $path->substitute( "\Q${from}${suffix_v}\E", "${to}${suffix_v}" );
       $path->substitute( "\Q${from}${suffix_r}\E", "${to}${suffix_r}" );
    }
@@ -667,7 +669,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.5.$Rev: 55 $ of L<Module::Provision>
+This documents version v0.5.$Rev: 56 $ of L<Module::Provision>
 
 =head1 Synopsis
 

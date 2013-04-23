@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.5.55    2013-04-23 03:51:02
+0.5.56    2013-04-23 15:20:33
+          - Added Dist::Zilla::Plugin::ManifestInRoot :(
           - Added update_copyright_year and update_version
 
 0.4.54    2013-04-23 00:22:42
