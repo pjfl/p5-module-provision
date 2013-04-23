@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.4.$Rev: 52 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.5.$Rev: 55 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -97,9 +97,9 @@ title for the terminal emulator. The `load-project-state` Lisp looks
 like this:
 
     (defun load-project-state (state-file) "Recovers the TinyDesk state from file"
-      (let ((session-path (concat "~/.emacs.d/config/state." state-file)))
-        (if (file-exists-p session-path) (tinydesk-recover-state session-path)
-          (message (concat "Not found: " state-file)))))
+       (let ((session-path (concat "~/.emacs.d/config/state." state-file)))
+          (if (file-exists-p session-path) (tinydesk-recover-state session-path)
+             (message (concat "Not found: " state-file)))))
 
 It assumes that the TinyDesk state file containing the list of files to edit
 for the project has been saved in `~/.emacs.d/config/state.\[% appdir %\]`. To
@@ -110,9 +110,15 @@ will load TinyDesk and turn tab bar mode on whenever a Perl file is edited:
 
     (add-hook 'perl-mode-hook
               '(lambda ()
-                (require 'fic-mode) (turn-on-fic-mode) (diminish 'fic-mode nil)
-                (require 'psvn) (require 'tinydesk) (tabbar-mode t)
-                (require 'tinyperl) (diminish 'tinyperl-mode nil)))
+                 (require 'fic-mode) (turn-on-fic-mode) (diminish 'fic-mode nil)
+                 (require 'psvn) (require 'tinydesk) (tabbar-mode t)
+                 (require 'tinyperl) (diminish 'tinyperl-mode nil)))
+
+This Lisp code will do likewise when a `dist.ini` file is edited:
+
+    (add-hook 'conf-windows-mode-hook
+              '(lambda ()
+                 (require 'tinydesk) (tabbar-mode t)))
 
 # Configuration and Environment
 
@@ -174,6 +180,13 @@ command line;
 # Subroutines/Methods
 
 The following methods constitute the public API
+
+## copyright\_year
+
+    $self->copyright_year;
+
+Substitutes the existing copyright year for the new copyright year in all
+files in the `MANIFEST`
 
 ## create\_directories
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# @(#)Ident: module_provision 2013-04-21 01:52 pjf ;
+# @(#)Ident: module_provision 2013-04-23 02:49 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.3.%d', q$Rev: 47 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 55 $ =~ /\d+/gmx );
 
 use Module::Provision;
 
@@ -40,7 +40,7 @@ Lists the methods available in this program
 
 =head1 VERSION
 
-This documents version v0.3.$Rev: 47 $ of L<Module::Provision>
+This documents version v0.3.$Rev: 55 $ of L<Module::Provision>
 
 =head1 DESCRIPTION
 
