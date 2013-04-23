@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.5.$Rev: 55 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.5.$Rev: 57 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -23,6 +23,9 @@ This documents version v0.5.$Rev: 55 $ of [Module::Provision](https://metacpan.o
 
     # Add another test script
     mp test 11another-one.t
+
+    # Update the version number
+    mp update_version 0.1 0.2
 
     # Command line help
     mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -181,13 +184,6 @@ command line;
 
 The following methods constitute the public API
 
-## copyright\_year
-
-    $self->copyright_year;
-
-Substitutes the existing copyright year for the new copyright year in all
-files in the `MANIFEST`
-
 ## create\_directories
 
     $self->create_directories;
@@ -242,6 +238,20 @@ repeatedly calling calling [Template](https://metacpan.org/module/Template) pass
     $exit_code = $self->test;
 
 Creates a new test specified by the test file name on the command line
+
+## update\_copyright\_year
+
+    $self->update_copyright_year;
+
+Substitutes the existing copyright year for the new copyright year in all
+files in the `MANIFEST`
+
+## update\_version
+
+    $self->update_version;
+
+Substitutes the existing version number for the new version number in all
+files in the `MANIFEST`
 
 # Diagnostics
 

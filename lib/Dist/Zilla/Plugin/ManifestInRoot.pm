@@ -1,23 +1,15 @@
-# @(#)Ident: ManifestInRoot.pm 2013-04-23 13:28 pjf ;
+# @(#)Ident: ManifestInRoot.pm 2013-04-23 15:49 pjf ;
 
 package Dist::Zilla::Plugin::ManifestInRoot;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 56 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 57 $ =~ /\d+/gmx );
 
 use Moose;
 use Moose::Autobox;
 use File::Slurp ();
 
 with 'Dist::Zilla::Role::InstallTool';
-
-sub __fix_filename {
-   my $name = shift; $name =~ m{ [ \'\\] }mx or return $name;
-
-   $name =~ s{ \\ }{\\\\}gmx; $name =~ s{ ' }{\\'}gmx;
-
-   return qq{'$name'};
-}
 
 sub setup_installer {
    my $self    = shift;
@@ -28,6 +20,16 @@ sub setup_installer {
 
    File::Slurp::write_file( "$file", { binmode => ':raw' }, $content );
    return;
+}
+
+# Private functions
+
+sub __fix_filename {
+   my $name = shift; $name =~ m{ [ \'\\] }mx or return $name;
+
+   $name =~ s{ \\ }{\\\\}gmx; $name =~ s{ ' }{\\'}gmx;
+
+   return qq{'$name'};
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -42,30 +44,47 @@ __END__
 
 =head1 Name
 
-Dist::Zilla::Plugin::ManifestInRoot - I<One-line description of the modules purpose>
+Dist::Zilla::Plugin::ManifestInRoot - I<Puts the MANIFEST file in the project root>
 
 =head1 Synopsis
 
-   use Dist::Zilla::Plugin::ManifestInRoot;
-   # Brief but working code examples
+   # In your dist.ini
+   [ManifestInRoot]
 
 =head1 Version
 
-This documents version v0.1.$Rev: 56 $ of L<Dist::Zilla::Plugin::ManifestInRoot>
+This documents version v0.5.$Rev: 57 $ of L<Dist::Zilla::Plugin::ManifestInRoot>
 
 =head1 Description
 
+Puts the F<MANIFEST> file in the project root so that it can be used by
+other programs, e.g. C<module_provision update_version 0.1 0.2>
+
 =head1 Configuration and Environment
+
+None
 
 =head1 Subroutines/Methods
 
+=head2 setup_installer
+
+The code had to go somewhere
+
 =head1 Diagnostics
+
+None
 
 =head1 Dependencies
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Dist::Zilla::Role::InstallTool>
+
+=item L<File::Slurp>
+
+=item L<Moose>
+
+=item L<Moose::Autobox>
 
 =back
 
@@ -85,7 +104,7 @@ Larry Wall - For the Perl programming language
 
 =head1 Author
 
-Peter Flanigan, C<< @ <pjfl@cpan.org> >>
+Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 

@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-23 13:23 pjf ;
+# @(#)Ident: Provision.pm 2013-04-23 22:27 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 56 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 57 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -21,8 +21,8 @@ extends q(Class::Usul::Programs);
 
 MooseX::Getopt::OptionTypeMap->add_option_type_to_map( Path, '=s' );
 
-enum 'Module::Provision::Builder' => qw(DZ MB MI);
-enum 'Module::Provision::VCS'     => qw(git svn);
+enum __PACKAGE__.'::Builder' => qw(DZ MB MI);
+enum __PACKAGE__.'::VCS'     => qw(git svn);
 
 # Public attributes
 
@@ -34,7 +34,7 @@ has 'branch'      => is => 'lazy', isa => NonEmptySimpleStr,
    documentation  => 'The name of the initial branch to create',
    default        => sub { $_[ 0 ]->vcs eq 'git' ? 'master' : 'trunk' };
 
-has 'builder'     => is => 'ro',   isa => 'Module::Provision::Builder',
+has 'builder'     => is => 'ro',   isa => __PACKAGE__.'::Builder',
    documentation  => 'Which build system to use: DZ, MB, or MI',
    default        => 'MB';
 
@@ -62,9 +62,8 @@ has 'repository'  => is => 'ro',   isa => NonEmptySimpleStr,
 has 'templates'   => is => 'ro',   isa => SimpleStr, default => NUL,
    documentation  => 'Non default location of the code templates';
 
-has 'vcs'         => is => 'ro',   isa => 'Module::Provision::VCS',
-   documentation  => 'Which VCS to use: git or svn',
-   default        => 'git';
+has 'vcs'         => is => 'ro',   isa => __PACKAGE__.'::VCS',
+   documentation  => 'Which VCS to use: git or svn', default => 'git';
 
 # Private attributes
 
@@ -213,14 +212,11 @@ sub test : method {
 }
 
 sub update_copyright_year : method {
-   my $self   = shift;
-   my $from   = shift @{ $self->extra_argv };
-   my $to     = shift @{ $self->extra_argv };
-   my @lines  = $self->_appldir->catfile( 'MANIFEST' )->chomp->getlines;
+   my $self = shift; my ($from, $to, $lines) = $self->_get_update_args;
+
    my $prefix = 'Copyright (c)';
 
-   for my $path (map { $self->io( (split m{ \s+ }mx, $_)[ 0 ] ) } @lines) {
-      $path->exists or next;
+   for my $path ($self->_get_existing_paths( $lines )) {
       $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
    }
 
@@ -228,15 +224,11 @@ sub update_copyright_year : method {
 }
 
 sub update_version : method {
-   my $self     = shift;
-   my $from     = shift @{ $self->extra_argv };
-   my $to       = shift @{ $self->extra_argv };
-   my @lines    = $self->_appldir->catfile( 'MANIFEST' )->chomp->getlines;
-   my $suffix_v = '.%d';
-   my $suffix_r = '.$Rev';
+   my $self = shift; my ($from, $to, $lines) = $self->_get_update_args;
 
-   for my $path (map { $self->io( (split m{ \s+ }mx, $_)[ 0 ] ) } @lines) {
-      $path->exists or next;
+   my $suffix_v = '.%d'; my $suffix_r = '.$Rev';
+
+   for my $path ($self->_get_existing_paths( $lines )) {
       $path->substitute( "\Q${from}${suffix_v}\E", "${to}${suffix_v}" );
       $path->substitute( "\Q${from}${suffix_r}\E", "${to}${suffix_r}" );
    }
@@ -456,6 +448,13 @@ sub _exec_perms {
    my $self = shift; return (($self->perms & oct q(0444)) >> 2) | $self->perms;
 }
 
+sub _get_existing_paths {
+   my ($self, $lines) = @_;
+
+   return grep { $_->exists }
+          map  { $self->io( (split m{ \s+ }mx, $_)[ 0 ] ) } @{ $lines };
+}
+
 sub _get_main_module_name {
    my $self = shift; my $dir = $self->io( getcwd ); my $prev;
 
@@ -493,6 +492,15 @@ sub _get_target {
    $self->method ne 'test' and $self->_stash->{abstract} = $abstract;
 
    return $target;
+}
+
+sub _get_update_args {
+   my $self  = shift;
+   my $from  = shift @{ $self->extra_argv };
+   my $to    = shift @{ $self->extra_argv };
+   my @lines = $self->_appldir->catfile( 'MANIFEST' )->chomp->getlines;
+
+   return ($from, $to, \@lines);
 }
 
 sub _initialize_distribution {
@@ -669,7 +677,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.5.$Rev: 56 $ of L<Module::Provision>
+This documents version v0.5.$Rev: 57 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -688,6 +696,9 @@ This documents version v0.5.$Rev: 56 $ of L<Module::Provision>
 
    # Add another test script
    mp test 11another-one.t
+
+   # Update the version number
+   mp update_version 0.1 0.2
 
    # Command line help
    mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -850,13 +861,6 @@ The version control system to use. Defaults to C<git>, can be C<svn>
 
 The following methods constitute the public API
 
-=head2 copyright_year
-
-   $self->copyright_year;
-
-Substitutes the existing copyright year for the new copyright year in all
-files in the F<MANIFEST>
-
 =head2 create_directories
 
    $self->create_directories;
@@ -911,6 +915,20 @@ repeatedly calling calling L<Template> passing in the C<< $self->_stash >>
    $exit_code = $self->test;
 
 Creates a new test specified by the test file name on the command line
+
+=head2 update_copyright_year
+
+   $self->update_copyright_year;
+
+Substitutes the existing copyright year for the new copyright year in all
+files in the F<MANIFEST>
+
+=head2 update_version
+
+   $self->update_version;
+
+Substitutes the existing version number for the new version number in all
+files in the F<MANIFEST>
 
 =head1 Diagnostics
 
