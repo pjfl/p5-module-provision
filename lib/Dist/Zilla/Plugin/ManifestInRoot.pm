@@ -3,7 +3,7 @@
 package Dist::Zilla::Plugin::ManifestInRoot;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.6.%d', q$Rev: 58 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.7.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Moose;
 use Moose::Autobox;
@@ -53,7 +53,7 @@ Dist::Zilla::Plugin::ManifestInRoot - I<Puts the MANIFEST file in the project ro
 
 =head1 Version
 
-This documents version v0.6.$Rev: 58 $ of L<Dist::Zilla::Plugin::ManifestInRoot>
+This documents version v0.7.$Rev: 1 $ of L<Dist::Zilla::Plugin::ManifestInRoot>
 
 =head1 Description
 
