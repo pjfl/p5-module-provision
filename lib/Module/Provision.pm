@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-23 22:27 pjf ;
+# @(#)Ident: Provision.pm 2013-04-24 03:17 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.5.%d', q$Rev: 57 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.6.%d', q$Rev: 58 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -212,11 +212,11 @@ sub test : method {
 }
 
 sub update_copyright_year : method {
-   my $self = shift; my ($from, $to, $lines) = $self->_get_update_args;
+   my $self = shift; my ($from, $to) = $self->_get_update_args;
 
    my $prefix = 'Copyright (c)';
 
-   for my $path ($self->_get_existing_paths( $lines )) {
+   for my $path (@{ $self->_get_manifest_paths }) {
       $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
    }
 
@@ -224,11 +224,11 @@ sub update_copyright_year : method {
 }
 
 sub update_version : method {
-   my $self = shift; my ($from, $to, $lines) = $self->_get_update_args;
+   my $self = shift; my ($from, $to) = $self->_get_update_args;
 
    my $suffix_v = '.%d'; my $suffix_r = '.$Rev';
 
-   for my $path ($self->_get_existing_paths( $lines )) {
+   for my $path (@{ $self->_get_manifest_paths }) {
       $path->substitute( "\Q${from}${suffix_v}\E", "${to}${suffix_v}" );
       $path->substitute( "\Q${from}${suffix_r}\E", "${to}${suffix_r}" );
    }
@@ -448,11 +448,13 @@ sub _exec_perms {
    my $self = shift; return (($self->perms & oct q(0444)) >> 2) | $self->perms;
 }
 
-sub _get_existing_paths {
-   my ($self, $lines) = @_;
+sub _get_manifest_paths {
+   my $self = shift;
 
-   return grep { $_->exists }
-          map  { $self->io( (split m{ \s+ }mx, $_)[ 0 ] ) } @{ $lines };
+   return [ grep { $_->exists }
+            map  { $self->io( __parse_manifest_line( $_ )->[ 0 ] ) }
+            grep { not m{ \A \s* [\#] }mx }
+            $self->_appldir->catfile( 'MANIFEST' )->chomp->getlines ];
 }
 
 sub _get_main_module_name {
@@ -495,12 +497,7 @@ sub _get_target {
 }
 
 sub _get_update_args {
-   my $self  = shift;
-   my $from  = shift @{ $self->extra_argv };
-   my $to    = shift @{ $self->extra_argv };
-   my @lines = $self->_appldir->catfile( 'MANIFEST' )->chomp->getlines;
-
-   return ($from, $to, \@lines);
+   return (shift @{ $_[ 0 ]->extra_argv }, shift @{ $_[ 0 ]->extra_argv });
 }
 
 sub _initialize_distribution {
@@ -661,6 +658,20 @@ sub __get_module_from {
        split m{ [\n] }mx, $_[ 0 ])[ 0 ];
 }
 
+sub __parse_manifest_line {
+   my $line = shift; my ($file, $comment);
+
+   # May contain spaces if enclosed in '' (in which case, \\ and \' are escapes)
+   if (($file, $comment) = $line =~ m{ \A \' (\\[\\\']|.+)+ \' \s* (.*) }mx) {
+      $file =~ s{ \\ ([\\\']) }{$1}gmx;
+   }
+   else {
+       ($file, $comment) = $line =~ m{ \A (\S+) \s* (.*) }mx;
+   }
+
+   return [ $file, $comment ];
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
@@ -677,7 +688,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.5.$Rev: 57 $ of L<Module::Provision>
+This documents version v0.6.$Rev: 58 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -697,7 +708,7 @@ This documents version v0.5.$Rev: 57 $ of L<Module::Provision>
    # Add another test script
    mp test 11another-one.t
 
-   # Update the version number
+   # Update the version numbers of the project files
    mp update_version 0.1 0.2
 
    # Command line help
@@ -756,12 +767,12 @@ The alias:
 uses the L<App::Ack> program to implement the old SYSV R4 C<ident>
 command
 
-The template for F<Build.PL> contains the following comment which is
-interpreted by Emacs:
+The templates for F<dist.ini>, F<Build.PL>, and F<Makefile.PL>
+contain the following comments which are interpreted by Emacs:
 
    # Local Variables:
-   # eval: (load-project-state "[% appdir %]")
    # mode: perl
+   # eval: (load-project-state "[% appdir %]")
    # tab-title: [% project %]
    # tab-width: 3
    # End:
