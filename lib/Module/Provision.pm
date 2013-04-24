@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-24 20:05 pjf ;
+# @(#)Ident: Provision.pm 2013-04-24 20:36 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.7.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.7.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -46,7 +46,7 @@ has 'license'     => is => 'ro',   isa => NonEmptySimpleStr, default => 'perl',
    documentation  => 'License used for the project';
 
 has 'no_auto_rev' => is => 'ro',   isa => Bool, default => FALSE,
-   documentation  => 'Do not turn on $Rev: 1 $ keyword expansion';
+   documentation  => 'Do not turn on $Rev: 3 $ keyword expansion';
 
 has 'no_vcs'      => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Do not create or use a VCS';
@@ -230,14 +230,15 @@ sub update_copyright_year : method {
 sub update_version : method {
    my $self = shift; my ($from, $to) = $self->_get_update_args;
 
-   my $ignore = $self->_get_ignore_rev_regex;
+   my $ignore = $self->_get_ignore_rev_regex; my $zero = 0;
 
    for my $path (@{ $self->_get_manifest_paths }) {
       $ignore and $path =~ m{ (?: $ignore ) }mx and next;
       $path->substitute( "\Q\'${from}.%d\',\E", "\'${to}.%d\'," );
       $path->substitute( "\Q v${from}.\$Rev\E", " v${to}.\$Rev" );
       $self->_get_rev_file and $path->substitute
-         ( '\$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$', '$Rev: 1 $' );
+         ( '\$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$',
+           '$Rev: '.$zero.' $' );
    }
 
    $self->_reset_rev_file;
@@ -723,7 +724,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.7.$Rev: 1 $ of L<Module::Provision>
+This documents version v0.7.$Rev: 3 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -875,7 +876,7 @@ The name of the license used on the project. Defaults to C<perl>
 
 =item C<no_auto_rev>
 
-Do not turn on automatic $Rev: 1 $ keyword expansion. Defaults to C<FALSE>
+Do not turn on automatic $Rev: 3 $ keyword expansion. Defaults to C<FALSE>
 
 =item C<no_vcs>
 
