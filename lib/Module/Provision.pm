@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-24 20:36 pjf ;
+# @(#)Ident: Provision.pm 2013-04-24 23:27 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.7.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.7.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -46,7 +46,7 @@ has 'license'     => is => 'ro',   isa => NonEmptySimpleStr, default => 'perl',
    documentation  => 'License used for the project';
 
 has 'no_auto_rev' => is => 'ro',   isa => Bool, default => FALSE,
-   documentation  => 'Do not turn on $Rev: 3 $ keyword expansion';
+   documentation  => 'Do not turn on Revision keyword expansion';
 
 has 'no_vcs'      => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Do not create or use a VCS';
@@ -686,6 +686,7 @@ sub __chdir {
 }
 
 sub __get_module_from {
+   # Return main module name from contents of dist.ini, Buile.PL or Makefile.PL
    return
       (map    { s{ [-] }{::}gmx; $_ }
        map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
@@ -724,7 +725,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.7.$Rev: 3 $ of L<Module::Provision>
+This documents version v0.7.$Rev: 4 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -876,7 +877,7 @@ The name of the license used on the project. Defaults to C<perl>
 
 =item C<no_auto_rev>
 
-Do not turn on automatic $Rev: 3 $ keyword expansion. Defaults to C<FALSE>
+Do not turn on automatic Revision keyword expansion. Defaults to C<FALSE>
 
 =item C<no_vcs>
 
@@ -920,19 +921,19 @@ Creates the required directories for the new distribution
 
 =head2 dist
 
-   $exit_code = $self->dist;
+   module_provision dist Foo::Bar
 
 Create a new distribution specified by the module name on the command line
 
 =head2 init_templates
 
-   $exit_code = $self->init_templates;
+   module_provision init_templates
 
 Initialise the F<.code_templates> directory and create the F<index.json> file
 
 =head2 module
 
-   $exit_code = $self->module;
+   module_provision module Foo::Bat
 
 Creates a new module specified by the class name on the command line
 
@@ -950,7 +951,7 @@ Runs before the new distribution is created
 
 =head2 program
 
-   $exit_code = $self->program;
+   module_provision program bar-cli
 
 Creates a new program specified by the program name on the command line
 
@@ -963,20 +964,20 @@ repeatedly calling calling L<Template> passing in the C<< $self->_stash >>
 
 =head2 test
 
-   $exit_code = $self->test;
+   module_provision test 11another-one.t
 
 Creates a new test specified by the test file name on the command line
 
 =head2 update_copyright_year
 
-   $self->update_copyright_year;
+   module_provision update_copyright_year 2013 2014
 
 Substitutes the existing copyright year for the new copyright year in all
 files in the F<MANIFEST>
 
 =head2 update_version
 
-   $self->update_version;
+   module_provision update_version 0.1 0.2
 
 Substitutes the existing version number for the new version number in all
 files in the F<MANIFEST>
