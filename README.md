@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.5.$Rev: 57 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.6.$Rev: 59 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -24,7 +24,7 @@ This documents version v0.5.$Rev: 57 $ of [Module::Provision](https://metacpan.o
     # Add another test script
     mp test 11another-one.t
 
-    # Update the version number
+    # Update the version numbers of the project files
     mp update_version 0.1 0.2
 
     # Command line help
@@ -83,12 +83,12 @@ The alias:
 uses the [App::Ack](https://metacpan.org/module/App::Ack) program to implement the old SYSV R4 `ident`
 command
 
-The template for `Build.PL` contains the following comment which is
-interpreted by Emacs:
+The templates for `dist.ini`, `Build.PL`, and `Makefile.PL`
+contain the following comments which are interpreted by Emacs:
 
     # Local Variables:
-    # eval: (load-project-state "[% appdir %]")
     # mode: perl
+    # eval: (load-project-state "[% appdir %]")
     # tab-title: [% project %]
     # tab-width: 3
     # End:

@@ -49,9 +49,10 @@
 #   Mac OSX SMB mount metadata files
 \B\._
 
-# Aviod other crap
+# Avoid other crap
 TAGS
 Thumbs.db
+\bipc_srlock
 
 # Avoid archives of this distribution
 \bModule-Provision-v?[\d\.\_]+
