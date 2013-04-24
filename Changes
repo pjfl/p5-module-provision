@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
 0.7.1     2013-04-24 21:14:11
+          - Removed italics from abstract in POD
           - Added Rev keyword reset to update_version for git VCS
 
 0.6.59    2013-04-24 05:10:52
