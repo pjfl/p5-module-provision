@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.7.4     2013-04-25 00:31:00
+0.7.5     2013-04-25 13:21:44
+          - Added informational ouput to subcommands
           - Updated POD
           - Stopped precommit hook change update_version code
           - Removed italics from abstract in POD

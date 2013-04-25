@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.6.$Rev: 59 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.7.$Rev: 5 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -12,14 +12,14 @@ This documents version v0.6.$Rev: 59 $ of [Module::Provision](https://metacpan.o
     alias mp='module_provision --base ~/Projects'
 
     # Create a new distribution in your Projects directory with Git VCS
-    mp dist Foo::Bar [ 'Optional one line abstract' ]
+    mp dist Foo::Bar 'Optional one line abstract'
 
     # Add another module
     cd ~/Projects/Foo-Bar
-    mp module Foo::Bat [ 'Optional one line abstract' ]
+    mp module Foo::Bat 'Optional one line abstract'
 
     # Add a program to the bin directory
-    mp program bar-cli [ 'Optional one line abstract' ]
+    mp program bar-cli 'Optional one line abstract'
 
     # Add another test script
     mp test 11another-one.t
@@ -152,7 +152,11 @@ command line;
 
     The name of the license used on the project. Defaults to `perl`
 
-- `novcs`
+- `no_auto_rev`
+
+    Do not turn on automatic Revision keyword expansion. Defaults to `FALSE`
+
+- `no_vcs`
 
     Do not create or use a VCS. Defaults to `FALSE`. Used by the test script
 
@@ -182,73 +186,70 @@ command line;
 
 # Subroutines/Methods
 
-The following methods constitute the public API
+The following methods constitute the public API;
 
 ## create\_directories
 
-    $self->create_directories;
-
-Creates the required directories for the new distribution
+Creates the required directories for the new distribution. If subclassed this
+method can be modified to include additional directories
 
 ## dist
 
-    $exit_code = $self->dist;
+    module_provision dist Foo::Bar
 
 Create a new distribution specified by the module name on the command line
 
 ## init\_templates
 
-    $exit_code = $self->init_templates;
+    module_provision init_templates
 
 Initialise the `.code\_templates` directory and create the `index.json` file
 
 ## module
 
-    $exit_code = $self->module;
+    module_provision module Foo::Bat
 
 Creates a new module specified by the class name on the command line
 
 ## post\_hook
 
-    $self->post_hook;
-
-Runs after the new distribution has been created
+Runs after the new distribution has been created. If subclassed this method
+can be modified to perform additional actions after the templates have been
+rendered
 
 ## pre\_hook
 
-    $self->pre_hook;
-
-Runs before the new distribution is created
+Runs before the new distribution is created. If subclassed this method
+can be modified to perform additional actions before the project directories
+are created
 
 ## program
 
-    $exit_code = $self->program;
+    module_provision program bar-cli
 
 Creates a new program specified by the program name on the command line
 
 ## render\_templates
 
-    $self->render_templates;
-
 Renders the list of templates in `$self->_template_list` be
-repeatedly calling calling [Template](https://metacpan.org/module/Template) passing in the `$self->_stash`
+repeatedly calling calling [Template](https://metacpan.org/module/Template) passing in the `$self->_stash`.
 
 ## test
 
-    $exit_code = $self->test;
+    module_provision test 11another-one.t
 
 Creates a new test specified by the test file name on the command line
 
 ## update\_copyright\_year
 
-    $self->update_copyright_year;
+    module_provision update_copyright_year 2013 2014
 
 Substitutes the existing copyright year for the new copyright year in all
 files in the `MANIFEST`
 
 ## update\_version
 
-    $self->update_version;
+    module_provision update_version 0.1 0.2
 
 Substitutes the existing version number for the new version number in all
 files in the `MANIFEST`
