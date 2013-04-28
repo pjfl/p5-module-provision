@@ -1,4 +1,4 @@
-# @(#)Ident: CPANTesting.pm 2013-04-27 11:34 pjf ;
+# @(#)Ident: CPANTesting.pm 2013-04-28 22:56 pjf ;
 # Bob-Version: 1.8
 
 package CPANTesting;
@@ -13,6 +13,10 @@ sub is_testing { !! ($ENV{AUTOMATED_TESTING} || $ENV{PERL_CR_SMOKER_CURRENT}
                  || ($ENV{PERL5OPT} || q()) =~ m{ CPAN-Reporter }mx) }
 
 sub should_abort {
+   is_testing() or return 0;
+
+   $host eq q(xphvmfred)
+      and return "Stauner ${host} - 0a7335a2-af67-11e2-99d1-ca991c44ed51";
    return 0;
 }
 
