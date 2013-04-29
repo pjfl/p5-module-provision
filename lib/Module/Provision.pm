@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-29 20:38 pjf ;
+# @(#)Ident: Provision.pm 2013-04-29 20:51 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -694,8 +694,7 @@ sub __chdir {
    return $_[ 0 ];
 }
 
-sub __get_module_from {
-   # Return main module name from contents of dist.ini, Buile.PL or Makefile.PL
+sub __get_module_from { # Return main module name from contents of project file
    return
       (map    { s{ [-] }{::}gmx; $_ }
        map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
@@ -734,7 +733,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.8.$Rev: 1 $ of L<Module::Provision>
+This documents version v0.8.$Rev: 2 $ of L<Module::Provision>
 
 =head1 Synopsis
 

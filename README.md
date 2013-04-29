@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.7.$Rev: 7 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.8.$Rev: 2 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -37,7 +37,7 @@ including basic builder scripts, tests, documentation, and module
 code. It creates a VCS repository and, in the Git case, installs some
 hooks that mimic the RCS Revision keyword expansion
 
-On first use the directory `~/.code\_templates` is created and
+On first use the directory `~/.module\_provision` is created and
 populated with templates and an index file `index.json`. The author
 name, id, and email are derived from the system (the environment
 variables `AUTHOR` and `EMAIL` take precedence) and stored in the
@@ -178,7 +178,7 @@ command line;
 - `templates`
 
     Location of the code templates in the users home directory. Defaults to
-    `.code\_templates`
+    `.module\_provision`
 
 - `vcs`
 
@@ -203,7 +203,7 @@ Create a new distribution specified by the module name on the command line
 
     module_provision init_templates
 
-Initialise the `.code\_templates` directory and create the `index.json` file
+Initialise the `.module\_provision` directory and create the `index.json` file
 
 ## module
 
