@@ -1,5 +1,8 @@
 Revision history for Module::Provision
 
+0.8.1     2013-04-29 21:43:21
+          - New templates directory ~/.module_provision
+
 0.7.8     2013-04-28 23:58:23
           - Bumped versions on F:DC and C:U
           - Stopped Stauner CPAN Testing - 0a7335a2-af67-11e2-99d1-ca991c44ed51

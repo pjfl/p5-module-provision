@@ -1,14 +1,14 @@
-# @(#)Ident: Provision.pm 2013-04-28 22:57 pjf ;
+# @(#)Ident: Provision.pm 2013-04-29 20:38 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.7.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
-use Class::Usul::Functions       qw(class2appdir classdir classfile distname
-                                    home2appldir is_arrayref prefix2class
-                                    throw trim);
+use Class::Usul::Functions       qw(app_prefix class2appdir classdir classfile
+                                    distname home2appldir is_arrayref
+                                    prefix2class throw trim);
 use Class::Usul::Time            qw(time2str);
 use Cwd                          qw(getcwd);
 use English                      qw(-no_match_vars);
@@ -410,7 +410,7 @@ sub _build__template_dir {
    my $self = shift;
    my $dir  = $self->templates
             ? $self->io( [ $self->templates ] )->absolute( $self->_initial_wd )
-            : $self->io( [ $self->_home, '.code_templates' ] );
+            : $self->io( [ $self->_home, '.'.(app_prefix __PACKAGE__) ] );
 
    $dir->exists and return $dir; $dir->mkpath( $self->_exec_perms );
 
@@ -734,7 +734,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.7.$Rev: 8 $ of L<Module::Provision>
+This documents version v0.8.$Rev: 1 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -767,7 +767,7 @@ including basic builder scripts, tests, documentation, and module
 code. It creates a VCS repository and, in the Git case, installs some
 hooks that mimic the RCS Revision keyword expansion
 
-On first use the directory F<~/.code_templates> is created and
+On first use the directory F<~/.module_provision> is created and
 populated with templates and an index file F<index.json>. The author
 name, id, and email are derived from the system (the environment
 variables C<AUTHOR> and C<EMAIL> take precedence) and stored in the
@@ -910,7 +910,7 @@ Name of the directory containing the SVN repository. Defaults to F<repository>
 =item C<templates>
 
 Location of the code templates in the users home directory. Defaults to
-F<.code_templates>
+F<.module_provision>
 
 =item C<vcs>
 
@@ -937,7 +937,7 @@ Create a new distribution specified by the module name on the command line
 
    module_provision init_templates
 
-Initialise the F<.code_templates> directory and create the F<index.json> file
+Initialise the F<.module_provision> directory and create the F<index.json> file
 
 =head2 module
 
