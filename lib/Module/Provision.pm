@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-29 20:51 pjf ;
+# @(#)Ident: Provision.pm 2013-04-30 22:24 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -142,6 +142,10 @@ sub dist : method {
    return OK;
 }
 
+sub distmeta : method {
+   my $self = shift; $self->_generate_metadata( TRUE ); return OK;
+}
+
 sub init_templates : method {
    my $self = shift; $self->_template_list; return OK;
 }
@@ -156,10 +160,12 @@ sub module : method {
 }
 
 sub post_hook {
-   my $self = shift;
+   my $self = shift; $self->_initialize_vcs;
 
-   $self->_initialize_vcs;
-   $self->_initialize_distribution;
+   my $mdf = $self->_generate_metadata; $mdf
+      and $self->_appldir->catfile( $mdf )->exists
+      and $self->_add_to_vcs( $mdf );
+
    $self->vcs eq 'svn' and $self->_svn_ignore_meta_files;
    $self->_test_distribution;
    $self->_reset_rev_file( TRUE );
@@ -471,6 +477,33 @@ sub _exec_perms {
    my $self = shift; return (($self->perms & oct q(0444)) >> 2) | $self->perms;
 }
 
+sub _generate_metadata {
+   my ($self, $verbose) = @_; __chdir( $self->_appldir );
+
+   my $mdf; $verbose ||= FALSE;
+
+   if ($self->builder eq 'DZ') {
+      $self->run_cmd( 'dzil build', $verbose ? { out => 'stdout' } : {} );
+      $self->run_cmd( 'dzil clean' );
+      $mdf = 'README.mkdn';
+   }
+   elsif ($self->builder eq 'MB') {
+      $self->run_cmd( 'perl '.$self->_project_file );
+      $self->run_cmd( './Build manifest', $verbose ? { out => 'stdout' } : {} );
+      $self->run_cmd( './Build distmeta', $verbose ? { out => 'stdout' } : {} );
+      $self->run_cmd( './Build distclean' );
+      $mdf = 'README.md';
+   }
+   elsif ($self->builder eq 'MI') {
+      $self->run_cmd( 'perl '.$self->_project_file );
+      $self->run_cmd( 'make manifest', $verbose ? { out => 'stdout' } : {} );
+      $self->run_cmd( 'make clean' );
+      $mdf = 'README.mkdn';
+   }
+
+   return $mdf;
+}
+
 sub _get_ignore_rev_regex {
    my $self = shift;
 
@@ -535,33 +568,6 @@ sub _get_target {
 
 sub _get_update_args {
    return (shift @{ $_[ 0 ]->extra_argv }, shift @{ $_[ 0 ]->extra_argv });
-}
-
-sub _initialize_distribution {
-   my $self = shift; my $mdf; __chdir( $self->_appldir );
-
-   if ($self->builder eq 'DZ') {
-      $self->run_cmd( 'dzil build' );
-      $self->run_cmd( 'dzil clean' );
-      $mdf = 'README.mkdn';
-   }
-   elsif ($self->builder eq 'MB') {
-      $self->run_cmd( 'perl '.$self->_project_file );
-      $self->run_cmd( './Build manifest'  );
-      $self->run_cmd( './Build distmeta'  );
-      $self->run_cmd( './Build distclean' );
-      $mdf = 'README.md';
-   }
-   elsif ($self->builder eq 'MI') {
-      $self->run_cmd( 'perl '.$self->_project_file );
-      $self->run_cmd( 'make manifest' );
-      $self->run_cmd( 'make clean' );
-      $mdf = 'README.mkdn';
-   }
-
-   $mdf and $self->_appldir->catfile( $mdf )->exists
-        and $self->_add_to_vcs( $mdf );
-   return;
 }
 
 sub _initialize_git {
@@ -733,7 +739,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.8.$Rev: 2 $ of L<Module::Provision>
+This documents version v0.8.$Rev: 3 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -755,6 +761,9 @@ This documents version v0.8.$Rev: 2 $ of L<Module::Provision>
 
    # Update the version numbers of the project files
    mp update_version 0.1 0.2
+
+   # Regenerate meta data files
+   mp distmeta
 
    # Command line help
    mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -931,6 +940,12 @@ method can be modified to include additional directories
    module_provision dist Foo::Bar
 
 Create a new distribution specified by the module name on the command line
+
+=head2 distmeta
+
+   module_provision distmeta
+
+Generates the distribution metadata files
 
 =head2 init_templates
 
