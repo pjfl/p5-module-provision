@@ -1,8 +1,8 @@
-# @(#)Ident: Provision.pm 2013-04-30 22:24 pjf ;
+# @(#)Ident: Provision.pm 2013-05-01 13:26 pjf ;
 
 package Module::Provision;
 
-use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.8.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -22,7 +22,7 @@ extends q(Class::Usul::Programs);
 MooseX::Getopt::OptionTypeMap->add_option_type_to_map( Path, '=s' );
 
 enum __PACKAGE__.'::Builder' => qw(DZ MB MI);
-enum __PACKAGE__.'::VCS'     => qw(git svn);
+enum __PACKAGE__.'::VCS'     => qw(git none svn);
 
 # Public attributes
 
@@ -32,7 +32,7 @@ has 'base'        => is => 'lazy', isa => Path, coerce => TRUE,
 
 has 'branch'      => is => 'lazy', isa => NonEmptySimpleStr,
    documentation  => 'The name of the initial branch to create',
-   default        => sub { $_[ 0 ]->vcs eq 'git' ? 'master' : 'trunk' };
+   default        => sub { $_[ 0 ]->vcs eq 'svn' ? 'trunk' : 'master' };
 
 has 'builder'     => is => 'ro',   isa => __PACKAGE__.'::Builder',
    documentation  => 'Which build system to use: DZ, MB, or MI',
@@ -47,9 +47,6 @@ has 'license'     => is => 'ro',   isa => NonEmptySimpleStr, default => 'perl',
 
 has 'no_auto_rev' => is => 'ro',   isa => Bool, default => FALSE,
    documentation  => 'Do not turn on Revision keyword expansion';
-
-has 'no_vcs'      => is => 'ro',   isa => Bool, default => FALSE,
-   documentation  => 'Do not create or use a VCS';
 
 has 'perms'       => is => 'ro',   isa => OctalNum, coerce => TRUE,
    documentation  => 'Default permission for file / directory creation',
@@ -66,7 +63,7 @@ has 'templates'   => is => 'ro',   isa => SimpleStr, default => NUL,
    documentation  => 'Non default location of the code templates';
 
 has 'vcs'         => is => 'lazy', isa => __PACKAGE__.'::VCS',
-   documentation  => 'Which VCS to use: git or svn';
+   documentation  => 'Which VCS to use: git, none, or svn';
 
 # Private attributes
 
@@ -296,7 +293,6 @@ sub _add_to_svn {
 sub _add_to_vcs {
    my ($self, $target, $type) = @_; $target or throw 'VCS target not specified';
 
-   $self->no_vcs and return;
    $self->vcs eq 'git' and $self->_add_to_git( $target, $type );
    $self->vcs eq 'svn' and $self->_add_to_svn( $target, $type );
    return;
@@ -309,9 +305,8 @@ sub _build__appbase {
 }
 
 sub _build__appldir {
-   my $self = shift; $self->vcs eq 'git' and return $self->_appbase;
-
-   return $self->_appbase->catdir( $self->branch );
+   return $_[ 0 ]->vcs eq 'svn' ? $_[ 0 ]->_appbase->catdir( $_[ 0 ]->branch )
+                                : $_[ 0 ]->_appbase;
 }
 
 sub _build__author {
@@ -389,9 +384,7 @@ sub _build__project_file {
 sub _build__stash {
    my $self = shift; my $project = $self->project; my $author = $self->_author;
 
-   my $abstract = $self->loc( 'One-line description of the modules purpose' );
-
-   return { abstract       => $abstract,
+   return { abstract       => $self->_default_module_abstract,
             appdir         => class2appdir $self->_distname,
             author         => $author,
             author_email   => $self->_author_email,
@@ -465,12 +458,20 @@ sub _build__template_list {
 }
 
 sub _build_vcs {
-   return $_[ 0 ]->_appbase->catdir( $_[ 0 ]->repository )->exists
-        ? 'svn' : 'git';
+   return $_[ 0 ]->_appbase->catdir( $_[ 0 ]->repository )->exists ? 'svn'
+                                                                   : 'git';
 }
 
 sub _create_mask {
    my $self = shift; return oct q(0777) ^ $self->_exec_perms;
+}
+
+sub _default_module_abstract {
+   return $_[ 0 ]->loc( 'One-line description of the modules purpose' );
+}
+
+sub _default_program_abstract {
+   return $_[ 0 ]->loc( 'One-line description of the programs purpose' );
 }
 
 sub _exec_perms {
@@ -547,12 +548,11 @@ sub _get_target {
    my ($self, $dir, $f) = @_; my $argv = $self->extra_argv;
 
    my $car      = shift @{ $argv } or throw 'No target specified';
-   my $abstract = shift @{ $argv }
-               || ($self->method eq 'program'
-                ? $self->loc( 'One-line description of the programs purpose' )
-                : $self->loc( 'One-line description of the modules purpose' ) );
+   my $abstract = shift @{ $argv } || ($self->method eq 'program'
+                                     ? $self->_default_program_abstract
+                                     : $self->_default_module_abstract );
 
-   $self->project;
+   $self->project; # Force evaluation of lazy attribute
 
    my $target   = $self->$dir->catfile( $f ? $f->( $car ) : $car );
 
@@ -613,10 +613,9 @@ sub _initialize_svn {
 sub _initialize_vcs {
    my $self = shift;
 
-   $self->no_vcs and return;
-   $self->output( 'Initializing VCS' );
-   $self->vcs eq 'git' and $self->_initialize_git;
-   $self->vcs eq 'svn' and $self->_initialize_svn;
+   $self->vcs ne 'none' and $self->output( 'Initializing VCS' );
+   $self->vcs eq 'git'  and $self->_initialize_git;
+   $self->vcs eq 'svn'  and $self->_initialize_svn;
    return;
 }
 
@@ -624,7 +623,7 @@ sub _merge_lists {
    my ($self, $args) = @_; my $list = $args->{templates};
 
    push @{ $list }, @{ $args->{builders}->{ $self->builder } };
-   not $self->no_vcs and push @{ $list }, @{ $args->{vcs}->{ $self->vcs } };
+   $self->vcs ne 'none' and push @{ $list }, @{ $args->{vcs}->{ $self->vcs } };
 
    return $list;
 }
@@ -739,7 +738,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.8.$Rev: 3 $ of L<Module::Provision>
+This documents version v0.8.$Rev: 4 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -896,10 +895,6 @@ The name of the license used on the project. Defaults to C<perl>
 
 Do not turn on automatic Revision keyword expansion. Defaults to C<FALSE>
 
-=item C<no_vcs>
-
-Do not create or use a VCS. Defaults to C<FALSE>. Used by the test script
-
 =item C<perms>
 
 Permissions used to create files. Defaults to C<644>. Directories and
@@ -922,7 +917,8 @@ F<.module_provision>
 
 =item C<vcs>
 
-The version control system to use. Defaults to C<git>, can be C<svn>
+The version control system to use. Defaults to C<git>, can be C<none>
+or C<svn>
 
 =back
 

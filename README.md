@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.8.$Rev: 2 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.8.$Rev: 4 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -26,6 +26,9 @@ This documents version v0.8.$Rev: 2 $ of [Module::Provision](https://metacpan.or
 
     # Update the version numbers of the project files
     mp update_version 0.1 0.2
+
+    # Regenerate meta data files
+    mp distmeta
 
     # Command line help
     mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -156,10 +159,6 @@ command line;
 
     Do not turn on automatic Revision keyword expansion. Defaults to `FALSE`
 
-- `no_vcs`
-
-    Do not create or use a VCS. Defaults to `FALSE`. Used by the test script
-
 - `perms`
 
     Permissions used to create files. Defaults to `644`. Directories and
@@ -182,7 +181,8 @@ command line;
 
 - `vcs`
 
-    The version control system to use. Defaults to `git`, can be `svn`
+    The version control system to use. Defaults to `git`, can be `none`
+    or `svn`
 
 # Subroutines/Methods
 
@@ -198,6 +198,12 @@ method can be modified to include additional directories
     module_provision dist Foo::Bar
 
 Create a new distribution specified by the module name on the command line
+
+## distmeta
+
+    module_provision distmeta
+
+Generates the distribution metadata files
 
 ## init\_templates
 
