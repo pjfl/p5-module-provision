@@ -1,8 +1,8 @@
-# @(#)Ident: 10test_script.t 2013-05-01 13:12 pjf ;
+# @(#)Ident: 10test_script.t 2013-05-02 18:42 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 6 $ =~ /\d+/gmx );
 use File::Spec::Functions;
 use FindBin qw( $Bin );
 use lib catdir( $Bin, updir, q(lib) );
@@ -53,7 +53,7 @@ ok -f catfile( qw(t code_templates index.json) ), 'Creates template index';
 
 $prog->pre_hook;
 
-like $prog->_appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
+like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
 
 $prog->create_directories;
 
