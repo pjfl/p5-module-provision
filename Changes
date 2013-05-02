@@ -1,5 +1,8 @@
 Revision history for Module::Provision
 
+0.9.1     2013-05-02 04:36:56
+          - Refactored into base class plus traits
+
 0.8.4     2013-05-01 19:25:21
           - Replaced no_vcs option with vcs type none
           - Can now mp distmeta

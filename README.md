@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.8.$Rev: 4 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.9.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -28,7 +28,7 @@ This documents version v0.8.$Rev: 4 $ of [Module::Provision](https://metacpan.or
     mp update_version 0.1 0.2
 
     # Regenerate meta data files
-    mp distmeta
+    mp generate_metadata
 
     # Command line help
     mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -128,137 +128,14 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 
 # Configuration and Environment
 
-Defines the following list of attributes which can be set from the
-command line;
+Extends [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base). Applies these traits; `AddingFiles`,
+`CreatingDistributions`, and `UpdatingContent`
 
-- `base`
-
-    The directory which will contain the new project. Defaults to the users
-    home directory
-
-- `branch`
-
-    The name of the initial branch to create. Defaults to `master` for
-    Git and `trunk` for SVN
-
-- `builder`
-
-    Which of the three build systems to use. Defaults to `MB`, which is
-    [Module::Build](https://metacpan.org/module/Module::Build). Can be `DZ` for [Dist::Zilla](https://metacpan.org/module/Dist::Zilla) or `MI` for
-    [Module::Install](https://metacpan.org/module/Module::Install)
-
-- `force`
-
-    Overwrite the output files if they already exist
-
-- `license`
-
-    The name of the license used on the project. Defaults to `perl`
-
-- `no_auto_rev`
-
-    Do not turn on automatic Revision keyword expansion. Defaults to `FALSE`
-
-- `perms`
-
-    Permissions used to create files. Defaults to `644`. Directories and
-    programs have the execute bit turned on if the corresponding read bit
-    is on
-
-- `project`
-
-    The class name of the new project. Should be the first extra argument on the
-    command line
-
-- `repository`
-
-    Name of the directory containing the SVN repository. Defaults to `repository`
-
-- `templates`
-
-    Location of the code templates in the users home directory. Defaults to
-    `.module\_provision`
-
-- `vcs`
-
-    The version control system to use. Defaults to `git`, can be `none`
-    or `svn`
+Defines no attributes
 
 # Subroutines/Methods
 
-The following methods constitute the public API;
-
-## create\_directories
-
-Creates the required directories for the new distribution. If subclassed this
-method can be modified to include additional directories
-
-## dist
-
-    module_provision dist Foo::Bar
-
-Create a new distribution specified by the module name on the command line
-
-## distmeta
-
-    module_provision distmeta
-
-Generates the distribution metadata files
-
-## init\_templates
-
-    module_provision init_templates
-
-Initialise the `.module\_provision` directory and create the `index.json` file
-
-## module
-
-    module_provision module Foo::Bat
-
-Creates a new module specified by the class name on the command line
-
-## post\_hook
-
-Runs after the new distribution has been created. If subclassed this method
-can be modified to perform additional actions after the templates have been
-rendered
-
-## pre\_hook
-
-Runs before the new distribution is created. If subclassed this method
-can be modified to perform additional actions before the project directories
-are created
-
-## program
-
-    module_provision program bar-cli
-
-Creates a new program specified by the program name on the command line
-
-## render\_templates
-
-Renders the list of templates in `$self->_template_list` be
-repeatedly calling calling [Template](https://metacpan.org/module/Template) passing in the `$self->_stash`.
-
-## test
-
-    module_provision test 11another-one.t
-
-Creates a new test specified by the test file name on the command line
-
-## update\_copyright\_year
-
-    module_provision update_copyright_year 2013 2014
-
-Substitutes the existing copyright year for the new copyright year in all
-files in the `MANIFEST`
-
-## update\_version
-
-    module_provision update_version 0.1 0.2
-
-Substitutes the existing version number for the new version number in all
-files in the `MANIFEST`
+None
 
 # Diagnostics
 
@@ -267,13 +144,10 @@ Add `-D` to command line to turn on debug output
 # Dependencies
 
 - [Class::Usul](https://metacpan.org/module/Class::Usul)
-- [Date::Format](https://metacpan.org/module/Date::Format)
-- [File::DataClass](https://metacpan.org/module/File::DataClass)
-- [File::ShareDir](https://metacpan.org/module/File::ShareDir)
-- [Module::Metadata](https://metacpan.org/module/Module::Metadata)
-- [Perl::Version](https://metacpan.org/module/Perl::Version)
-- [Pod::Markdown](https://metacpan.org/module/Pod::Markdown)
-- [Template](https://metacpan.org/module/Template)
+- [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base)
+- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/module/Module::Provision::TraitFor::CreatingDistributions)
+- [Module::Provision::TraitFor::AddingFiles](https://metacpan.org/module/Module::Provision::TraitFor::AddingFiles)
+- [Module::Provision::TraitFor::UpdatingContent](https://metacpan.org/module/Module::Provision::TraitFor::UpdatingContent)
 
 # Incompatibilities
 
