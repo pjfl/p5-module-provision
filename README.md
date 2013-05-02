@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.9.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.9.$Rev: 7 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -129,13 +129,61 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 # Configuration and Environment
 
 Extends [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base). Applies these traits; `AddingFiles`,
-`CreatingDistributions`, and `UpdatingContent`
+`CreatingDistributions`, `Rendering`, and `UpdatingContent`
 
 Defines no attributes
 
 # Subroutines/Methods
 
-None
+## dist
+
+    module_provision dist Foo::Bar 'Optional one line abstract'
+
+Create a new distribution specified by the module name on the command line
+
+## generate\_metadata
+
+    module_provision generate_metadata
+
+Generates the distribution metadata files
+
+## init\_templates
+
+    module_provision init_templates
+
+Initialise the `.module\_provision` directory and create the `index.json` file
+
+## module
+
+    module_provision module Foo::Bat 'Optional one line abstract'
+
+Creates a new module specified by the class name on the command line
+
+## program
+
+    module_provision program bar-cli 'Optional one line abstract'
+
+Creates a new program specified by the program name on the command line
+
+## test
+
+    module_provision test 11another-one.t
+
+Creates a new test specified by the test file name on the command line
+
+## update\_copyright\_year
+
+    module_provision update_copyright_year 2013 2014
+
+Substitutes the existing copyright year for the new copyright year in all
+files in the `MANIFEST`
+
+## update\_version
+
+    module_provision update_version 0.1 0.2
+
+Substitutes the existing version number for the new version number in all
+files in the `MANIFEST`
 
 # Diagnostics
 
