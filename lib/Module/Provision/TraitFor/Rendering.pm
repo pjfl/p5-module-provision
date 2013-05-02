@@ -1,9 +1,9 @@
-# @(#)Ident: Rendering.pm 2013-05-02 02:56 pjf ;
+# @(#)Ident: Rendering.pm 2013-05-02 03:38 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -152,7 +152,7 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.1.$Rev: 2 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.9.$Rev: 3 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 
