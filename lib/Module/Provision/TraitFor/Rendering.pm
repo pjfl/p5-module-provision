@@ -1,16 +1,16 @@
-# @(#)Ident: Rendering.pm 2013-05-02 03:38 pjf ;
+# @(#)Ident: Rendering.pm 2013-05-02 18:15 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
 use Class::Usul::Functions qw(is_arrayref throw);
 use MooseX::Types::Moose   qw(ArrayRef Bool);
 
-requires qw(_template_dir vcs);
+requires qw(appldir builder dist_module incdir stash template_dir testdir vcs);
 
 # Object attributes (public)
 has 'force'          => is => 'ro', isa => Bool, default => FALSE,
@@ -21,6 +21,11 @@ has 'force'          => is => 'ro', isa => Bool, default => FALSE,
 has '_template_list' => is => 'ro', isa => ArrayRef, traits => [ 'Array' ],
    handles           => { all_templates => 'elements', }, lazy => TRUE,
    builder           => '_build__template_list', init_arg => undef;
+
+# Construction
+before 'populate_directories' => sub {
+   my $self = shift; $self->render_templates; return;
+};
 
 # Public methods
 sub init_templates : method {
@@ -35,7 +40,7 @@ sub render_template {
 
    $target->exists and $target->is_dir
       and $target = $target->catfile( $template );
-   $template = $self->_template_dir->catfile( $template );
+   $template = $self->template_dir->catfile( $template );
 
    $template->exists or
       return $self->log->warn( $self->loc( 'Path [_1] not found', $template ) );
@@ -53,7 +58,7 @@ sub render_template {
 
    my $tmplt = Template->new( $conf ) or throw $Template::ERROR;
 
-   $tmplt->process( $template->pathname, $self->_stash, \$text )
+   $tmplt->process( $template->pathname, $self->stash, \$text )
       or throw $tmplt->error();
    $target->perms( $self->perms )->print( $text ); $target->close;
    return $target;
@@ -65,16 +70,11 @@ sub render_templates {
    for my $tuple ($self->all_templates) {
       for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
          if (is_arrayref $tuple->[ $i ]) {
-            my $method = $tuple->[ $i ]->[ 0 ];
-
-            '_' eq substr $method, 0, 1
-               and $tuple->[ $i ]->[ 0 ] = $self->$method();
+            $tuple->[ $i ]->[ 0 ] = $self->_deref_tmpl( $tuple->[ $i ]->[ 0 ] );
             $tuple->[ $i ] = $self->io( $tuple->[ $i ] );
          }
          else {
-            my $method = $tuple->[ $i ];
-
-            '_' eq substr $method, 0, 1 and $tuple->[ $i ] = $self->$method();
+            $tuple->[ $i ] = $self->_deref_tmpl( $tuple->[ $i ] );
          }
       }
 
@@ -86,7 +86,7 @@ sub render_templates {
 
 # Private methods
 sub _build__template_list {
-   my $self = shift; my $index = $self->_template_dir->catfile( 'index.json' );
+   my $self = shift; my $index = $self->template_dir->catfile( 'index.json' );
 
    my $data; $index->exists and $data = $self->file->data_load
       ( paths => [ $index ], storage_class => 'Any' )
@@ -122,6 +122,12 @@ sub _build__template_list {
    return $self->_merge_lists( $data );
 }
 
+sub _deref_tmpl {
+   my ($self, $car) = @_; '_' ne substr $car, 0, 1 and return $car;
+
+   my $reader = substr $car, 1; return $self->$reader();
+}
+
 sub _merge_lists {
    my ($self, $args) = @_; my $list = $args->{templates};
 
@@ -152,13 +158,18 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.9.$Rev: 3 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.9.$Rev: 5 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 
-Renders templates
+Renders templates. Uses a list stored in the index file F<index.json> which
+by default is in the F<~/.module_provision> directory
 
 =head1 Configuration and Environment
+
+Requires the consuming class to define the attributes; C<appldir>,
+C<builder>, C<dist_module>, C<incdir>, C<stash>, C<template_dir>,
+C<testdir>, and C<vcs>
 
 Defines the following attributes;
 
@@ -174,7 +185,7 @@ Overwrite the output files if they already exist
 
 =head2 init_templates
 
-   module_provision init_templates
+   $exit_code = $self->init_templates;
 
 Initialise the F<.module_provision> directory and create the F<index.json> file
 
@@ -186,8 +197,10 @@ Renders a single template using L<Template>
 
 =head2 render_templates
 
+   $self->render_templates;
+
 Renders the list of templates in C<< $self->_template_list >> be
-repeatedly calling calling L<Template> passing in the C<< $self->_stash >>.
+repeatedly calling calling L<Template> passing in the C<< $self->stash >>.
 
 =head1 Diagnostics
 

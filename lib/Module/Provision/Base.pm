@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-02 02:49 pjf ;
+# @(#)Ident: Base.pm 2013-05-02 18:09 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -32,15 +32,11 @@ has 'branch'      => is => 'lazy', isa => NonEmptySimpleStr,
    documentation  => 'The name of the initial branch to create',
    default        => sub { $_[ 0 ]->vcs eq 'svn' ? 'trunk' : 'master' };
 
-has 'builder'     => is => 'ro',   isa => __PACKAGE__.'::Builder',
-   documentation  => 'Which build system to use: DZ, MB, or MI',
-   default        => 'MB';
+has 'builder'     => is => 'lazy', isa => __PACKAGE__.'::Builder',
+   documentation  => 'Which build system to use: DZ, MB, or MI';
 
 has 'license'     => is => 'ro',   isa => NonEmptySimpleStr, default => 'perl',
    documentation  => 'License used for the project';
-
-has 'no_auto_rev' => is => 'ro',   isa => Bool, default => FALSE,
-   documentation  => 'Do not turn on Revision keyword expansion';
 
 has 'perms'       => is => 'ro',   isa => OctalNum, coerce => TRUE,
    documentation  => 'Default permission for file / directory creation',
@@ -59,77 +55,85 @@ has 'templates'   => is => 'ro',   isa => SimpleStr, default => NUL,
 has 'vcs'         => is => 'lazy', isa => __PACKAGE__.'::VCS',
    documentation  => 'Which VCS to use: git, none, or svn';
 
+
+has '_appbase'         => is => 'lazy', isa => Path, coerce => TRUE,
+   reader              => 'appbase';
+
+has '_appldir'         => is => 'lazy', isa => Path, coerce => TRUE,
+   reader              => 'appldir';
+
+has '_binsdir'         => is => 'lazy', isa => Path, coerce => TRUE,
+   default             => sub { [ $_[ 0 ]->appldir, 'bin' ] },
+   reader              => 'binsdir';
+
+has '_dist_module'     => is => 'lazy', isa => Path, coerce => TRUE,
+   default             => sub { [ $_[ 0 ]->homedir.'.pm' ] },
+   reader              => 'dist_module';
+
+has '_distname'        => is => 'lazy', isa => NonEmptySimpleStr,
+   default             => sub { distname $_[ 0 ]->project },
+   reader              => 'distname';
+
+has '_exec_perms'      => is => 'lazy', isa => PositiveInt,
+   reader              => 'exec_perms';
+
+has '_homedir'         => is => 'lazy', isa => Path, coerce => TRUE,
+   reader              => 'homedir';
+
+has '_incdir'          => is => 'lazy', isa => Path, coerce => TRUE,
+   default             => sub { [ $_[ 0 ]->appldir, 'inc' ] },
+   reader              => 'incdir';
+
+has '_libdir'          => is => 'lazy', isa => Path, coerce => TRUE,
+   default             => sub { [ $_[ 0 ]->appldir, 'lib' ] },
+   reader              => 'libdir';
+
+has '_module_abstract' => is => 'lazy', isa => NonEmptySimpleStr,
+   reader              => 'module_abstract';
+
+has '_project_file'    => is => 'lazy', isa => NonEmptySimpleStr,
+   reader              => 'project_file';
+
+has '_stash'           => is => 'lazy', isa => HashRef, reader => 'stash';
+
+has '_template_dir'    => is => 'lazy', isa => Directory, coerce => TRUE,
+   reader              => 'template_dir';
+
+has '_testdir'         => is => 'lazy', isa => Path, coerce => TRUE,
+   default             => sub { [ $_[ 0 ]->appldir, 't' ] },
+   reader              => 'testdir';
+
 # Object attributes (private)
-has '_appbase'       => is => 'lazy', isa => Path, coerce => TRUE;
+has '_author'          => is => 'lazy', isa => NonEmptySimpleStr;
 
-has '_appldir'       => is => 'lazy', isa => Path, coerce => TRUE;
+has '_author_email'    => is => 'lazy', isa => NonEmptySimpleStr;
 
-has '_author'        => is => 'lazy', isa => NonEmptySimpleStr;
+has '_author_id'       => is => 'lazy', isa => NonEmptySimpleStr;
 
-has '_author_email'  => is => 'lazy', isa => NonEmptySimpleStr;
+has '_home'            => is => 'lazy', isa => Path, coerce => TRUE,
+   default             => sub { $_[ 0 ]->config->my_home };
 
-has '_author_id'     => is => 'lazy', isa => NonEmptySimpleStr;
+has '_home_page'       => is => 'lazy', isa => NonEmptySimpleStr;
 
-has '_binsdir'       => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_appldir, 'bin' ] };
+has '_initial_wd'      => is => 'ro',   isa => Directory, coerce => TRUE,
+   default             => sub { [ getcwd ] };
 
-has '_dist_module'   => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_homedir.'.pm' ] };
-
-has '_distname'      => is => 'lazy', isa => NonEmptySimpleStr,
-   default           => sub { distname $_[ 0 ]->project };
-
-has '_home'          => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { $_[ 0 ]->config->my_home };
-
-has '_homedir'       => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_libdir, classdir $_[ 0 ]->project ] };
-
-has '_home_page'     => is => 'lazy', isa => NonEmptySimpleStr;
-
-has '_incdir'        => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_appldir, 'inc' ] };
-
-has '_initial_wd'    => is => 'ro',   isa => Directory, coerce => TRUE,
-   default           => sub { [ getcwd ] };
-
-has '_libdir'        => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_appldir, 'lib' ] };
-
-has '_license_keys'  => is => 'lazy', isa => HashRef;
-
-has '_project_file'  => is => 'lazy', isa => NonEmptySimpleStr;
-
-has '_stash'         => is => 'lazy', isa => HashRef;
-
-has '_template_dir'  => is => 'lazy', isa => Directory, coerce => TRUE;
-
-has '_testdir'       => is => 'lazy', isa => Path, coerce => TRUE,
-   default           => sub { [ $_[ 0 ]->_appldir, 't' ] };
-
-# Public methods
-sub default_module_abstract {
-   return $_[ 0 ]->loc( 'One-line description of the modules purpose' );
-}
-
-sub exec_perms {
-   my $self = shift; return (($self->perms & oct q(0444)) >> 2) | $self->perms;
-}
+has '_license_keys'    => is => 'lazy', isa => HashRef;
 
 # Private methods
 sub _build__appbase {
    my $self = shift; my $base = $self->base->absolute( $self->_initial_wd );
 
-   return $base->catdir( $self->_distname );
+   return $base->catdir( $self->distname );
 }
 
 sub _build__appldir {
-   return $_[ 0 ]->vcs eq 'svn' ? $_[ 0 ]->_appbase->catdir( $_[ 0 ]->branch )
-                                : $_[ 0 ]->_appbase;
+   return $_[ 0 ]->vcs eq 'svn' ? $_[ 0 ]->appbase->catdir( $_[ 0 ]->branch )
+                                : $_[ 0 ]->appbase;
 }
 
 sub _build__author {
-   my $path      = $_[ 0 ]->_template_dir->catfile( 'author' );
+   my $path      = $_[ 0 ]->template_dir->catfile( 'author' );
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
    if ($from_file) { $from_file =~ s{ [\'] }{\'}gmx; return $from_file }
@@ -143,7 +147,7 @@ sub _build__author {
 }
 
 sub _build__author_email {
-   my $path      = $_[ 0 ]->_template_dir->catfile( 'author_email' );
+   my $path      = $_[ 0 ]->template_dir->catfile( 'author_email' );
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
    if ($from_file) { $from_file =~ s{ [\'] }{\'}gmx; return $from_file }
@@ -155,7 +159,7 @@ sub _build__author_email {
 }
 
 sub _build__author_id {
-   my $path      = $_[ 0 ]->_template_dir->catfile( 'author_id' );
+   my $path      = $_[ 0 ]->template_dir->catfile( 'author_id' );
    my $from_file = $path->exists ? trim $path->getline : FALSE;
 
    $from_file and return $from_file;
@@ -166,10 +170,26 @@ sub _build__author_id {
    return $author_id;
 }
 
+sub _build_builder {
+   my $self = shift;
+
+   $self->appldir->catfile( 'dist.ini'    )->exists and return 'DZ';
+   $self->appldir->catfile( 'Makefile.PL' )->exists and return 'MI';
+   return 'MB';
+}
+
+sub _build__exec_perms {
+   return (($_[ 0 ]->perms & oct q(0444)) >> 2) | $_[ 0 ]->perms;
+}
+
 sub _build__home_page {
-   my $path = $_[ 0 ]->_template_dir->catfile( 'home_page' );
+   my $path = $_[ 0 ]->template_dir->catfile( 'home_page' );
 
    return $path->exists ? trim $path->getline : 'http://example.com';
+}
+
+sub _build__homedir {
+   return [ $_[ 0 ]->libdir, classdir $_[ 0 ]->project ];
 }
 
 sub _build__license_keys {
@@ -184,6 +204,10 @@ sub _build__license_keys {
       gpl        => [ map { "GPL_$_" } qw(1 2 3) ],
       mit        => 'MIT',
       mozilla    => [ map { "Mozilla_$_" } qw(1_0 1_1) ], };
+}
+
+sub _build__module_abstract {
+   return $_[ 0 ]->loc( 'One-line description of the modules purpose' );
 }
 
 sub _build_project {
@@ -202,7 +226,7 @@ sub _build_project {
       $prev = $dir; $dir = $dir->parent;
    }
 
-   throw error => 'File [_1] not in path', args => [ $self->_project_file ];
+   throw error => 'File [_1] not in path', args => [ $self->project_file ];
    return; # Never reached
 }
 
@@ -214,16 +238,16 @@ sub _build__project_file {
 sub _build__stash {
    my $self = shift; my $project = $self->project; my $author = $self->_author;
 
-   return { abstract       => $self->default_module_abstract,
-            appdir         => class2appdir $self->_distname,
+   return { abstract       => $self->module_abstract,
+            appdir         => class2appdir $self->distname,
             author         => $author,
             author_email   => $self->_author_email,
             author_id      => $self->_author_id,
             copyright      => $ENV{ORGANIZATION} || $author,
             copyright_year => time2str( '%Y' ),
             creation_date  => time2str,
-            dist_module    => $self->_dist_module->abs2rel( $self->_appldir ),
-            distname       => $self->_distname,
+            dist_module    => $self->dist_module->abs2rel( $self->appldir ),
+            distname       => $self->distname,
             first_name     => lc ((split SPC, $author)[ 0 ]),
             home_page      => $self->_home_page,
             last_name      => lc ((split SPC, $author)[ -1 ]),
@@ -244,7 +268,7 @@ sub _build__template_dir {
 
    $dir->exists and return $dir; $dir->mkpath( $self->exec_perms );
 
-   my $dist = $self->io( File::ShareDir::dist_dir( distname $class ) );
+   my $dist  = $self->io( File::ShareDir::dist_dir( distname $class ) );
 
    $_->copy( $dir ) for ($dist->all_files);
 
@@ -252,8 +276,8 @@ sub _build__template_dir {
 }
 
 sub _build_vcs {
-   return $_[ 0 ]->_appbase->catdir( $_[ 0 ]->repository )->exists ? 'svn'
-                                                                   : 'git';
+   return $_[ 0 ]->appbase->catdir( $_[ 0 ]->repository )->exists ? 'svn'
+                                                                  : 'git';
 }
 
 # Private functions
@@ -288,7 +312,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.9.$Rev: 1 $ of L<Module::Provision::Base>
+This documents version v0.9.$Rev: 5 $ of L<Module::Provision::Base>
 
 =head1 Description
 
@@ -322,10 +346,6 @@ L<Module::Install>
 
 The name of the license used on the project. Defaults to C<perl>
 
-=item C<no_auto_rev>
-
-Do not turn on automatic Revision keyword expansion. Defaults to C<FALSE>
-
 =item C<perms>
 
 Permissions used to create files. Defaults to C<644>. Directories and
@@ -355,17 +375,7 @@ or C<svn>
 
 =head1 Subroutines/Methods
 
-=head2 default_module_abstract
-
-   $message = $self->default_module_abstract;
-
-Returns the localized text for the default one line module abstract
-
-=head2 exec_perms
-
-   $perms = $self->exec_perms;
-
-Returns the executable permissions corresponding to C<< $self->perms >>
+None
 
 =head1 Diagnostics
 

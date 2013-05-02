@@ -1,17 +1,18 @@
-# @(#)Ident: Provision.pm 2013-05-02 03:02 pjf ;
+# @(#)Ident: Provision.pm 2013-05-02 18:14 pjf ;
 
 package Module::Provision;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Moose;
 
 extends q(Module::Provision::Base);
-with    q(Module::Provision::TraitFor::Rendering);
 with    q(Module::Provision::TraitFor::CreatingDistributions);
-with    q(Module::Provision::TraitFor::AddingFiles);
+with    q(Module::Provision::TraitFor::Rendering);
 with    q(Module::Provision::TraitFor::UpdatingContent);
+with    q(Module::Provision::TraitFor::VCS);
+with    q(Module::Provision::TraitFor::AddingFiles);
 
 __PACKAGE__->meta->make_immutable;
 
@@ -29,7 +30,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.9.$Rev: 1 $ of L<Module::Provision>
+This documents version v0.9.$Rev: 5 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -154,13 +155,61 @@ This Lisp code will do likewise when a F<dist.ini> file is edited:
 =head1 Configuration and Environment
 
 Extends L<Module::Provision::Base>. Applies these traits; C<AddingFiles>,
-C<CreatingDistributions>, and C<UpdatingContent>
+C<CreatingDistributions>, C<Rendering>, and C<UpdatingContent>
 
 Defines no attributes
 
 =head1 Subroutines/Methods
 
-None
+=head2 dist
+
+   module_provision dist Foo::Bar 'Optional one line abstract'
+
+Create a new distribution specified by the module name on the command line
+
+=head2 generate_metadata
+
+   module_provision generate_metadata
+
+Generates the distribution metadata files
+
+=head2 init_templates
+
+   module_provision init_templates
+
+Initialise the F<.module_provision> directory and create the F<index.json> file
+
+=head2 module
+
+   module_provision module Foo::Bat 'Optional one line abstract'
+
+Creates a new module specified by the class name on the command line
+
+=head2 program
+
+   module_provision program bar-cli 'Optional one line abstract'
+
+Creates a new program specified by the program name on the command line
+
+=head2 test
+
+   module_provision test 11another-one.t
+
+Creates a new test specified by the test file name on the command line
+
+=head2 update_copyright_year
+
+   module_provision update_copyright_year 2013 2014
+
+Substitutes the existing copyright year for the new copyright year in all
+files in the F<MANIFEST>
+
+=head2 update_version
+
+   module_provision update_version 0.1 0.2
+
+Substitutes the existing version number for the new version number in all
+files in the F<MANIFEST>
 
 =head1 Diagnostics
 
