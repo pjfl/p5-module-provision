@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-05-02 18:28 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-05-03 13:57 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -11,7 +11,19 @@ use Class::Usul::Functions qw(throw);
 use Cwd                    qw(getcwd);
 
 requires qw(appbase appldir builder exec_perms homedir
-            incdir project_file stash testdir);
+            incdir project_file stash testdir vcs);
+
+around '_build_builder' => sub {
+   my ($next, $self, @args) = @_; my $builder = $self->$next( @args );
+
+   return !$builder && $self->method eq 'dist' ? 'MB' : $builder;
+};
+
+around '_build_vcs' => sub {
+   my ($next, $self, @args) = @_; my $vcs = $self->$next( @args );
+
+   return $vcs eq 'none' && $self->method eq 'dist' ? 'git' : $vcs;
+};
 
 # Public Methods
 sub create_directories {
@@ -132,7 +144,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.9.$Rev: 5 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.9.$Rev: 8 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 

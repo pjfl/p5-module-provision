@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-02 18:09 pjf ;
+# @(#)Ident: Base.pm 2013-05-03 13:40 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -19,6 +19,8 @@ use User::pwent;
 extends q(Class::Usul::Programs);
 
 MooseX::Getopt::OptionTypeMap->add_option_type_to_map( Path, '=s' );
+
+my %builders = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', 'MI' => 'Makefile.PL');
 
 enum __PACKAGE__.'::Builder' => qw(DZ MB MI);
 enum __PACKAGE__.'::VCS'     => qw(git none svn);
@@ -171,11 +173,14 @@ sub _build__author_id {
 }
 
 sub _build_builder {
-   my $self = shift;
+   my $self = shift; my $appldir = $self->appldir;
 
-   $self->appldir->catfile( 'dist.ini'    )->exists and return 'DZ';
-   $self->appldir->catfile( 'Makefile.PL' )->exists and return 'MI';
-   return 'MB';
+   for (grep { $_->[ 1 ]->exists }
+        map  { [ $_, $appldir->catfile( $builders{ $_ } ) ] } keys %builders) {
+      return $_->[ 0 ];
+   }
+
+   return undef;
 }
 
 sub _build__exec_perms {
@@ -215,10 +220,9 @@ sub _build_project {
 
    $project and return $project; my $dir = $self->io( getcwd ); my $prev;
 
-   my @builders = ( qw(dist.ini Build.PL Makefile.PL) );
-
    while (not $prev or $prev ne $dir) {
-      for my $file (grep { $_->exists } map { $dir->catfile( $_ ) } @builders) {
+      for my $file (grep { $_->exists }
+                    map  { $dir->catfile( $builders{ $_ } ) } keys %builders) {
          $project = __get_module_from( $file->all ) and return $project;
          throw 'Main module name not found';
       }
@@ -231,8 +235,7 @@ sub _build_project {
 }
 
 sub _build__project_file {
-   return $_[ 0 ]->builder eq 'DZ' ? 'dist.ini' :
-          $_[ 0 ]->builder eq 'MB' ? 'Build.PL' : 'Makefile.PL';
+   return $builders{ $_[ 0 ]->builder };
 }
 
 sub _build__stash {
@@ -276,8 +279,11 @@ sub _build__template_dir {
 }
 
 sub _build_vcs {
-   return $_[ 0 ]->appbase->catdir( $_[ 0 ]->repository )->exists ? 'svn'
-                                                                  : 'git';
+   my $self = shift; my $appbase = $self->appbase;
+
+   return $appbase->catdir( $self->repository )->exists ? 'svn'
+        : $appbase->catdir( '.git'            )->exists ? 'git'
+                                                        : 'none';
 }
 
 # Private functions
@@ -312,7 +318,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.9.$Rev: 5 $ of L<Module::Provision::Base>
+This documents version v0.9.$Rev: 8 $ of L<Module::Provision::Base>
 
 =head1 Description
 
