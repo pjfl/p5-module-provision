@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-05-03 13:57 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-05-03 14:36 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 9 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -85,7 +85,7 @@ sub test_distribution {
 
 # Private methods
 sub _create_mask {
-   my $self = shift; return oct q(0777) ^ $self->exec_perms;
+   return oct q(0777) ^ $_[ 0 ]->exec_perms;
 }
 
 sub _generate_metadata {
@@ -144,7 +144,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.9.$Rev: 8 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.9.$Rev: 9 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
