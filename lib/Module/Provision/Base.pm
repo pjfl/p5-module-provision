@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-03 13:40 pjf ;
+# @(#)Ident: Base.pm 2013-05-03 19:10 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 10 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -318,7 +318,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.9.$Rev: 8 $ of L<Module::Provision::Base>
+This documents version v0.9.$Rev: 10 $ of L<Module::Provision::Base>
 
 =head1 Description
 

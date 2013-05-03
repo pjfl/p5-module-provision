@@ -1,9 +1,9 @@
-# @(#)Ident: Provision.pm 2013-05-03 14:10 pjf ;
+# @(#)Ident: Provision.pm 2013-05-03 19:24 pjf ;
 
 package Module::Provision;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 10 $ =~ /\d+/gmx );
 
 use Moose;
 
@@ -30,7 +30,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.9.$Rev: 8 $ of L<Module::Provision>
+This documents version v0.9.$Rev: 10 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -49,6 +49,9 @@ This documents version v0.9.$Rev: 8 $ of L<Module::Provision>
 
    # Add another test script
    mp test 11another-one.t
+
+   # Edit the project files
+   mp -q edit_project
 
    # Update the version numbers of the project files
    mp update_version 0.1 0.2
@@ -167,6 +170,14 @@ Defines no attributes
 
 Create a new distribution specified by the module name on the command line
 
+=head2 edit_project
+
+   module_provision -q edit_project
+
+Edit the project file (one of; F<dist.ini>, F<Build.PL>, or
+F<Makefile.PL>) in the project directory. The editor defaults to
+C<emacs> but can be set on the command line, e.g C<-o editor=vim>
+
 =head2 generate_metadata
 
    module_provision generate_metadata
@@ -190,6 +201,12 @@ Creates a new module specified by the class name on the command line
    module_provision program bar-cli 'Optional one line abstract'
 
 Creates a new program specified by the program name on the command line
+
+=head2 show_tab_title
+
+   module_provision -q show_tab_title
+
+Print the tab title for the current project
 
 =head2 test
 

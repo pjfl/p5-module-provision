@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.9.8     2013-05-03 15:11:01
+0.9.10    2013-05-03 20:42:32
+          - Added edit_project and show_tab_title methods
           - Bob removes MANIFEST.bak with distclean
           - Abstracted builders with ::Base
           - Updated README.md

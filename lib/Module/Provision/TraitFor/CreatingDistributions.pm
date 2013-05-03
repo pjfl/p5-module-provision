@@ -1,13 +1,13 @@
-# @(#)Ident: CreatingDistributions.pm 2013-05-03 14:36 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-05-03 19:16 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 9 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 10 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Functions qw(throw);
+use Class::Usul::Functions qw(say throw trim);
 use Cwd                    qw(getcwd);
 
 requires qw(appbase appldir builder exec_perms homedir
@@ -48,6 +48,13 @@ sub dist : method {
    return OK;
 }
 
+sub edit_project : method {
+   my $self = shift; my $editor = $self->options->{editor} || q(emacs);
+
+   $self->run_cmd( $editor.SPC.$self->_project_file_path, { async => TRUE } );
+   return OK;
+}
+
 sub generate_metadata : method {
    shift->_generate_metadata( FALSE ); return OK;
 }
@@ -70,6 +77,15 @@ sub pre_hook {
    $self->stash->{abstract} = shift @{ $argv } || $self->stash->{abstract};
    __chdir( $self->appbase );
    return;
+}
+
+sub show_tab_title : method {
+   my $self = shift;
+   my $file = $self->extra_argv->[ 0 ] || $self->_project_file_path;
+   my $text = (grep { m{ tab-title: }msx } $self->io( $file )->getlines)[ -1 ];
+
+   say trim( (split m{ : }msx, $text || NUL, 2)[ 1 ] );
+   return OK;
 }
 
 sub test_distribution {
@@ -115,6 +131,10 @@ sub _generate_metadata {
    return $create ? $mdf : undef;
 }
 
+sub _project_file_path {
+   my $self = shift; return $self->appldir->catfile( $self->project_file );
+}
+
 # Private functions
 sub __chdir {
    $_[ 0 ] or throw 'Directory not specified'; chdir $_[ 0 ];
@@ -144,7 +164,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.9.$Rev: 9 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.9.$Rev: 10 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
@@ -173,6 +193,13 @@ method can be modified to include additional directories
 
 Create a new distribution specified by the module name on the command line
 
+=head2 edit_project
+
+   $exit_code = $self->edit_project;
+
+Edit the project file (one of; F<dist.ini>, F<Build.PL>, or
+F<Makefile.PL>) in the current directory
+
 =head2 generate_metadata
 
    $exit_code = $self->generate_metadata;
@@ -200,6 +227,12 @@ rendered
 Runs before the new distribution is created. If subclassed this method
 can be modified to perform additional actions before the project directories
 are created
+
+=head2 show_tab_title
+
+   $exit_code = $self->show_tab_title;
+
+Print the tab title for the current project to C<STDOUT>
 
 =head2 test_distribution
 

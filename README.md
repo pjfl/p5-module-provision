@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.9.$Rev: 8 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.9.$Rev: 10 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -23,6 +23,9 @@ This documents version v0.9.$Rev: 8 $ of [Module::Provision](https://metacpan.or
 
     # Add another test script
     mp test 11another-one.t
+
+    # Edit the project files
+    mp -q edit_project
 
     # Update the version numbers of the project files
     mp update_version 0.1 0.2
@@ -141,6 +144,14 @@ Defines no attributes
 
 Create a new distribution specified by the module name on the command line
 
+## edit\_project
+
+    module_provision -q edit_project
+
+Edit the project file (one of; `dist.ini`, `Build.PL`, or
+`Makefile.PL`) in the project directory. The editor defaults to
+`emacs` but can be set on the command line, e.g `-o editor=vim`
+
 ## generate\_metadata
 
     module_provision generate_metadata
@@ -164,6 +175,12 @@ Creates a new module specified by the class name on the command line
     module_provision program bar-cli 'Optional one line abstract'
 
 Creates a new program specified by the program name on the command line
+
+## show\_tab\_title
+
+    module_provision -q show_tab_title
+
+Print the tab title for the current project
 
 ## test
 

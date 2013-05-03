@@ -1,9 +1,9 @@
-# @(#)Ident: UpdatingContent.pm 2013-05-02 18:26 pjf ;
+# @(#)Ident: UpdatingContent.pm 2013-05-03 18:37 pjf ;
 
 package Module::Provision::TraitFor::UpdatingContent;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 10 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -110,7 +110,7 @@ Module::Provision::TraitFor::UpdatingContent - Perform search and replace on pro
 
 =head1 Version
 
-This documents version v0.9.$Rev: 5 $ of L<Module::Provision::TraitFor::UpdatingContent>
+This documents version v0.9.$Rev: 10 $ of L<Module::Provision::TraitFor::UpdatingContent>
 
 =head1 Description
 
