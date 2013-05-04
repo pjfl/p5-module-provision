@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-03 23:57 pjf ;
+# @(#)Ident: Base.pm 2013-05-04 00:09 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.10.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.10.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -193,7 +193,7 @@ sub _build__stash {
             appdir         => class2appdir $self->distname,
             author         => $author,
             author_email   => $config->author_email,
-            author_id      => $config->author_id,
+            author_id      => $config->author_id || $self->logname,
             copyright      => $ENV{ORGANIZATION} || $author,
             copyright_year => time2str( '%Y' ),
             creation_date  => time2str,
@@ -266,7 +266,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.10.$Rev: 1 $ of L<Module::Provision::Base>
+This documents version v0.10.$Rev: 2 $ of L<Module::Provision::Base>
 
 =head1 Description
 

@@ -1,8 +1,8 @@
-# @(#)Ident: Config.pm 2013-05-04 00:00 pjf ;
+# @(#)Ident: Config.pm 2013-05-04 00:09 pjf ;
 
 package Module::Provision::Config;
 
-use version; our $VERSION = qv( sprintf '0.10.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.10.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -17,8 +17,7 @@ has 'author'          => is => 'lazy', isa => NonEmptySimpleStr;
 
 has 'author_email'    => is => 'lazy', isa => NonEmptySimpleStr;
 
-has 'author_id'       => is => 'lazy', isa => NonEmptySimpleStr,
-   default            => sub { $_[ 0 ]->logname };
+has 'author_id'       => is => 'lazy', isa => SimpleStr;
 
 has 'base'            => is => 'lazy', isa => Path, coerce => TRUE,
    default            => sub { $_[ 0 ]->config->my_home };
@@ -85,7 +84,7 @@ Module::Provision::Config - Attributes set from the config file
 
 =head1 Version
 
-This documents version v0.10.$Rev: 1 $ of L<Module::Provision::Config>
+This documents version v0.10.$Rev: 2 $ of L<Module::Provision::Config>
 
 =head1 Description
 
