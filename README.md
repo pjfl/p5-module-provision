@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.9.$Rev: 10 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.10.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -24,7 +24,7 @@ This documents version v0.9.$Rev: 10 $ of [Module::Provision](https://metacpan.o
     # Add another test script
     mp test 11another-one.t
 
-    # Edit the project files
+    # Edit the project master file
     mp -q edit_project
 
     # Update the version numbers of the project files
@@ -79,7 +79,7 @@ These are expanded automatically by Emacs using this Lisp code:
           time-stamp-line-limit 10
           time-stamp-format     " %f %04y-%02m-%02d %02H:%02M %u "
           time-stamp-start      "Ident:"
-          time-stamp-time-zone  "GMT"
+          time-stamp-time-zone  "UTC"
           time-stamp-end        ";")
 
 The alias:
@@ -180,7 +180,10 @@ Creates a new program specified by the program name on the command line
 
     module_provision -q show_tab_title
 
-Print the tab title for the current project
+Print the tab title for the current project. Can be used like this;
+
+    alias ep='mp -q edit_project ; \
+              yakuake_session set_tab_title_for_project $(mp -q show_tab_title)'
 
 ## test
 
@@ -208,11 +211,12 @@ Add `-D` to command line to turn on debug output
 
 # Dependencies
 
-- [Class::Usul](https://metacpan.org/module/Class::Usul)
 - [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base)
-- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/module/Module::Provision::TraitFor::CreatingDistributions)
 - [Module::Provision::TraitFor::AddingFiles](https://metacpan.org/module/Module::Provision::TraitFor::AddingFiles)
+- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/module/Module::Provision::TraitFor::CreatingDistributions)
+- [Module::Provision::TraitFor::Rendering](https://metacpan.org/module/Module::Provision::TraitFor::Rendering)
 - [Module::Provision::TraitFor::UpdatingContent](https://metacpan.org/module/Module::Provision::TraitFor::UpdatingContent)
+- [Module::Provision::TraitFor::VCS](https://metacpan.org/module/Module::Provision::TraitFor::VCS)
 
 # Incompatibilities
 

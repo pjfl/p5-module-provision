@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-05-03 19:16 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-05-03 22:01 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.9.%d', q$Rev: 10 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.10.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -11,18 +11,19 @@ use Class::Usul::Functions qw(say throw trim);
 use Cwd                    qw(getcwd);
 
 requires qw(appbase appldir builder exec_perms homedir
-            incdir project_file stash testdir vcs);
+            incdir project_file render_templates stash testdir vcs);
 
 around '_build_builder' => sub {
    my ($next, $self, @args) = @_; my $builder = $self->$next( @args );
 
-   return !$builder && $self->method eq 'dist' ? 'MB' : $builder;
+   return !$builder && $self->method eq 'dist'
+        ? $self->config->builder : $builder;
 };
 
 around '_build_vcs' => sub {
    my ($next, $self, @args) = @_; my $vcs = $self->$next( @args );
 
-   return $vcs eq 'none' && $self->method eq 'dist' ? 'git' : $vcs;
+   return $vcs eq 'none' && $self->method eq 'dist' ? $self->config->vcs : $vcs;
 };
 
 # Public Methods
@@ -43,7 +44,7 @@ sub dist : method {
 
    $self->pre_hook;
    $self->create_directories;
-   $self->populate_directories;
+   $self->render_templates;
    $self->post_hook;
    return OK;
 }
@@ -57,9 +58,6 @@ sub edit_project : method {
 
 sub generate_metadata : method {
    shift->_generate_metadata( FALSE ); return OK;
-}
-
-sub populate_directories {
 }
 
 sub post_hook {
@@ -164,7 +162,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.9.$Rev: 10 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.10.$Rev: 1 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
@@ -205,12 +203,6 @@ F<Makefile.PL>) in the current directory
    $exit_code = $self->generate_metadata;
 
 Generates the distribution metadata files
-
-=head2 populate_directories
-
-   $self->populate_directories;
-
-An empty subroutine to modify in another role
 
 =head2 post_hook
 
