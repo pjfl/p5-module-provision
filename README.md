@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.10.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.11.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -31,7 +31,7 @@ This documents version v0.10.$Rev: 1 $ of [Module::Provision](https://metacpan.o
     mp update_version 0.1 0.2
 
     # Regenerate meta data files
-    mp generate_metadata
+    mp metadata
 
     # Command line help
     mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -46,14 +46,18 @@ hooks that mimic the RCS Revision keyword expansion
 On first use the directory `~/.module\_provision` is created and
 populated with templates and an index file `index.json`. The author
 name, id, and email are derived from the system (the environment
-variables `AUTHOR` and `EMAIL` take precedence) and stored in the
-`author`, `author\_id`, and `author\_email` files
+variables `AUTHOR` and `EMAIL` take precedence). The can be
+overridden by the values in the configuration file
+`~/.module\_provision/module\_provision.json`
 
 If the default builder (`MB`) is used, then the project file
 `Build.PL` loads `inc::Bob` which instantiates an inline subclass of
 [Module::Build](https://metacpan.org/module/Module::Build). The code for the subclass is in
 `inc::SubClass`. The file `inc::CPANTesting` allows for fine grained
 control over which tests are run by which CPAN Testing smokers
+
+The default builder used by the create distribution method can be
+changed from the command line or from the configuration file
 
 If the Git VCS is used `precommit` and `commit-msg` hooks are
 installed. The `precommit` hook will expand the RCS Revision keyword
@@ -68,6 +72,9 @@ change log no other commit message text is required. The following
 makes for a suitable `git log` alias:
 
     alias gl='git log -10 --pretty=format:"%h %ci %s" | cut -c1-79'
+
+The default VCS used by the create distribution methods can be
+changed from the command line or from the configuration file
 
 The templates contain comment lines like:
 
@@ -89,8 +96,9 @@ The alias:
 uses the [App::Ack](https://metacpan.org/module/App::Ack) program to implement the old SYSV R4 `ident`
 command
 
-The templates for `dist.ini`, `Build.PL`, and `Makefile.PL`
-contain the following comments which are interpreted by Emacs:
+The templates for the project files `dist.ini`, `Build.PL`, and
+`Makefile.PL` contain the following comments which are interpreted by
+Emacs:
 
     # Local Variables:
     # mode: perl
@@ -131,8 +139,28 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 
 # Configuration and Environment
 
-Extends [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base). Applies these traits; `AddingFiles`,
-`CreatingDistributions`, `Rendering`, and `UpdatingContent`
+The configuration file defaults to
+`~/.module\_provision/module\_provision.json`. All of the attributes listed in
+[Module::Provision::Config](https://metacpan.org/module/Module::Provision::Config) can set from the configuration file in addition
+to the attributes listed in [Class::Usul::Config::Programs](https://metacpan.org/module/Class::Usul::Config::Programs) and
+[Class::Usul::Config](https://metacpan.org/module/Class::Usul::Config). A typical file looks like;
+
+    {
+       "author": "<first_name> <last_name>",
+       "author_email": "<userid>@example.com",
+       "author_id": "<userid>",
+       "base": "/home/<userid>/Projects",
+       "doc_title": "Perl",
+       "editor": "emacs",
+       "home_page": "http://www.example.com"
+    }
+
+Creating `logs` and `tmp` directories in `~/.module\_provision` will cause
+the log and temporary files to use them instead of `/tmp`
+
+Extends [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base). Applies these traits;
+`AddingFiles`, `Config`, `CreatingDistributions`, `Rendering`,
+`UpdatingContent`, and `VCS`
 
 Defines no attributes
 
@@ -152,9 +180,9 @@ Edit the project file (one of; `dist.ini`, `Build.PL`, or
 `Makefile.PL`) in the project directory. The editor defaults to
 `emacs` but can be set on the command line, e.g `-o editor=vim`
 
-## generate\_metadata
+## metadata
 
-    module_provision generate_metadata
+    module_provision metadata
 
 Generates the distribution metadata files
 
@@ -176,6 +204,12 @@ Creates a new module specified by the class name on the command line
 
 Creates a new program specified by the program name on the command line
 
+## prove
+
+    module_provision prove
+
+Runs the projects tests
+
 ## show\_tab\_title
 
     module_provision -q show_tab_title
@@ -183,7 +217,7 @@ Creates a new program specified by the program name on the command line
 Print the tab title for the current project. Can be used like this;
 
     alias ep='mp -q edit_project ; \
-              yakuake_session set_tab_title_for_project $(mp -q show_tab_title)'
+       yakuake_session set_tab_title_for_project $(mp -q show_tab_title)'
 
 ## test
 
