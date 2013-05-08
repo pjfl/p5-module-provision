@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.12.1    2013-05-06 16:06:32
+0.12.2    2013-05-08 03:49:47
+          - Avoid calling getpwuid on WinShite
           - Added missing dependencies
 
 0.11.1    2013-05-04 21:21:14
