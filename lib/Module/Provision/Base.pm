@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-09 17:27 pjf ;
+# @(#)Ident: Base.pm 2013-05-09 18:13 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -105,6 +105,16 @@ has '_testdir'         => is => 'lazy', isa => Path, coerce => TRUE,
 # Object attributes (private)
 has '_license_keys'    => is => 'lazy', isa => HashRef;
 
+# Public methods
+sub chdir {
+   my ($self, $path) = @_; $path or throw 'Directory not specified in chdir';
+
+   chdir $path; $self->io( getcwd )->stat->{inode} = $path->stat->{inode}
+      or throw error => 'Chdir requested path [_1] actual [_2]',
+               args  => [ $path, getcwd ];
+   return $path;
+}
+
 # Private methods
 sub _build__appbase {
    my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
@@ -115,9 +125,9 @@ sub _build__appbase {
 sub _build__appldir {
    my $self   = shift; my $appbase = $self->appbase;
 
-   my $branch = $self->branch || 'none'; my $vcs = $self->vcs;
+   my $branch = $self->branch; my $vcs = $self->vcs;
 
-   $self->debug and $self->log->debug
+   $self->debug and $self->warning
       ( "Appbase: ${appbase}, Branch: ${branch}, VCS: ${vcs}" );
 
    return $appbase->catdir( $branch )->exists ? $appbase->catdir( $branch )
@@ -129,7 +139,7 @@ sub _build__appldir {
 
 sub _build_branch {
    return $ENV{BRANCH} || ($_[ 0 ]->vcs eq 'git' ? 'master' :
-                           $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : q());
+                           $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : 'none');
 }
 
 sub _build_builder {
@@ -263,7 +273,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.12.$Rev: 4 $ of L<Module::Provision::Base>
+This documents version v0.12.$Rev: 5 $ of L<Module::Provision::Base>
 
 =head1 Description
 
