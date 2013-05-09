@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-08 10:22 pjf ;
+# @(#)Ident: Base.pm 2013-05-09 17:27 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -113,21 +113,23 @@ sub _build__appbase {
 }
 
 sub _build__appldir {
-   my $self = shift; my $appbase = $self->appbase; my $branch = $self->branch;
+   my $self   = shift; my $appbase = $self->appbase;
+
+   my $branch = $self->branch || 'none'; my $vcs = $self->vcs;
 
    $self->debug and $self->log->debug
-      ( "Appbase: ${appbase}, Branch: ${branch}" );
+      ( "Appbase: ${appbase}, Branch: ${branch}, VCS: ${vcs}" );
 
    return $appbase->catdir( $branch )->exists ? $appbase->catdir( $branch )
-        : $appbase->catdir( '.git' )->exists  ? $appbase
-        : $self->vcs eq 'none'                ? $appbase
+        : $appbase->catdir( '.git'  )->exists ? $appbase
+        : $appbase->catdir( '.svn'  )->exists ? $appbase
+        : $vcs eq 'none'                      ? $appbase
                                               : undef;
 }
 
 sub _build_branch {
-   my $self = shift;
-
-   return $ENV{BRANCH} || ($self->vcs eq 'svn' ? 'trunk' : 'master');
+   return $ENV{BRANCH} || ($_[ 0 ]->vcs eq 'git' ? 'master' :
+                           $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : q());
 }
 
 sub _build_builder {
@@ -182,7 +184,7 @@ sub _build_project {
       $prev = $dir; $dir = $dir->parent;
    }
 
-   throw error => 'File [_1] not in path', args => [ $self->project_file ];
+   throw 'No project files in path';
    return; # Never reached
 }
 
@@ -222,6 +224,9 @@ sub _build_vcs {
    return $appbase->catdir( '.git'            )->exists ? 'git'
         : $appbase->catdir( $branch, '.git'   )->exists ? 'git'
         : $appbase->catdir( qw(master .git)   )->exists ? 'git'
+        : $appbase->catdir( '.svn'            )->exists ? 'svn'
+        : $appbase->catdir( $branch, '.svn'   )->exists ? 'svn'
+        : $appbase->catdir( qw(trunk  .svn)   )->exists ? 'svn'
         : $appbase->catdir( $self->repository )->exists ? 'svn'
                                                         : 'none';
 }
@@ -258,7 +263,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.12.$Rev: 3 $ of L<Module::Provision::Base>
+This documents version v0.12.$Rev: 4 $ of L<Module::Provision::Base>
 
 =head1 Description
 

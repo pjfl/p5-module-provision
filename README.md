@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.12.$Rev: 3 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.12.$Rev: 4 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -71,7 +71,8 @@ body. This means that so long as one detail line is added to the
 change log no other commit message text is required. The following
 makes for a suitable `git log` alias:
 
-    alias gl='git log -10 --pretty=format:"%h %ci %s" | cut -c1-79'
+    alias gl='git log -5 --pretty=format:"%h %ci %s" | \
+       cut -d" " -f1-3,5- | cut -c1-79'
 
 The default VCS used by the create distribution methods can be
 changed from the command line or from the configuration file
