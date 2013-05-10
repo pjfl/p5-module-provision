@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-09 18:13 pjf ;
+# @(#)Ident: Base.pm 2013-05-10 20:46 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 7 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -127,7 +127,7 @@ sub _build__appldir {
 
    my $branch = $self->branch; my $vcs = $self->vcs;
 
-   $self->debug and $self->warning
+   $self->debug and $self->info
       ( "Appbase: ${appbase}, Branch: ${branch}, VCS: ${vcs}" );
 
    return $appbase->catdir( $branch )->exists ? $appbase->catdir( $branch )
@@ -273,7 +273,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.12.$Rev: 5 $ of L<Module::Provision::Base>
+This documents version v0.12.$Rev: 7 $ of L<Module::Provision::Base>
 
 =head1 Description
 
@@ -330,7 +330,13 @@ or C<svn>
 
 =head1 Subroutines/Methods
 
-None
+=head2 chdir
+
+   $directory = $self->chdir( $directory );
+
+Changes the current working directory to the one supplied and returns it.
+Throws if the operation was not successful. Compares C<inode> numbers to
+determine success
 
 =head1 Diagnostics
 
