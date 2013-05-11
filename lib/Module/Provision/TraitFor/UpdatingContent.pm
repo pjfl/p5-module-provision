@@ -1,12 +1,13 @@
-# @(#)Ident: UpdatingContent.pm 2013-05-11 02:03 pjf ;
+# @(#)Ident: UpdatingContent.pm 2013-05-11 02:32 pjf ;
 
 package Module::Provision::TraitFor::UpdatingContent;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
+use Class::Usul::Functions qw(throw);
 
 requires qw(appldir);
 
@@ -55,7 +56,11 @@ sub update_version_post_hook { # Can be modified by applied traits
 }
 
 sub update_version_pre_hook { # Can be modified by applied traits
-   my $self = shift; return @_;
+   my ($self, @args) = @_;
+
+   ($args[ 0 ] and $args[ 1 ]) or throw 'Insufficient arguments';
+
+   return @args;
 }
 
 # Private methods
@@ -116,7 +121,7 @@ Module::Provision::TraitFor::UpdatingContent - Perform search and replace on pro
 
 =head1 Version
 
-This documents version v0.13.$Rev: 2 $ of L<Module::Provision::TraitFor::UpdatingContent>
+This documents version v0.13.$Rev: 3 $ of L<Module::Provision::TraitFor::UpdatingContent>
 
 =head1 Description
 

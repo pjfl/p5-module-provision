@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.13.1    2013-05-11 02:53:29
+0.13.3    2013-05-11 03:48:40
+          - Added _should_add_tag to ::VCS
           - Updated POD, added mission use statement
           - Added release tagging and version number prompting
 
