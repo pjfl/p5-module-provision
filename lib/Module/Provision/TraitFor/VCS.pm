@@ -1,15 +1,16 @@
-# @(#)Ident: VCS.pm 2013-05-11 01:45 pjf ;
+# @(#)Ident: VCS.pm 2013-05-11 01:58 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
 use Class::Usul::Functions qw(throw);
 use Cwd                    qw(getcwd);
 use MooseX::Types::Moose   qw(Bool);
+use Perl::Version;
 
 requires qw(appldir distname vcs);
 
@@ -260,7 +261,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.13.$Rev: 1 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.13.$Rev: 2 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 

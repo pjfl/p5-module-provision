@@ -1,9 +1,9 @@
-# @(#)Ident: UpdatingContent.pm 2013-05-11 00:22 pjf ;
+# @(#)Ident: UpdatingContent.pm 2013-05-11 02:03 pjf ;
 
 package Module::Provision::TraitFor::UpdatingContent;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -116,7 +116,7 @@ Module::Provision::TraitFor::UpdatingContent - Perform search and replace on pro
 
 =head1 Version
 
-This documents version v0.13.$Rev: 1 $ of L<Module::Provision::TraitFor::UpdatingContent>
+This documents version v0.13.$Rev: 2 $ of L<Module::Provision::TraitFor::UpdatingContent>
 
 =head1 Description
 
@@ -153,9 +153,15 @@ files in the F<MANIFEST>
 Substitutes the existing version number for the new version number in all
 files in the F<MANIFEST>
 
+=head2 update_version_pre_hook
+
+   $self->update_version_pre_hook;
+
+Returns it's input args by default. Can be modified by applied traits
+
 =head2 update_version_post_hook
 
-  $self->update_version_post_hook;
+   $self->update_version_post_hook;
 
 Does nothing by default. Can be modified by applied traits
 
