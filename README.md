@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.13.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.13.$Rev: 4 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -27,11 +27,11 @@ This documents version v0.13.$Rev: 1 $ of [Module::Provision](https://metacpan.o
     # Edit the project master file
     mp -q edit_project
 
-    # Update the version numbers of the project files
-    mp update_version 0.1 0.2
-
     # Regenerate meta data files
     mp metadata
+
+    # Update the version numbers of the project files
+    mp update_version 0.1 0.2
 
     # Command line help
     mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -40,13 +40,13 @@ This documents version v0.13.$Rev: 1 $ of [Module::Provision](https://metacpan.o
 
 [Module::Provision](https://metacpan.org/module/Module::Provision) is used to create a skeletal CPAN distribution,
 including basic builder scripts, tests, documentation, and module
-code. It creates a VCS repository and, in the Git case, installs some
-hooks that mimic the RCS Revision keyword expansion
+code. It creates a VCS repository and, with Git as the VCS, installs
+some hooks that mimic the RCS Revision keyword expansion
 
 On first use the directory `~/.module\_provision` is created and
 populated with templates and an index file `index.json`. The author
 name, id, and email are derived from the system (the environment
-variables `AUTHOR` and `EMAIL` take precedence). The can be
+variables `AUTHOR` and `EMAIL` take precedence). They can be
 overridden by the values in the configuration file
 `~/.module\_provision/module\_provision.json`
 
@@ -141,10 +141,11 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 # Configuration and Environment
 
 The configuration file defaults to
-`~/.module\_provision/module\_provision.json`. All of the attributes listed in
-[Module::Provision::Config](https://metacpan.org/module/Module::Provision::Config) can set from the configuration file in addition
-to the attributes listed in [Class::Usul::Config::Programs](https://metacpan.org/module/Class::Usul::Config::Programs) and
-[Class::Usul::Config](https://metacpan.org/module/Class::Usul::Config). A typical file looks like;
+`~/.module\_provision/module\_provision.json`. All of the attributes
+listed in [Module::Provision::Config](https://metacpan.org/module/Module::Provision::Config) can be set from the
+configuration file in addition to the attributes listed in
+[Class::Usul::Config::Programs](https://metacpan.org/module/Class::Usul::Config::Programs) and [Class::Usul::Config](https://metacpan.org/module/Class::Usul::Config). A typical
+file looks like;
 
     {
        "author": "<first_name> <last_name>",
@@ -160,10 +161,10 @@ Creating `logs` and `tmp` directories in `~/.module\_provision` will cause
 the log and temporary files to use them instead of `/tmp`
 
 Extends [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base). Applies these traits;
-`AddingFiles`, `Config`, `CreatingDistributions`, `Rendering`,
+`AddingFiles`, `CreatingDistributions`, `Rendering`,
 `UpdatingContent`, and `VCS`
 
-Defines no attributes
+This class defines no attributes
 
 # Subroutines/Methods
 
@@ -238,7 +239,8 @@ files in the `MANIFEST`
     module_provision update_version 0.1 0.2
 
 Substitutes the existing version number for the new version number in all
-files in the `MANIFEST`
+files in the `MANIFEST`. Prompts for the major/minor and bump if the
+version numbers are not provided
 
 # Diagnostics
 

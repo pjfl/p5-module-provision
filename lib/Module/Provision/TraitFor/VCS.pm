@@ -1,9 +1,9 @@
-# @(#)Ident: VCS.pm 2013-05-11 02:42 pjf ;
+# @(#)Ident: VCS.pm 2013-05-11 03:11 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
@@ -14,6 +14,7 @@ use Perl::Version;
 
 requires qw(appldir distname vcs);
 
+# Public attributes
 has 'no_auto_rev' => is => 'ro', isa => Bool, default => FALSE,
    documentation  => 'Do not turn on Revision keyword expansion';
 
@@ -271,13 +272,30 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.13.$Rev: 3 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.13.$Rev: 4 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
 Interface to Version Control Systems
 
 =head1 Configuration and Environment
+
+Modifies
+L<Module::Provision::TraitFor::CreatingDistributions/dist_post_hook>
+where it initializes the VCS, ignore meta files and resets the
+revision number file
+
+Modifies
+L<Module::Provision::TraitFor::UpdatingContent/substitute_version>
+where it resets the Revision keyword values
+
+Modifies
+L<Module::Provision::TraitFor::UpdatingContent/update_version_pre_hook>
+where it prompts for version numbers and creates tagged releases
+
+Modifies
+L<Module::Provision::TraitFor::UpdatingContent/update_version_post_hook>
+where it resets the revision number file
 
 Requires these attributes to be defined in the consuming class;
 C<appldir>, C<distname>, C<vcs>
