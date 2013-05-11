@@ -1,9 +1,10 @@
-# @(#)Ident: Provision.pm 2013-05-11 02:59 pjf ;
+# @(#)Ident: Provision.pm 2013-05-11 05:50 pjf ;
 
 package Module::Provision;
 
+use 5.01;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Moose;
 
@@ -13,6 +14,7 @@ with    q(Module::Provision::TraitFor::CreatingDistributions);
 with    q(Module::Provision::TraitFor::UpdatingContent);
 with    q(Module::Provision::TraitFor::VCS);
 with    q(Module::Provision::TraitFor::AddingFiles);
+with    q(Module::Provision::TraitFor::PrereqDifferences);
 
 __PACKAGE__->meta->make_immutable;
 
@@ -30,7 +32,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.13.$Rev: 4 $ of L<Module::Provision>
+This documents version v0.14.$Rev: 1 $ of L<Module::Provision>
 
 =head1 Synopsis
 

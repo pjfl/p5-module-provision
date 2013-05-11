@@ -2,7 +2,7 @@
 
 package Module::Provision::Config;
 
-use version; our $VERSION = qv( sprintf '0.13.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Class::Null;
 use Class::Usul::Moose;
@@ -91,7 +91,7 @@ Module::Provision::Config - Attributes set from the config file
 
 =head1 Version
 
-This documents version v0.13.$Rev: 1 $ of L<Module::Provision::Config>
+This documents version v0.14.$Rev: 1 $ of L<Module::Provision::Config>
 
 =head1 Description
 

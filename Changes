@@ -1,5 +1,8 @@
 Revision history for Module::Provision
 
+0.14.1    2013-05-11 09:53:11
+          - Added ::TraitFor::PrereqDifferences
+
 0.13.4    2013-05-11 04:12:04
           - Updated POD
           - Added _should_add_tag to ::VCS
