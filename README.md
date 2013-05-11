@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.14.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.14.$Rev: 2 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -168,6 +168,12 @@ This class defines no attributes
 
 # Subroutines/Methods
 
+## cpan\_upload
+
+    module_provision cpan_upload 'optional_distribution_path'
+
+Uploads the current distribution to CPAN
+
 ## dist
 
     module_provision dist Foo::Bar 'Optional one line abstract'
@@ -205,6 +211,13 @@ Creates a new module specified by the class name on the command line
     module_provision program bar-cli 'Optional one line abstract'
 
 Creates a new program specified by the program name on the command line
+
+## prereq\_diffs
+
+    module_provision prereq_diffs
+
+Displays a report showing which pre-requisite modules should be added to,
+removed from, or updated in the project file
 
 ## prove
 

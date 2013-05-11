@@ -12,8 +12,7 @@ license  '[% license %]';
 perl_version [% perl %];
 
 requires
-   ( 'Class::Usul'     => q(0.18.0),
-     'File::DataClass' => q(0.20.0), );
+   ( 'Class::Usul'     => q(0.19.0), );
 
 recommends
    ( 'App::cpanminus'  => 1.6005, );

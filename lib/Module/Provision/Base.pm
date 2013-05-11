@@ -1,8 +1,8 @@
-# @(#)Ident: Base.pm 2013-05-11 04:40 pjf ;
+# @(#)Ident: Base.pm 2013-05-11 10:28 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Moose;
 use Class::Usul::Constants;
@@ -225,9 +225,9 @@ sub _build__project_file {
 }
 
 sub _build__stash {
-   my $self = shift; my $config = $self->config;
+   my $self = shift; my $config = $self->config; my $author = $config->author;
 
-   my $author = $config->author; my $project = $self->project;
+   my $project = $self->project; my $perl_ver = $self->config->min_perl_ver;
 
    return { abstract       => $self->module_abstract,
             appdir         => class2appdir $self->distname,
@@ -246,9 +246,11 @@ sub _build__stash {
             license        => $self->license,
             license_class  => $self->_license_keys->{ $self->license },
             module         => $project,
-            perl           => $],
+            perl           => $perl_ver,
             prefix         => (split m{ :: }mx, lc $project)[ -1 ],
-            project        => $project, };
+            project        => $project,
+            use_perl       => $self->method eq 'dist'
+                            ? "use ${perl_ver};" : q(), };
 }
 
 sub _build_vcs {
@@ -310,7 +312,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.14.$Rev: 1 $ of L<Module::Provision::Base>
+This documents version v0.14.$Rev: 2 $ of L<Module::Provision::Base>
 
 =head1 Description
 
