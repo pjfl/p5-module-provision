@@ -1,10 +1,10 @@
-# @(#)Ident: Provision.pm 2013-05-11 13:55 pjf ;
+# @(#)Ident: Provision.pm 2013-05-11 16:14 pjf ;
 
 package Module::Provision;
 
 use 5.01;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Moose;
 
@@ -33,7 +33,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.14.$Rev: 2 $ of L<Module::Provision>
+This documents version v0.14.$Rev: 3 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -197,12 +197,6 @@ This class defines no attributes
 
 =head1 Subroutines/Methods
 
-=head2 cpan_upload
-
-   module_provision cpan_upload 'optional_distribution_path'
-
-Uploads the current distribution to CPAN
-
 =head2 dist
 
    module_provision dist Foo::Bar 'Optional one line abstract'
@@ -283,6 +277,12 @@ files in the F<MANIFEST>
 Substitutes the existing version number for the new version number in all
 files in the F<MANIFEST>. Prompts for the major/minor and bump if the
 version numbers are not provided
+
+=head2 upload
+
+   module_provision upload 'optional_distribution_path'
+
+Uploads the current distribution to CPAN
 
 =head1 Diagnostics
 

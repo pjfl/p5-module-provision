@@ -1,16 +1,16 @@
-# @(#)Ident: UploadingToCPAN.pm 2013-05-11 13:53 pjf ;
+# @(#)Ident: UploadingToCPAN.pm 2013-05-11 16:13 pjf ;
 
 package Module::Provision::TraitFor::UploadingToCPAN;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
 use Class::Usul::Functions qw(throw);
 
 # Public methods
-sub cpan_upload : method {
+sub upload : method {
    my $self = shift; my $args = $self->_read_pauserc;
 
    my $file = shift @{ $self->extra_argv }
@@ -60,7 +60,7 @@ Module::Provision::TraitFor::UploadingToCPAN - Uploads distributions to CPAN
 
 =head1 Version
 
-This documents version v0.14.$Rev: 2 $ of
+This documents version v0.14.$Rev: 3 $ of
 L<Module::Provision::TraitFor::UploadingToCPAN>
 
 =head1 Description
@@ -75,9 +75,9 @@ Defines no attributes
 
 =head1 Subroutines/Methods
 
-=head2 cpan_upload
+=head2 upload
 
-   $exit_code = $self->cpan_upload;
+   $exit_code = $self->upload;
 
 Uploads a distribution to CPAN
 
