@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.14.$Rev: 3 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.15.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -168,6 +168,12 @@ This class defines no attributes
 
 # Subroutines/Methods
 
+## cpan\_upload
+
+    module_provision cpan_upload 'optional_distribution_path'
+
+Uploads the current distribution to CPAN
+
 ## dist
 
     module_provision dist Foo::Bar 'Optional one line abstract'
@@ -248,12 +254,6 @@ files in the `MANIFEST`
 Substitutes the existing version number for the new version number in all
 files in the `MANIFEST`. Prompts for the major/minor and bump if the
 version numbers are not provided
-
-## upload
-
-    module_provision upload 'optional_distribution_path'
-
-Uploads the current distribution to CPAN
 
 # Diagnostics
 

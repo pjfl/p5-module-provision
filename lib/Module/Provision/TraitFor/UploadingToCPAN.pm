@@ -1,42 +1,45 @@
-# @(#)Ident: UploadingToCPAN.pm 2013-05-11 16:13 pjf ;
+# @(#)Ident: UploadingToCPAN.pm 2013-05-12 16:07 pjf ;
 
 package Module::Provision::TraitFor::UploadingToCPAN;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.14.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.15.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
 use Class::Usul::Functions qw(throw);
 
 # Public methods
-sub upload : method {
-   my $self = shift; my $args = $self->_read_pauserc;
-
+sub cpan_upload : method {
+   my $self = shift;
    my $file = shift @{ $self->extra_argv }
            || $self->distname.'-v'.$self->dist_version.'.tar.gz';
 
-   $self->ensure_class_loaded( q(CPAN::Uploader) );
+   -f $file or throw error => 'File [_1] not found', args => [ $file ];
 
-   $args->{subdir} = lc $self->distname;
+   my $args = $self->_read_pauserc; $args->{subdir} = lc $self->distname;
+
+   $self->ensure_class_loaded( 'CPAN::Uploader' );
+
    exists $args->{dry_run} or $args->{dry_run}
       = not $self->yorn( 'Really upload to CPAN', FALSE, TRUE, 0 );
+
    CPAN::Uploader->upload_file( $file, $args );
    return OK;
 }
 
 # Private methods
 sub _read_pauserc {
-   my $self = shift; my $dir = $self->config->my_home; my $args = {};
+   my $self = shift; my $dir = $self->config->my_home; my $attr = {};
 
    for ($self->io( [ $dir, q(.pause) ] )->chomp->getlines) {
       ($_ and $_ !~ m{ \A \s* \# }mx) or next;
       my ($k, $v) = m{ \A \s* (\w+) \s+ (.+) \z }mx;
-      exists $args->{ $k } and throw "Multiple enties for ${k}";
-      $args->{ $k } = $v;
+      exists $attr->{ $k } and throw "Multiple enties for ${k}";
+      $attr->{ $k } = $v;
    }
 
-   return $args;
+   return $attr;
 }
 
 1;
@@ -60,7 +63,7 @@ Module::Provision::TraitFor::UploadingToCPAN - Uploads distributions to CPAN
 
 =head1 Version
 
-This documents version v0.14.$Rev: 3 $ of
+This documents version v0.15.$Rev: 2 $ of
 L<Module::Provision::TraitFor::UploadingToCPAN>
 
 =head1 Description
@@ -75,9 +78,9 @@ Defines no attributes
 
 =head1 Subroutines/Methods
 
-=head2 upload
+=head2 cpan_upload
 
-   $exit_code = $self->upload;
+   $exit_code = $self->cpan_upload;
 
 Uploads a distribution to CPAN
 
