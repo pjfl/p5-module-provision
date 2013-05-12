@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.15.$Rev: 3 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.15.$Rev: 4 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -230,6 +230,14 @@ removed from, or updated in the project file
     module_provision prove
 
 Runs the projects tests
+
+## set\_cpan\_password
+
+    module_provision set_cpan_password your_PAUSE_server_password
+
+Sets the password used to connect to the PAUSE server. Once used the
+command line program `cpan-upload` will not work since it cannot
+decrypt the password in the configuration file `~/.pause`
 
 ## show\_tab\_title
 
