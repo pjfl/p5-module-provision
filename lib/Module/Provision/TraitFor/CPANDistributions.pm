@@ -1,19 +1,21 @@
-# @(#)Ident: CPANDistributions.pm 2013-05-12 23:13 pjf ;
+# @(#)Ident: CPANDistributions.pm 2013-05-13 16:52 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.15.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.15.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Crypt::Util qw(decrypt_from_config encrypt_for_config
-                                is_encrypted);
-use Class::Usul::Functions   qw(throw);
-use English                  qw(-no_match_vars);
-use HTTP::Request::Common    qw(POST);
+use Class::Usul::Crypt::Util      qw(decrypt_from_config encrypt_for_config
+                                     is_encrypted);
+use Class::Usul::Functions        qw(throw);
+use English                       qw(-no_match_vars);
+use HTTP::Request::Common         qw(POST);
 use HTTP::Status;
 use MooseX::Types::Common::String qw(NonEmptySimpleStr);
+
+requires qw(distname dist_version);
 
 # Private attributes
 has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
@@ -29,24 +31,26 @@ sub cpan_upload : method {
 
    -f $file or throw error => 'File [_1] not found', args => [ $file ];
 
-   my $args = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
-
    $self->ensure_class_loaded( 'CPAN::Uploader' );
 
-   exists $args->{dry_run} or $args->{dry_run}
-      = not $self->yorn( 'Really upload to CPAN', FALSE, TRUE, 0 );
+   my $args   = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
+   my $prompt = $self->add_leader( 'Really upload to CPAN' );
+
+   exists $args->{dry_run}
+       or $args->{dry_run} = not $self->yorn( $prompt, FALSE, TRUE, 0 );
 
    CPAN::Uploader->upload_file( $file, $args );
    return OK;
 }
 
 sub delete_cpan_files : method {
-   my $self  = shift;
-   my $args  = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
-   my $files = $self->_convert_versions_to_paths( $self->extra_argv, $args );
+   my $self   = shift;
+   my $args   = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
+   my $files  = $self->_convert_versions_to_paths( $self->extra_argv, $args );
+   my $prompt = $self->add_leader( 'Really delete files from CPAN' );
 
-   exists $args->{dry_run} or $args->{dry_run}
-      = not $self->yorn( 'Really delete files from CPAN', FALSE, TRUE, 0 );
+   exists $args->{dry_run}
+       or $args->{dry_run} = not $self->yorn( $prompt, FALSE, TRUE, 0 );
 
    if ($args->{dry_run}) {
       $self->output( 'By request, cowardly refusing to do anything at all' );
@@ -82,9 +86,9 @@ sub _convert_versions_to_paths {
    my $subdir   = $args->{subdir} ? $args->{subdir}.'/' : q();
 
    for my $version (@{ $versions || [] }) {
-      push @{ $paths }, "${subdir}${distname}-${version}.meta";
-      push @{ $paths }, "${subdir}${distname}-${version}.readme";
-      push @{ $paths }, "${subdir}${distname}-${version}.tar.gz";
+      for my $extn (qw(meta readme tar.gz)) {
+         push @{ $paths }, "${subdir}${distname}-${version}.${extn}";
+      }
    }
 
    return $paths;
@@ -143,9 +147,9 @@ sub _read_pauserc {
 
    for ($self->io( [ $dir, q(.pause) ] )->chomp->getlines) {
       ($_ and $_ !~ m{ \A \s* \# }mx) or next;
-      my ($k, $v) = m{ \A \s* (\w+) \s+ (.+) \z }mx;
+      my ($k, $v) = m{ \A \s* (\w+) (?: \s+ (.+))? \z }mx;
       exists $attr->{ $k } and throw "Multiple enties for ${k}";
-      $attr->{ $k } = $v;
+      $attr->{ $k } = $v || q();
    }
 
    my $pword; exists $attr->{password}
@@ -162,11 +166,13 @@ sub _throw_on_error {
       or throw "Request completely failed - we got undef back: ${OS_ERROR}";
 
    if ($response->is_error) {
+      my $class = blessed $self || $self;
+
       $response->code == RC_NOT_FOUND
          and throw "PAUSE's CGI for handling messages seems to have moved!\n".
                    "(HTTP response code of 404 from the ${target}".
                    " web server)\nIt used to be: ${uri}\n".
-                   "Please inform the maintainer of ${self}.\n";
+                   "Please inform the maintainer of ${class}\n";
 
       throw "Request failed with error code ".$response->code.
             "\n  Message: ".$response->message."\n";
@@ -178,9 +184,9 @@ sub _throw_on_error {
 }
 
 sub _ua_string {
-  my $class = blessed $_[ 0 ] || $_[ 0 ]; my $ver = $class->VERSION // 'dev';
+   my $class = blessed $_[ 0 ] || $_[ 0 ]; my $ver = $class->VERSION // 'dev';
 
-  return "${class}/${ver}";
+   return "${class}/${ver}";
 }
 
 sub _write_pauserc {
@@ -216,7 +222,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.15.$Rev: 4 $ of
+This documents version v0.15.$Rev: 5 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description
