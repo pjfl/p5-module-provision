@@ -1,9 +1,9 @@
-# @(#)Ident: Build.PL 2013-06-22 19:58 pjf ;
+# @(#)Ident: Build.PL 2013-06-25 15:39 pjf ;
 
 use strict;
 use warnings;
 use inc::Bob; # Module::Build subclass
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 Bob->new( {
    module    => q(Module::Provision),
@@ -23,7 +23,7 @@ Bob->new( {
       'File::Slurp'           => 9999.13,
       'HTTP::Message'         => 6.06,
       'LWP::Protocol::https'  => 6.03,
-      'LWP::UserAgent'        => 6.04,
+      'LWP'                   => 6.04,
       'Module::Install'       => 1.06,
       'Module::Install::AutoLicense'           => 0.08,
       'Module::Install::ReadmeFromPod'         => 0.20,
