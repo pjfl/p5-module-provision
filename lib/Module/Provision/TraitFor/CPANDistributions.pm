@@ -1,26 +1,26 @@
-# @(#)Ident: CPANDistributions.pm 2013-05-13 16:52 pjf ;
+# @(#)Ident: CPANDistributions.pm 2013-06-22 19:56 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Crypt::Util      qw(decrypt_from_config encrypt_for_config
-                                     is_encrypted);
-use Class::Usul::Functions        qw(throw);
-use English                       qw(-no_match_vars);
-use HTTP::Request::Common         qw(POST);
+use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
+                                 is_encrypted );
+use Class::Usul::Functions   qw( throw );
+use English                  qw( -no_match_vars );
+use HTTP::Request::Common    qw( POST );
 use HTTP::Status;
-use MooseX::Types::Common::String qw(NonEmptySimpleStr);
+use Moo::Role;
+use Unexpected::Types        qw( NonEmptySimpleStr );
 
-requires qw(distname dist_version);
+requires qw( add_leader config debug distname dist_version dumper
+             ensure_class_loaded extra_argv info io loc log output yorn );
 
 # Private attributes
 has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
-   builder               => '_build__debug_http_method', init_arg => undef,
-   reader                => 'debug_http_method';
+   builder               => '_build__debug_http_method', init_arg => undef;
 
 # Public methods
 sub cpan_upload : method {
@@ -29,12 +29,12 @@ sub cpan_upload : method {
    if ($ver) { $file = $self->distname."-${ver}.tar.gz" }
    else { $file = $self->distname.'-v'.$self->dist_version.'.tar.gz' }
 
-   -f $file or throw error => 'File [_1] not found', args => [ $file ];
+   -f $file or throw $self->loc( 'File [_1] not found', $file );
 
    $self->ensure_class_loaded( 'CPAN::Uploader' );
 
    my $args   = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
-   my $prompt = $self->add_leader( 'Really upload to CPAN' );
+   my $prompt = $self->add_leader( $self->loc( 'Really upload to CPAN' ) );
 
    exists $args->{dry_run}
        or $args->{dry_run} = not $self->yorn( $prompt, FALSE, TRUE, 0 );
@@ -47,7 +47,8 @@ sub delete_cpan_files : method {
    my $self   = shift;
    my $args   = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
    my $files  = $self->_convert_versions_to_paths( $self->extra_argv, $args );
-   my $prompt = $self->add_leader( 'Really delete files from CPAN' );
+   my $prompt = $self->loc( 'Really delete files from CPAN' );
+      $prompt = $self->add_leader( $prompt );
 
    exists $args->{dry_run}
        or $args->{dry_run} = not $self->yorn( $prompt, FALSE, TRUE, 0 );
@@ -66,7 +67,8 @@ sub delete_cpan_files : method {
 sub set_cpan_password : method {
    my $self  = shift;
    my $args  = $self->_read_pauserc;
-   my $pword = shift @{ $self->extra_argv } or throw 'No password';
+   my $pword = shift @{ $self->extra_argv }
+      or throw $self->loc( 'No password' );
 
    $args->{password} = encrypt_for_config( $self->config, $pword );
    $self->_write_pauserc( $args );
@@ -97,7 +99,8 @@ sub _convert_versions_to_paths {
 sub _delete_files {
    my ($self, $files, $args) = @_; my $target = $args->{target} || 'PAUSE';
 
-   $self->info( "Registering to delete files with ${target} web server" );
+   $self->info( 'Registering to delete files with the [_1] web server',
+                { args => [ $target ] } );
    $self->ensure_class_loaded( 'LWP::UserAgent' );
 
    my $agent   = LWP::UserAgent->new;
@@ -108,7 +111,7 @@ sub _delete_files {
    my $uri     = $args->{delete_files_uri} || $self->config->delete_files_uri;
    my $request = $self->_get_delete_request( $files, $args, $uri );
 
-   $self->info( "POSTing delete files request to ${uri}" );
+   $self->info( 'POSTing delete files request to [_1]', { args => [ $uri ] } );
    $self->_throw_on_error( $uri, $target, $agent->request( $request ) );
    return;
 }
@@ -133,7 +136,7 @@ sub _get_delete_request {
 sub _log_http_debug {
    my ($self, $type, $obj, $msg) = @_; $self->debug or return;
 
-   my $method = $self->debug_http_method;
+   my $method = $self->_debug_http_method;
 
    $self->log->debug( $_ ) for ( $msg ? $msg : (),
                                  "----- ${type} BEGIN -----\n",
@@ -147,8 +150,11 @@ sub _read_pauserc {
 
    for ($self->io( [ $dir, q(.pause) ] )->chomp->getlines) {
       ($_ and $_ !~ m{ \A \s* \# }mx) or next;
+
       my ($k, $v) = m{ \A \s* (\w+) (?: \s+ (.+))? \z }mx;
-      exists $attr->{ $k } and throw "Multiple enties for ${k}";
+
+      exists $attr->{ $k }
+         and throw $self->loc( 'Multiple enties for [_1]', $k );
       $attr->{ $k } = $v || q();
    }
 
@@ -162,29 +168,32 @@ sub _read_pauserc {
 sub _throw_on_error {
    my ($self, $uri, $target, $response) = @_;
 
-   defined $response
-      or throw "Request completely failed - we got undef back: ${OS_ERROR}";
+   defined $response or throw $self->loc
+      ( 'Request completely failed - we got undef back: [_1]', $OS_ERROR );
 
    if ($response->is_error) {
       my $class = blessed $self || $self;
 
-      $response->code == RC_NOT_FOUND
-         and throw "PAUSE's CGI for handling messages seems to have moved!\n".
-                   "(HTTP response code of 404 from the ${target}".
-                   " web server)\nIt used to be: ${uri}\n".
-                   "Please inform the maintainer of ${class}\n";
+      $response->code == RC_NOT_FOUND and throw $self->loc
+         (  "PAUSE's CGI for handling messages seems to have moved!\n".
+            "(HTTP response code of 404 from the [_1] web server)\n".
+            "It used to be: [_2]\nPlease inform the maintainer of [_3]\n",
+            $target, $uri, $class );
 
-      throw "Request failed with error code ".$response->code.
-            "\n  Message: ".$response->message."\n";
+      throw $self->loc( "Request failed error code [_1]\n  Message: [_2]\n",
+                        $response->code, $response->message );
    }
 
    $self->_log_http_debug( 'RESPONSE', $response, 'Looks OK!' );
-   $self->info( "${target} delete request sent ok [".$response->code."]" );
+   $self->info( '[_1] delete request sent ok [[_2]]',
+                { args => [ $target, $response->code ] } );
    return;
 }
 
 sub _ua_string {
-   my $class = blessed $_[ 0 ] || $_[ 0 ]; my $ver = $class->VERSION // 'dev';
+   my $self  = shift;
+   my $class = blessed $self || $self;
+   my $ver   = $class->VERSION // 'dev';
 
    return "${class}/${ver}";
 }
@@ -194,7 +203,7 @@ sub _write_pauserc {
 
    my $file = $self->io( [ $self->config->my_home, q(.pause) ] );
 
-   $attr or throw "No data in write to ${file}";
+   $attr or throw $self->loc( 'No data in write to [_1]', $file );
 
    $file->println( "${_} ".$attr->{ $_ } ) for (sort keys %{ $attr });
 
@@ -222,7 +231,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of
+This documents version v0.16.$Rev: 3 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description
@@ -275,7 +284,7 @@ None
 
 =item L<Moose::Role>
 
-=item L<MooseX::Types::Common>
+=item L<Unexpected>
 
 =back
 

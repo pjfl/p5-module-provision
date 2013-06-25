@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# @(#)Ident: module_provision 2013-04-29 20:47 pjf ;
+# @(#)Ident: module-provision 2013-06-21 22:27 pjf ;
 
 use strict;
 use warnings;
@@ -17,22 +17,22 @@ __END__
 
 =head1 NAME
 
-module_provision - Create new Perl distributions
+module-provision - Create new Perl distributions
 
 =head1 SYNOPSIS
 
 =over 3
 
-=item B<module_provision> B<dist> I<Your::Distribution>
+=item B<module-provision> B<dist> I<Your::Distribution>
 
 Creates a new distribution with a C<git> repository and a
 L<Module::Build> toolchain
 
-=item B<module_provision> B<-H> | B<-h> I<[method]> | B<-?>
+=item B<module-provision> B<-H> | B<-h> I<method> | B<-h> | B<-?>
 
-Display man page / method help  / usage strings
+Display man page / method help / option descriptions / usage strings
 
-=item B<module_provision> B<list_methods>
+=item B<module-provision> B<list_methods>
 
 Lists the methods available in this program
 
@@ -60,9 +60,49 @@ The package name of the new distribution to create
 
 =over 3
 
-=item B<-D>
+=item B<-c> I<method>
 
-Turn debugging on
+Name of method to call. Required, can be first non option argument
+
+=item B<-D        >
+
+Turn debugging on. Promps if interactive
+
+=item B<--encoding>
+
+Decodes/encodes input/output using the value. Defaults to I<UTF-8>
+
+=item B<-h        >
+
+Uses Pod::Usage to describe the program usage options
+
+=item B<-H        >
+
+Uses Pod::Man to display the program documentation. Pipes through C<nroff>
+
+=item B<--home    >
+
+Directory containing the configuration file
+
+=item B<-L        >
+
+Loads the specified language message catalog
+
+=item B<-n        >
+
+Do not prompt for debugging
+
+=item B<-o        >
+
+Zero, one or more key/value pairs passed to the method call
+
+=item B<-q        >
+
+Quiet the display of information messages
+
+=item B<-V        >
+
+Displays the version number of the program class
 
 =back
 

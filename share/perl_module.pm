@@ -1,17 +1,15 @@
-# @(#)Ident: perl_module.pm 2013-05-11 10:18 pjf ;
+# @(#)Ident: perl_module.pm 2013-06-21 19:01 pjf ;
 
 package [% module %];
 
 [% use_perl %]
 use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
-use Class::Usul::Moose;
 use Class::Usul::Constants;
 use Class::Usul::Functions qw(throw);
+use Moo;
 
 extends qw(Class::Usul::Programs);
-
-__PACKAGE__->meta->make_immutable;
 
 1;
 

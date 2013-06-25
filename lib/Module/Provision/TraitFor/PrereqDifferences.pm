@@ -1,15 +1,18 @@
-# @(#)Ident: PrereqDifferences.pm 2013-06-06 15:17 pjf ;
+# @(#)Ident: PrereqDifferences.pm 2013-06-22 17:49 pjf ;
 
 package Module::Provision::TraitFor::PrereqDifferences;
 
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Functions qw(classfile is_member emit throw);
-use English                qw(-no_match_vars);
+use Class::Usul::Functions  qw( classfile is_member emit throw );
+use English                 qw( -no_match_vars );
 use Module::Metadata;
+use Moo::Role;
+
+requires qw( appldir builder chdir debug ensure_class_loaded extra_argv
+             get_meta io libdir output project_file run_cmd );
 
 # Public methods
 sub prereq_diffs : method {
@@ -304,7 +307,7 @@ Module::Provision::TraitFor::PrereqDifferences - Displays a prerequisite differe
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of
+This documents version v0.16.$Rev: 3 $ of
 L<Module::Provision::TraitFor::PrereqDifferences>
 
 =head1 Description

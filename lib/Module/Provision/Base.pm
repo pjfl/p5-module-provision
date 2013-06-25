@@ -1,122 +1,111 @@
-# @(#)Ident: Base.pm 2013-05-23 22:00 pjf ;
+# @(#)Ident: Base.pm 2013-06-23 23:29 pjf ;
 
 package Module::Provision::Base;
 
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Class::Usul::Moose;
 use Class::Usul::Constants;
-use Class::Usul::Functions       qw(app_prefix class2appdir classdir distname
-                                    throw);
-use Class::Usul::Time            qw(time2str);
-use Cwd                          qw(getcwd);
-use English                      qw(-no_match_vars);
-use File::DataClass::Constraints qw(Directory OctalNum Path);
+use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
+                                throw );
+use Class::Usul::Time       qw( time2str );
+use Cwd                     qw( getcwd );
+use English                 qw( -no_match_vars );
+use File::DataClass::Types  qw( Directory HashRef NonEmptySimpleStr
+                                Object OctalNum Path PositiveInt );
 use Module::Metadata;
+use Moo;
+use MooX::Options;
 use Perl::Version;
+use Type::Utils             qw( enum );
 
 extends q(Class::Usul::Programs);
 
-enum __PACKAGE__.'::Builder' => qw(DZ MB MI);
-enum __PACKAGE__.'::VCS'     => qw(git none svn);
-
-MooseX::Getopt::OptionTypeMap->add_option_type_to_map( Path, '=s' );
-
-my %builders = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', 'MI' => 'Makefile.PL');
+my %BUILDERS = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', 'MI' => 'Makefile.PL');
+my $BUILDER  = enum 'Builder' => [ qw( DZ MB MI ) ];
+my $VCS      = enum 'VCS'     => [ qw( git none svn ) ];
 
 # Override defaults in base class
 has '+config_class' => default => sub { 'Module::Provision::Config' };
 
 # Object attributes (public)
 #   Visible to the command line
-has 'base'       => is => 'lazy', isa => Path, coerce => TRUE,
-   documentation => 'Directory containing new projects',
-   default       => sub { $_[ 0 ]->config->base };
+option 'base'       => is => 'lazy', isa => Path, format => 's',
+   documentation    => 'Directory containing new projects',
+   coerce           => Path->coercion, default => sub { $_[ 0 ]->config->base };
 
-has 'branch'     => is => 'lazy', isa => NonEmptySimpleStr,
-   documentation => 'The name of the initial branch to create';
+option 'branch'     => is => 'lazy', isa => NonEmptySimpleStr, format => 's',
+   documentation    => 'The name of the initial branch to create';
 
-has 'builder'    => is => 'lazy', isa => __PACKAGE__.'::Builder',
-   documentation => 'Which build system to use: DZ, MB, or MI';
+option 'builder'    => is => 'lazy', isa => $BUILDER, format => 's',
+   documentation    => 'Which build system to use: DZ, MB, or MI';
 
-has 'license'    => is => 'ro',   isa => NonEmptySimpleStr,
-   documentation => 'License used for the project',
-   default       => sub { $_[ 0 ]->config->license };
+option 'license'    => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
+   documentation    => 'License used for the project',
+   default          => sub { $_[ 0 ]->config->license };
 
-has 'perms'      => is => 'ro',   isa => OctalNum, coerce => TRUE,
-   documentation => 'Default permission for file / directory creation',
-   default       => '640';
+option 'perms'      => is => 'ro',   isa => OctalNum, format => 'i',
+   documentation    => 'Default permission for file / directory creation',
+   coerce           => OctalNum->coercion, default => '640';
 
-has 'project'    => is => 'lazy', isa => NonEmptySimpleStr,
-   documentation => 'Package name of the new projects main module';
+option 'project'    => is => 'lazy', isa => NonEmptySimpleStr, format => 's',
+   documentation    => 'Package name of the new projects main module';
 
-has 'repository' => is => 'ro',   isa => NonEmptySimpleStr,
-   documentation => 'Directory containing the SVN repository',
-   default       => sub { $_[ 0 ]->config->repository };
+option 'repository' => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
+   documentation    => 'Directory containing the SVN repository',
+   default          => sub { $_[ 0 ]->config->repository };
 
-has 'vcs'        => is => 'lazy', isa => __PACKAGE__.'::VCS',
-   documentation => 'Which VCS to use: git, none, or svn';
+option 'vcs'        => is => 'lazy', isa => $VCS, format => 's',
+   documentation    => 'Which VCS to use: git, none, or svn';
 
 #   Ingnored by the command line
-has '_appbase'         => is => 'lazy', isa => Path, coerce => TRUE,
-   reader              => 'appbase';
+has 'appbase'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
-has '_appldir'         => is => 'lazy', isa => Path, coerce => TRUE,
-   reader              => 'appldir';
+has 'appldir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
-has '_binsdir'         => is => 'lazy', isa => Path, coerce => TRUE,
-   default             => sub { [ $_[ 0 ]->appldir, 'bin' ] },
-   reader              => 'binsdir';
+has 'binsdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
+   default            => sub { [ $_[ 0 ]->appldir, 'bin' ] };
 
-has '_dist_module'     => is => 'lazy', isa => Path, coerce => TRUE,
-   default             => sub { [ $_[ 0 ]->homedir.'.pm' ] },
-   reader              => 'dist_module';
+has 'dist_module'     => is => 'lazy', isa => Path, coerce => Path->coercion,
+   default            => sub { [ $_[ 0 ]->homedir.'.pm' ] };
 
-has '_dist_version'    => is => 'lazy', isa => Object,
-   reader              => 'dist_version';
+has 'dist_version'    => is => 'lazy', isa => Object;
 
-has '_distname'        => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => sub { distname $_[ 0 ]->project },
-   reader              => 'distname';
+has 'distname'        => is => 'lazy', isa => NonEmptySimpleStr,
+   default            => sub { distname $_[ 0 ]->project };
 
-has '_exec_perms'      => is => 'lazy', isa => PositiveInt,
-   reader              => 'exec_perms';
+has 'exec_perms'      => is => 'lazy', isa => PositiveInt;
 
-has '_homedir'         => is => 'lazy', isa => Path, coerce => TRUE,
-   reader              => 'homedir';
+has 'homedir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
-has '_incdir'          => is => 'lazy', isa => Path, coerce => TRUE,
-   default             => sub { [ $_[ 0 ]->appldir, 'inc' ] },
-   reader              => 'incdir';
+has 'incdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
+   default            => sub { [ $_[ 0 ]->appldir, 'inc' ] };
 
-has '_initial_wd'      => is => 'ro',   isa => Directory, coerce => TRUE,
-   default             => sub { [ getcwd ] }, reader => 'initial_wd';
+has 'initial_wd'      => is => 'ro',   isa => Directory,
+   coerce             => Directory->coercion, default => sub { [ getcwd ] };
 
-has '_libdir'          => is => 'lazy', isa => Path, coerce => TRUE,
-   default             => sub { [ $_[ 0 ]->appldir, 'lib' ] },
-   reader              => 'libdir';
+has 'libdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
+   default            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
 
-has '_module_abstract' => is => 'lazy', isa => NonEmptySimpleStr,
-   reader              => 'module_abstract';
+has 'module_abstract' => is => 'lazy', isa => NonEmptySimpleStr;
 
-has '_project_file'    => is => 'lazy', isa => NonEmptySimpleStr,
-   reader              => 'project_file';
+has 'project_file'    => is => 'lazy', isa => NonEmptySimpleStr;
 
-has '_stash'           => is => 'lazy', isa => HashRef, reader => 'stash';
+has 'stash'           => is => 'lazy', isa => HashRef;
 
-has '_testdir'         => is => 'lazy', isa => Path, coerce => TRUE,
-   default             => sub { [ $_[ 0 ]->appldir, 't' ] },
-   reader              => 'testdir';
+has 'testdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
+   default            => sub { [ $_[ 0 ]->appldir, 't' ] };
 
 # Object attributes (private)
-has '_license_keys'    => is => 'lazy', isa => HashRef;
+has '_license_keys'   => is => 'lazy', isa => HashRef;
 
 # Public methods
 sub chdir {
-   my ($self, $dir) = @_; $dir or throw 'Directory not specified in chdir';
+   my ($self, $dir) = @_;
 
-   chdir $dir or throw error => 'Directory [_1] cannot chdir: [_2]',
-                        args  => [ $dir, $OS_ERROR ];
+         $dir or throw $self->loc( 'Directory not specified in chdir' );
+   chdir $dir or throw $self->loc( 'Directory [_1] cannot chdir: [_2]',
+                                   $dir, $OS_ERROR );
    return $dir;
 }
 
@@ -130,13 +119,13 @@ sub get_manifest_paths {
 }
 
 # Private methods
-sub _build__appbase {
+sub _build_appbase {
    my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
 
    return $base->catdir( $self->distname );
 }
 
-sub _build__appldir {
+sub _build_appldir {
    my $self   = shift; my $appbase = $self->appbase;
 
    my $branch = $self->branch; my $vcs = $self->vcs;
@@ -160,14 +149,14 @@ sub _build_builder {
    my $self = shift; my $appldir = $self->appldir;
 
    for (grep { $_->[ 1 ]->exists }
-        map  { [ $_, $appldir->catfile( $builders{ $_ } ) ] } keys %builders) {
+        map  { [ $_, $appldir->catfile( $BUILDERS{ $_ } ) ] } keys %BUILDERS) {
       return $_->[ 0 ];
    }
 
    return undef;
 }
 
-sub _build__dist_version {
+sub _build_dist_version {
    my $self   = shift;
    my $module = $self->dist_module->abs2rel( $self->appldir );
    my $info   = Module::Metadata->new_from_file( $module );
@@ -175,11 +164,11 @@ sub _build__dist_version {
    return Perl::Version->new( $info ? $info->version : '0.1.1' );
 }
 
-sub _build__exec_perms {
+sub _build_exec_perms {
    return (($_[ 0 ]->perms & oct q(0444)) >> 2) | $_[ 0 ]->perms;
 }
 
-sub _build__homedir {
+sub _build_homedir {
    return [ $_[ 0 ]->libdir, classdir $_[ 0 ]->project ];
 }
 
@@ -197,7 +186,7 @@ sub _build__license_keys {
       mozilla    => [ map { "Mozilla_$_" } qw(1_0 1_1) ], };
 }
 
-sub _build__module_abstract {
+sub _build_module_abstract {
    return $_[ 0 ]->loc( $_[ 0 ]->config->module_abstract );
 }
 
@@ -206,23 +195,23 @@ sub _build_project {
 
    while (not $prev or $prev ne $dir) {
       for my $file (grep { $_->exists }
-                    map  { $dir->catfile( $builders{ $_ } ) } keys %builders) {
+                    map  { $dir->catfile( $BUILDERS{ $_ } ) } keys %BUILDERS) {
          $project = __get_module_from( $file->all ) and return $project;
-         throw error => 'File [_1] contains no module name', args => [ $file ];
+         throw $self->loc( 'File [_1] contains no module name', $file );
       }
 
       $prev = $dir; $dir = $dir->parent;
    }
 
-   throw error => 'Path [_1] contains no project files', args => [ $dir ];
+   throw $self->loc( 'Path [_1] contains no project files', $dir );
    return; # Never reached
 }
 
-sub _build__project_file {
-   return $builders{ $_[ 0 ]->builder };
+sub _build_project_file {
+   return $BUILDERS{ $_[ 0 ]->builder };
 }
 
-sub _build__stash {
+sub _build_stash {
    my $self = shift; my $config = $self->config; my $author = $config->author;
 
    my $project = $self->project; my $perl_ver = $self->config->min_perl_ver;
@@ -288,8 +277,6 @@ sub __parse_manifest_line { # Robbed from ExtUtils::Manifest
    return [ $file, $comment ];
 }
 
-__PACKAGE__->meta->make_immutable;
-
 1;
 
 __END__
@@ -310,7 +297,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of L<Module::Provision::Base>
+This documents version v0.16.$Rev: 3 $ of L<Module::Provision::Base>
 
 =head1 Description
 
@@ -338,6 +325,14 @@ Git and F<trunk> for SVN
 Which of the three build systems to use. Defaults to C<MB>, which is
 L<Module::Build>. Can be C<DZ> for L<Dist::Zilla> or C<MI> for
 L<Module::Install>
+
+=item C<config_class>
+
+The name of the configuration class
+
+=item C<initial_wd>
+
+The working directory when the command was invoked
 
 =item C<license>
 

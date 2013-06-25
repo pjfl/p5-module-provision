@@ -1,16 +1,16 @@
-# @(#)Ident: AddingFiles.pm 2013-05-04 17:19 pjf ;
+# @(#)Ident: AddingFiles.pm 2013-06-22 18:26 pjf ;
 
 package Module::Provision::TraitFor::AddingFiles;
 
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Functions qw(classfile throw);
+use Class::Usul::Functions  qw( classfile throw );
+use Moo::Role;
 
-requires qw(add_to_vcs appldir binsdir exec_perms libdir module_abstract
-            render_template stash testdir);
+requires qw( add_to_vcs appldir binsdir exec_perms extra_argv libdir loc method
+             module_abstract output project render_template stash testdir );
 
 # Construction
 around 'generate_metadata' => sub {
@@ -26,7 +26,7 @@ around 'generate_metadata' => sub {
 sub module : method {
    my $self = shift; my $target = $self->_get_target( 'libdir', \&classfile );
 
-   $self->output( $self->loc( 'Adding new module' ) );
+   $self->output( 'Adding new module' );
    $target = $self->render_template( 'perl_module.pm', $target );
    $self->add_to_vcs( $target, 'module' );
    return OK;
@@ -35,7 +35,7 @@ sub module : method {
 sub program : method {
    my $self = shift; my $target = $self->_get_target( 'binsdir' );
 
-   $self->output( $self->loc( 'Adding new program' ) );
+   $self->output( 'Adding new program' );
    $target = $self->render_template( 'perl_program.pl', $target );
    chmod $self->exec_perms, $target->pathname;
    $self->add_to_vcs( $target, 'program' );
@@ -45,7 +45,7 @@ sub program : method {
 sub test : method {
    my $self = shift; my $target = $self->_get_target( 'testdir' );
 
-   $self->output( $self->loc( 'Adding new test' ) );
+   $self->output( 'Adding new test' );
    $target = $self->render_template( '10test_script.t', $target );
    $self->add_to_vcs( $target, 'test' );
    return OK;
@@ -55,7 +55,7 @@ sub test : method {
 sub _get_target {
    my ($self, $dir, $f) = @_; my $argv = $self->extra_argv;
 
-   my $car      = shift @{ $argv } or throw 'No target specified';
+   my $car      = shift @{ $argv } or throw $self->loc( 'No target specified' );
    my $abstract = shift @{ $argv }
                || ($self->method eq 'program' ? $self->_program_abstract
                                               : $self->module_abstract );
@@ -99,7 +99,7 @@ Module::Provision::TraitFor::AddingFiles - Adds additional files to the project
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of L<Module::Provision::TraitFor::AddingFiles>
+This documents version v0.16.$Rev: 3 $ of L<Module::Provision::TraitFor::AddingFiles>
 
 =head1 Description
 

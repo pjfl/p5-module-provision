@@ -1,12 +1,12 @@
-# @(#)Ident: Provision.pm 2013-05-23 22:02 pjf ;
+# @(#)Ident: Provision.pm 2013-06-23 23:30 pjf ;
 
 package Module::Provision;
 
 use 5.01;
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose;
+use Moo;
 
 extends q(Module::Provision::Base);
 with    q(Module::Provision::TraitFor::Rendering);
@@ -16,8 +16,7 @@ with    q(Module::Provision::TraitFor::VCS);
 with    q(Module::Provision::TraitFor::AddingFiles);
 with    q(Module::Provision::TraitFor::PrereqDifferences);
 with    q(Module::Provision::TraitFor::CPANDistributions);
-
-__PACKAGE__->meta->make_immutable;
+with    q(Class::Usul::TraitFor::UntaintedGetopts);
 
 1;
 
@@ -33,7 +32,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of L<Module::Provision>
+This documents version v0.16.$Rev: 3 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -317,6 +316,8 @@ Add C<-D> to command line to turn on debug output
 =item L<Module::Provision::TraitFor::UpdatingContent>
 
 =item L<Module::Provision::TraitFor::VCS>
+
+=item L<Moo>
 
 =back
 

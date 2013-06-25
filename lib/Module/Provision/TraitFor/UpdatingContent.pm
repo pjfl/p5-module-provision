@@ -1,15 +1,15 @@
-# @(#)Ident: UpdatingContent.pm 2013-05-11 04:37 pjf ;
+# @(#)Ident: UpdatingContent.pm 2013-06-22 17:39 pjf ;
 
 package Module::Provision::TraitFor::UpdatingContent;
 
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Functions qw(throw);
+use Class::Usul::Functions  qw( throw );
+use Moo::Role;
 
-requires qw(appldir);
+requires qw( appldir extra_argv get_manifest_paths loc output );
 
 # Public methods
 sub substitute_version {
@@ -23,9 +23,7 @@ sub substitute_version {
 sub update_copyright_year : method {
    my $self = shift; my ($from, $to) = $self->_get_update_args;
 
-   my $prefix = 'Copyright (c)';
-
-   $self->output( $self->loc( 'Updating copyright year' ) );
+   my $prefix = 'Copyright (c)'; $self->output( 'Updating copyright year' );
 
    for my $path (@{ $self->get_manifest_paths }) {
       $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
@@ -39,7 +37,7 @@ sub update_version : method {
 
    my $ignore = $self->_get_ignore_rev_regex;
 
-   $self->output( $self->loc( 'Updating version numbers' ) );
+   $self->output( 'Updating version numbers' );
 
    ($from, $to) = $self->update_version_pre_hook( $from, $to );
 
@@ -58,7 +56,7 @@ sub update_version_post_hook { # Can be modified by applied traits
 sub update_version_pre_hook { # Can be modified by applied traits
    my ($self, @args) = @_;
 
-   ($args[ 0 ] and $args[ 1 ]) or throw 'Insufficient arguments';
+   ($args[ 0 ] and $args[ 1 ]) or throw $self->loc( 'Insufficient arguments' );
 
    return @args;
 }
@@ -97,7 +95,7 @@ Module::Provision::TraitFor::UpdatingContent - Perform search and replace on pro
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of L<Module::Provision::TraitFor::UpdatingContent>
+This documents version v0.16.$Rev: 3 $ of L<Module::Provision::TraitFor::UpdatingContent>
 
 =head1 Description
 

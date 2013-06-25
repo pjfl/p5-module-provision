@@ -1,26 +1,28 @@
-# @(#)Ident: CreatingDistributions.pm 2013-05-15 17:35 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-06-23 23:31 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Functions        qw(emit throw trim);
-use Cwd                           qw(getcwd);
-use MooseX::Types::Common::String qw(NonEmptySimpleStr);
+use Class::Usul::Functions  qw( emit throw trim );
+use Cwd                     qw( getcwd );
+use Moo::Role;
+use MooX::Options;
+use Unexpected::Types       qw( NonEmptySimpleStr );
 
-requires qw(appbase appldir branch builder exec_perms homedir
-            incdir project_file render_templates stash testdir vcs);
+requires qw( appbase appldir branch builder chdir config exec_perms
+             extra_argv homedir incdir io method output project_file
+             quiet render_templates run_cmd stash testdir vcs );
 
 # Object attributes (public)
-has 'editor'     => is => 'ro', isa => NonEmptySimpleStr, lazy => TRUE,
+option 'editor'  => is => 'lazy', isa => NonEmptySimpleStr,
    documentation => 'Which text editor to use',
    default       => sub { $_[ 0 ]->config->editor };
 
 # Construction
-around '_build__appldir' => sub {
+around '_build_appldir' => sub {
    my ($next, $self, @args) = @_; my $appldir = $self->$next( @args );
 
    return !$appldir && $self->method eq 'dist'
@@ -53,7 +55,7 @@ around '_build_vcs' => sub {
 sub create_directories {
    my $self = shift; my $perms = $self->exec_perms;
 
-   $self->output( $self->loc( 'Creating directories' ) );
+   $self->output( 'Creating directories' );
    $self->appldir->exists or $self->appldir->mkpath( $perms );
    $self->builder eq 'MB'
       and ($self->incdir->exists or $self->incdir->mkpath( $perms ));
@@ -134,7 +136,7 @@ sub prove : method {
 
    $ENV{AUTHOR_TESTING} = TRUE; $ENV{TEST_MEMORY} = TRUE;
    $ENV{TEST_SPELLING}  = TRUE;
-   $self->output ( 'Testing '.$self->appldir );
+   $self->output ( 'Testing [_1]', { args => [ $self->appldir ] } );
    $self->run_cmd( $cmd, $self->quiet ? {} : { out => 'stdout' } );
    return OK;
 }
@@ -178,7 +180,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.16.$Rev: 3 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
@@ -278,7 +280,7 @@ None
 
 =item L<Moose::Role>
 
-=item L<MooseX::Types::Common::String>
+=item L<Unexpected>
 
 =back
 

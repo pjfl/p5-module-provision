@@ -1,18 +1,19 @@
-# @(#)Ident: VCS.pm 2013-05-11 03:11 pjf ;
+# @(#)Ident: VCS.pm 2013-06-22 17:34 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use namespace::sweep;
+use version; our $VERSION = qv( sprintf '0.16.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
-use Moose::Role;
 use Class::Usul::Constants;
-use Class::Usul::Functions qw(throw);
-use Cwd                    qw(getcwd);
-use MooseX::Types::Moose   qw(Bool);
+use Class::Usul::Functions  qw( throw );
+use Cwd                     qw( getcwd );
+use Moo::Role;
 use Perl::Version;
+use Unexpected::Types       qw( Bool );
 
-requires qw(appldir distname vcs);
+requires qw( add_leader appbase appldir branch chdir config dist_version
+             distname exec_perms get_line loc output quiet run_cmd vcs );
 
 # Public attributes
 has 'no_auto_rev' => is => 'ro', isa => Bool, default => FALSE,
@@ -53,8 +54,9 @@ after 'update_version_post_hook' => sub {
 
 # Public methods
 sub add_to_vcs {
-   my ($self, $target, $type) = @_; $target or throw 'VCS target not specified';
+   my ($self, $target, $type) = @_;
 
+   $target or throw $self->loc( 'VCS target not specified' );
    $self->vcs eq 'git' and $self->_add_to_git( $target, $type );
    $self->vcs eq 'svn' and $self->_add_to_svn( $target, $type );
    return;
@@ -71,9 +73,10 @@ sub _add_hook {
 }
 
 sub _add_tag {
-   my ($self, $tag) = @_; $tag or throw 'VCS tag version not specified';
+   my ($self, $tag) = @_;
 
-   $self->output( $self->loc( 'Creating tagged release v[_1]', $tag ) );
+   $tag or throw $self->loc( 'VCS tag version not specified' );
+   $self->output( 'Creating tagged release v[_1]', { args => [ $tag ] } );
    $self->vcs eq 'git' and $self->_add_tag_to_git( $tag );
    $self->vcs eq 'svn' and $self->_add_tag_to_svn( $tag );
    return;
@@ -82,7 +85,7 @@ sub _add_tag {
 sub _add_tag_to_git {
    my ($self, $tag) = @_;
 
-   my $message = $self->config->tag_message;
+   my $message = $self->loc( $self->config->tag_message );
    my $sign    = $self->config->signing_key; $sign and $sign = "-u ${sign}";
 
    $self->run_cmd( "git tag -d v${tag}", { err => 'null', expected_rv => 1 } );
@@ -96,7 +99,7 @@ sub _add_tag_to_svn {
    my $repo    = $self->_get_svn_repository;
    my $from    = "${repo}/trunk";
    my $to      = "${repo}/tags/v${tag}";
-   my $message = $self->config->tag_message." v${tag}";
+   my $message = $self->loc( $self->config->tag_message )." v${tag}";
    my $cmd     = "svn copy --parents -m '${message}' ${from} ${to}";
 
    $self->run_cmd( $cmd, $params );
@@ -141,9 +144,9 @@ sub _get_svn_repository {
 sub _get_version_numbers {
    my ($self, @args) = @_; $args[ 0 ] and $args[ 1 ] and return @args;
 
-   my $prompt = $self->add_leader( 'Enter major/minor 0 or 1' );
+   my $prompt = $self->add_leader( $self->loc( 'Enter major/minor 0 or 1'  ) );
    my $comp   = $self->get_line( $prompt, 1, TRUE, 0 );
-      $prompt = $self->add_leader( 'Enter increment/decrement' );
+      $prompt = $self->add_leader( $self->loc( 'Enter increment/decrement' ) );
    my $bump   = $self->get_line( $prompt, 1, TRUE, 0 ) or return @args;
    my ($from, $ver);
 
@@ -160,13 +163,15 @@ sub _get_version_numbers {
 }
 
 sub _initialize_git {
-   my $self = shift; my $class = blessed $self; $self->chdir( $self->appldir );
+   my $self = shift;
+   my $msg  = $self->loc( 'Initialized by [_1]', blessed $self );
 
-   $self->run_cmd  ( 'git init'   );
-   $self->_add_hook( 'commit-msg' );
-   $self->_add_hook( 'pre-commit' );
-   $self->run_cmd  ( 'git add .'  );
-   $self->run_cmd  ( "git commit -m 'Initialized by ${class}'" );
+   $self->chdir    ( $self->appldir );
+   $self->run_cmd  ( 'git init'     );
+   $self->_add_hook( 'commit-msg'   );
+   $self->_add_hook( 'pre-commit'   );
+   $self->run_cmd  ( 'git add .'    );
+   $self->run_cmd  ( "git commit -m ${msg}" );
    return;
 }
 
@@ -179,8 +184,9 @@ sub _initialize_svn {
 
    my $branch = $self->branch;
    my $url    = 'file://'.$repository->catdir( $branch );
+   my $msg    = $self->loc( 'Initialized by [_1]', $class );
 
-   $self->run_cmd( "svn import ${branch} ${url} -m 'Initialized by ${class}'" );
+   $self->run_cmd( "svn import ${branch} ${url} -m ${msg}" );
 
    my $appldir = $self->appldir; $appldir->rmtree;
 
@@ -191,8 +197,7 @@ sub _initialize_svn {
       $self->run_cmd( "svn propset svn:keywords 'Id Revision Auth' ${target}" );
    }
 
-   my $msg = "Add RCS keywords to project files";
-
+   $msg = $self->loc( 'Add RCS keywords to project files' );
    $self->run_cmd( "svn commit ${branch} -m '${msg}'" );
    $self->chdir( $self->appldir );
    $self->run_cmd( 'svn update' );
@@ -240,7 +245,7 @@ sub _should_add_tag {
 sub _svn_ignore_meta_files {
    my $self = shift; $self->chdir( $self->appldir );
 
-   my $ignores = "LICENSE\nMANIFEST\nMETA.json\nMETA.yml\nREADME";
+   my $ignores = "LICENSE\nMANIFEST\nMETA.json\nMETA.yml\nREADME\nREADME.md";
 
    $self->run_cmd( "svn propset svn:ignore '${ignores}' ." );
    $self->run_cmd( 'svn commit -m "Ignoring meta files" .' );
@@ -272,7 +277,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.16.$Rev: 1 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.16.$Rev: 3 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
@@ -330,7 +335,9 @@ None
 
 =item L<Moose::Role>
 
-=item L<MooseX::Types>
+=item L<Perl::Version>
+
+=item L<Unexpected>
 
 =back
 
