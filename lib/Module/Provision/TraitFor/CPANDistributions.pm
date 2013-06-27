@@ -1,9 +1,9 @@
-# @(#)Ident: CPANDistributions.pm 2013-06-22 19:56 pjf ;
+# @(#)Ident: CPANDistributions.pm 2013-06-26 20:57 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
@@ -201,7 +201,7 @@ sub _ua_string {
 sub _write_pauserc {
    my ($self, $attr) = @_;
 
-   my $file = $self->io( [ $self->config->my_home, q(.pause) ] );
+   my $file = $self->config->my_home->catfile( '.pause' );
 
    $attr or throw $self->loc( 'No data in write to [_1]', $file );
 
@@ -231,7 +231,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of
+This documents version v0.17.$Rev: 4 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description

@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-06-23 23:29 pjf ;
+# @(#)Ident: Base.pm 2013-06-27 16:37 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
@@ -11,7 +11,7 @@ use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
 use Class::Usul::Time       qw( time2str );
 use Cwd                     qw( getcwd );
 use English                 qw( -no_match_vars );
-use File::DataClass::Types  qw( Directory HashRef NonEmptySimpleStr
+use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
                                 Object OctalNum Path PositiveInt );
 use Module::Metadata;
 use Moo;
@@ -87,6 +87,8 @@ has 'initial_wd'      => is => 'ro',   isa => Directory,
 has 'libdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
 
+has 'manifest_paths'  => is => 'lazy', isa => ArrayRef, init_arg => undef;
+
 has 'module_abstract' => is => 'lazy', isa => NonEmptySimpleStr;
 
 has 'project_file'    => is => 'lazy', isa => NonEmptySimpleStr;
@@ -107,15 +109,6 @@ sub chdir {
    chdir $dir or throw $self->loc( 'Directory [_1] cannot chdir: [_2]',
                                    $dir, $OS_ERROR );
    return $dir;
-}
-
-sub get_manifest_paths {
-   my $self = shift;
-
-   return [ grep { $_->exists }
-            map  { $self->io( __parse_manifest_line( $_ )->[ 0 ] ) }
-            grep { not m{ \A \s* [\#] }mx }
-            $self->appldir->catfile( 'MANIFEST' )->chomp->getlines ];
 }
 
 # Private methods
@@ -141,8 +134,8 @@ sub _build_appldir {
 }
 
 sub _build_branch {
-   return $ENV{BRANCH} || ($_[ 0 ]->vcs eq 'git' ? 'master' :
-                           $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : 'none');
+   return $_[ 0 ]->_get_branch || ($_[ 0 ]->vcs eq 'git' ? 'master' :
+                                   $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : 'none');
 }
 
 sub _build_builder {
@@ -186,17 +179,26 @@ sub _build__license_keys {
       mozilla    => [ map { "Mozilla_$_" } qw(1_0 1_1) ], };
 }
 
+sub _build_manifest_paths {
+   my $self = shift;
+
+   return [ grep { $_->exists }
+            map  { $self->io( __parse_manifest_line( $_ )->[ 0 ] ) }
+            grep { not m{ \A \s* [\#] }mx }
+            $self->appldir->catfile( 'MANIFEST' )->chomp->getlines ];
+}
+
 sub _build_module_abstract {
    return $_[ 0 ]->loc( $_[ 0 ]->config->module_abstract );
 }
 
 sub _build_project {
-   my $self = shift; my $dir = $self->io( getcwd ); my ($prev, $project);
+   my $self = shift; my $dir = $self->initial_wd; my ($prev, $module);
 
    while (not $prev or $prev ne $dir) {
       for my $file (grep { $_->exists }
                     map  { $dir->catfile( $BUILDERS{ $_ } ) } keys %BUILDERS) {
-         $project = __get_module_from( $file->all ) and return $project;
+         $module = __get_module_from( $file->all ) and return $module;
          throw $self->loc( 'File [_1] contains no module name', $file );
       }
 
@@ -241,7 +243,9 @@ sub _build_stash {
 }
 
 sub _build_vcs {
-   my $self = shift; my $appbase = $self->appbase; my $branch = $ENV{BRANCH};
+   my $self = shift;
+
+   my $appbase = $self->appbase; my $branch = $self->_get_branch;
 
    return $appbase->catdir( '.git'            )->exists ? 'git'
         : $appbase->catdir( $branch, '.git'   )->exists ? 'git'
@@ -251,6 +255,14 @@ sub _build_vcs {
         : $appbase->catdir( qw(trunk  .svn)   )->exists ? 'svn'
         : $appbase->catdir( $self->repository )->exists ? 'svn'
                                                         : 'none';
+}
+
+sub _get_branch {
+   my $self = shift; my $branch; $branch = $ENV{BRANCH} and return $branch;
+
+   my $io = $self->appbase->catfile( '.branch' );
+
+   return $io->exists ? $io->chomp->getline : NUL;
 }
 
 # Private functions
@@ -297,7 +309,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 4 $ of L<Module::Provision::Base>
 
 =head1 Description
 
@@ -368,13 +380,6 @@ or C<svn>
 
 Changes the current working directory to the one supplied and returns it.
 Throws if the operation was not successful
-
-=head2 get_manifest_paths
-
-   $paths = $self->get_manifest_paths;
-
-Reads the F<MANIFEST> file, parses the pathnames an returns an array ref
-of those that exist
 
 =head1 Diagnostics
 

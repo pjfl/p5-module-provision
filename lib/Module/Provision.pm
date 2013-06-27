@@ -1,10 +1,10 @@
-# @(#)Ident: Provision.pm 2013-06-23 23:30 pjf ;
+# @(#)Ident: Provision.pm 2013-06-27 04:09 pjf ;
 
 package Module::Provision;
 
 use 5.01;
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -32,12 +32,12 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of L<Module::Provision>
+This documents version v0.17.$Rev: 4 $ of L<Module::Provision>
 
 =head1 Synopsis
 
    # To reduce typing define a shell alias
-   alias mp='module_provision --base ~/Projects'
+   alias mp='module-provision --base ~/Projects'
 
    # Create a new distribution in your Projects directory with Git VCS
    mp dist Foo::Bar 'Optional one line abstract'
@@ -198,25 +198,25 @@ This class defines no attributes
 
 =head2 cpan_upload
 
-   module_provision cpan_upload 'optional_version_number'
+   module-provision cpan_upload 'optional_version_number'
 
 By default uploads the projects current distribution to CPAN
 
 =head2 delete_cpan_files
 
-   module_provision delete_cpan_files v0.1.1
+   module-provision delete_cpan_files v0.1.1
 
 Deletes a specified version of the projects distributions from CPAN
 
 =head2 dist
 
-   module_provision dist Foo::Bar 'Optional one line abstract'
+   module-provision dist Foo::Bar 'Optional one line abstract'
 
 Create a new distribution specified by the module name on the command line
 
 =head2 edit_project
 
-   module_provision -q edit_project
+   module-provision -q edit_project
 
 Edit the project file (one of; F<dist.ini>, F<Build.PL>, or
 F<Makefile.PL>) in the project directory. The editor defaults to
@@ -224,44 +224,44 @@ C<emacs> but can be set on the command line, e.g C<-o editor=vim>
 
 =head2 metadata
 
-   module_provision metadata
+   module-provision metadata
 
 Generates the distribution metadata files
 
 =head2 init_templates
 
-   module_provision init_templates
+   module-provision init_templates
 
 Initialise the F<.module_provision> directory and create the F<index.json> file
 
 =head2 module
 
-   module_provision module Foo::Bat 'Optional one line abstract'
+   module-provision module Foo::Bat 'Optional one line abstract'
 
 Creates a new module specified by the class name on the command line
 
 =head2 program
 
-   module_provision program bar-cli 'Optional one line abstract'
+   module-provision program bar-cli 'Optional one line abstract'
 
 Creates a new program specified by the program name on the command line
 
 =head2 prereq_diffs
 
-   module_provision prereq_diffs
+   module-provision prereq_diffs
 
 Displays a report showing which pre-requisite modules should be added to,
 removed from, or updated in the project file
 
 =head2 prove
 
-   module_provision prove
+   module-provision prove
 
 Runs the projects tests
 
 =head2 set_cpan_password
 
-   module_provision set_cpan_password your_PAUSE_server_password
+   module-provision set_cpan_password your_PAUSE_server_password
 
 Sets the password used to connect to the PAUSE server. Once used the
 command line program C<cpan-upload> will not work since it cannot
@@ -269,7 +269,7 @@ decrypt the password in the configuration file F<~/.pause>
 
 =head2 show_tab_title
 
-   module_provision -q show_tab_title
+   module-provision -q show_tab_title
 
 Print the tab title for the current project. Can be used like this;
 
@@ -278,20 +278,20 @@ Print the tab title for the current project. Can be used like this;
 
 =head2 test
 
-   module_provision test 11another-one.t
+   module-provision test 11another-one.t
 
 Creates a new test specified by the test file name on the command line
 
 =head2 update_copyright_year
 
-   module_provision update_copyright_year 2013 2014
+   module-provision update_copyright_year 2013 2014
 
 Substitutes the existing copyright year for the new copyright year in all
 files in the F<MANIFEST>
 
 =head2 update_version
 
-   module_provision update_version 0.1 0.2
+   module-provision update_version 0.1 0.2
 
 Substitutes the existing version number for the new version number in all
 files in the F<MANIFEST>. Prompts for the major/minor and bump if the

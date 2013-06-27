@@ -1,9 +1,9 @@
-# @(#)Ident: VCS.pm 2013-06-22 17:34 pjf ;
+# @(#)Ident: VCS.pm 2013-06-26 20:44 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( throw );
@@ -53,6 +53,13 @@ after 'update_version_post_hook' => sub {
 };
 
 # Public methods
+sub add_hooks : method {
+   my $self = shift;
+
+   $self->vcs eq 'git' and $self->_add_git_hooks( 'commit-msg', 'pre-commit' );
+   return OK;
+}
+
 sub add_to_vcs {
    my ($self, $target, $type) = @_;
 
@@ -62,13 +69,28 @@ sub add_to_vcs {
    return;
 }
 
+sub set_branch : method {
+   my $self = shift; my $branch = shift @{ $self->extra_argv };
+
+   my $file = $self->appldir->parent->catfile( '.branch' );
+
+   not $branch and $file->exists and $file->unlink and return OK;
+
+   $branch and $file->println( $branch );
+   return OK;
+}
+
 # Private methods
-sub _add_hook {
-   my ($self, $hook) = @_; -e ".git${hook}" or return;
+sub _add_git_hooks {
+   my ($self, @hooks) = @_;
 
-   my $path = $self->appldir->catfile( qw(.git hooks), $hook );
+   for my $hook (grep { -e ".git${_}" } @hooks) {
+      my $dest = $self->appldir->catfile( qw(.git hooks), $hook );
 
-   link ".git${hook}", $path; chmod $self->exec_perms, ".git${hook}";
+      $dest->exists and $dest->unlink; link ".git${hook}", $dest;
+      chmod $self->exec_perms, ".git${hook}";
+   }
+
    return;
 }
 
@@ -166,12 +188,11 @@ sub _initialize_git {
    my $self = shift;
    my $msg  = $self->loc( 'Initialized by [_1]', blessed $self );
 
-   $self->chdir    ( $self->appldir );
-   $self->run_cmd  ( 'git init'     );
-   $self->_add_hook( 'commit-msg'   );
-   $self->_add_hook( 'pre-commit'   );
-   $self->run_cmd  ( 'git add .'    );
-   $self->run_cmd  ( "git commit -m ${msg}" );
+   $self->chdir( $self->appldir ); $self->run_cmd( 'git init' );
+
+   $self->add_hooks();
+
+   $self->run_cmd( 'git add .' ); $self->run_cmd  ( "git commit -m ${msg}" );
    return;
 }
 
@@ -277,7 +298,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 4 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
@@ -317,11 +338,23 @@ Do not turn on automatic Revision keyword expansion. Defaults to C<FALSE>
 
 =head1 Subroutines/Methods
 
+=head2 add_hooks
+
+   $self->add_hooks;
+
+Adds and re-adds any hooks in the VCS
+
 =head2 add_to_vcs
 
    $self->add_to_vcs( $target, $type );
 
 Add the target file to the VCS
+
+=head2 set_branch
+
+   $self->set_branch;
+
+Sets the current branch to the value supplied on the command line
 
 =head1 Diagnostics
 

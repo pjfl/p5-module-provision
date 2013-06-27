@@ -1,9 +1,9 @@
-# @(#)Ident: Config.pm 2013-06-21 13:03 pjf ;
+# @(#)Ident: Config.pm 2013-06-26 20:05 pjf ;
 
 package Module::Provision::Config;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( fullname loginid logname untaint_cmdline
@@ -99,7 +99,7 @@ Module::Provision::Config - Attributes set from the config file
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of L<Module::Provision::Config>
+This documents version v0.17.$Rev: 4 $ of L<Module::Provision::Config>
 
 =head1 Description
 
@@ -118,8 +118,6 @@ Defines the following attributes;
 =item C<author_id>
 
 =item C<base>
-
-=item C<branch>
 
 =item C<builder>
 
