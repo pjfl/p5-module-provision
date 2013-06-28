@@ -1,19 +1,20 @@
-# @(#)Ident: VCS.pm 2013-06-26 20:44 pjf ;
+# @(#)Ident: VCS.pm 2013-06-28 15:15 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions  qw( throw );
+use Class::Usul::Functions  qw( is_win32 throw );
 use Cwd                     qw( getcwd );
 use Moo::Role;
 use Perl::Version;
 use Unexpected::Types       qw( Bool );
 
-requires qw( add_leader appbase appldir branch chdir config dist_version
-             distname exec_perms get_line loc output quiet run_cmd vcs );
+requires qw( add_leader appbase appldir branch chdir config
+             default_branch_for_vcs dist_version distname editor
+             exec_perms get_line loc output quiet run_cmd vcs );
 
 # Public attributes
 has 'no_auto_rev' => is => 'ro', isa => Bool, default => FALSE,
@@ -69,14 +70,32 @@ sub add_to_vcs {
    return;
 }
 
+sub get_emacs_state_file_path {
+   my ($self, $file) = @_; my $home = $self->config->my_home;
+
+   return $home->catfile( qw(.emacs.d config), "state.${file}" );
+}
+
 sub set_branch : method {
-   my $self = shift; my $branch = shift @{ $self->extra_argv };
+   my $self = shift; my $bfile = $self->appbase->catfile( '.branch' );
 
-   my $file = $self->appldir->parent->catfile( '.branch' );
+   my $old_branch = $self->branch;
+   my $new_branch = shift @{ $self->extra_argv }
+                 || $self->default_branch_for_vcs;
 
-   not $branch and $file->exists and $file->unlink and return OK;
+   not $new_branch and $bfile->exists and $bfile->unlink and return OK;
+       $new_branch and $bfile->println( $new_branch );
 
-   $branch and $file->println( $branch );
+   my $method = 'get_'.$self->editor.'_state_file_path';
+
+   $self->can( $method ) or return OK;
+
+   my $sfname = __get_state_file_name( $self->io( $self->project_file ) );
+   my $sfpath = $self->$method( $sfname );
+   my $sep    = is_win32 ? "\\" : '/';
+
+   $sfpath->substitute( "${sep}\Q${old_branch}\E${sep}",
+                        "${sep}${new_branch}${sep}" );
    return OK;
 }
 
@@ -275,6 +294,12 @@ sub _svn_ignore_meta_files {
 }
 
 # Private functions
+sub __get_state_file_name {
+   return (map  { m{ load-project-state \s+ [\'\"](.+)[\'\"] }mx; }
+           grep { m{ eval: \s+ \( \s* load-project-state }mx }
+           $_[ 0 ]->getlines)[ -1 ];
+}
+
 sub __tag_from_version {
    my $ver = shift; return $ver->component( 0 ).q(.).$ver->component( 1 );
 }
@@ -298,7 +323,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 4 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 5 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 

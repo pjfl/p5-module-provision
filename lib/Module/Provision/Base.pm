@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-06-27 16:37 pjf ;
+# @(#)Ident: Base.pm 2013-06-28 12:42 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
@@ -111,6 +111,11 @@ sub chdir {
    return $dir;
 }
 
+sub default_branch_for_vcs {
+   return $_[ 0 ]->vcs eq 'git' ? 'master' :
+          $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : NUL;
+}
+
 # Private methods
 sub _build_appbase {
    my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
@@ -134,8 +139,13 @@ sub _build_appldir {
 }
 
 sub _build_branch {
-   return $_[ 0 ]->_get_branch || ($_[ 0 ]->vcs eq 'git' ? 'master' :
-                                   $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : 'none');
+   my $self = shift; my $branch = $ENV{BRANCH}; $branch and return $branch;
+
+   my $file = $self->appbase->catfile( '.branch' );
+
+   $file->exists and return $file->chomp->getline;
+
+   return $self->default_branch_for_vcs;
 }
 
 sub _build_builder {
@@ -243,26 +253,14 @@ sub _build_stash {
 }
 
 sub _build_vcs {
-   my $self = shift;
-
-   my $appbase = $self->appbase; my $branch = $self->_get_branch;
+   my $self = shift; my $appbase = $self->appbase;
 
    return $appbase->catdir( '.git'            )->exists ? 'git'
-        : $appbase->catdir( $branch, '.git'   )->exists ? 'git'
         : $appbase->catdir( qw(master .git)   )->exists ? 'git'
         : $appbase->catdir( '.svn'            )->exists ? 'svn'
-        : $appbase->catdir( $branch, '.svn'   )->exists ? 'svn'
         : $appbase->catdir( qw(trunk  .svn)   )->exists ? 'svn'
         : $appbase->catdir( $self->repository )->exists ? 'svn'
                                                         : 'none';
-}
-
-sub _get_branch {
-   my $self = shift; my $branch; $branch = $ENV{BRANCH} and return $branch;
-
-   my $io = $self->appbase->catfile( '.branch' );
-
-   return $io->exists ? $io->chomp->getline : NUL;
 }
 
 # Private functions
@@ -309,7 +307,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 4 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 5 $ of L<Module::Provision::Base>
 
 =head1 Description
 
