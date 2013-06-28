@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-06-28 12:56 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-06-28 19:47 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 6 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( emit throw trim );
@@ -132,7 +132,7 @@ sub metadata : method {
 sub prove : method {
    my $self = shift; $self->chdir( $self->appldir );
 
-   my $cmd = $self->builder eq 'DZ' ? 'dzil test' : 'prove t';
+   my $cmd = $self->_get_test_command( shift @{ $self->extra_argv } );
 
    $ENV{AUTHOR_TESTING} = TRUE; $ENV{TEST_MEMORY} = TRUE;
    $ENV{TEST_SPELLING}  = TRUE;
@@ -143,7 +143,7 @@ sub prove : method {
 
 sub show_tab_title : method {
    my $self = shift;
-   my $file = $self->extra_argv->[ 0 ] || $self->_project_file_path;
+   my $file = shift @{ $self->extra_argv } || $self->_project_file_path;
    my $text = (grep { m{ tab-title: }msx } $self->io( $file )->getlines)[ -1 ];
 
    emit trim( (split m{ : }msx, $text || NUL, 2)[ 1 ] ).SPC.$self->appbase;
@@ -153,6 +153,12 @@ sub show_tab_title : method {
 # Private methods
 sub _create_mask {
    return oct q(0777) ^ $_[ 0 ]->exec_perms;
+}
+
+sub _get_test_command {
+   return $_[ 1 ]                  ? 'prove '.$_[ 1 ]
+        : $_[ 0 ]->builder eq 'DZ' ? 'dzil test'
+                                   : 'prove t';
 }
 
 sub _project_file_path {
@@ -180,7 +186,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.17.$Rev: 5 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.17.$Rev: 6 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 

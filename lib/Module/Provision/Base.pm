@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-06-28 12:42 pjf ;
+# @(#)Ident: Base.pm 2013-06-28 19:07 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 6 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
@@ -12,7 +12,7 @@ use Class::Usul::Time       qw( time2str );
 use Cwd                     qw( getcwd );
 use English                 qw( -no_match_vars );
 use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
-                                Object OctalNum Path PositiveInt );
+                                Object OctalNum Path PositiveInt SimpleStr );
 use Module::Metadata;
 use Moo;
 use MooX::Options;
@@ -34,8 +34,8 @@ option 'base'       => is => 'lazy', isa => Path, format => 's',
    documentation    => 'Directory containing new projects',
    coerce           => Path->coercion, default => sub { $_[ 0 ]->config->base };
 
-option 'branch'     => is => 'lazy', isa => NonEmptySimpleStr, format => 's',
-   documentation    => 'The name of the initial branch to create';
+option 'branch'     => is => 'lazy', isa => SimpleStr, format => 's',
+   documentation    => 'The name of the initial branch to create', short => 'b';
 
 option 'builder'    => is => 'lazy', isa => $BUILDER, format => 's',
    documentation    => 'Which build system to use: DZ, MB, or MI';
@@ -124,17 +124,19 @@ sub _build_appbase {
 }
 
 sub _build_appldir {
-   my $self   = shift; my $appbase = $self->appbase;
+   my $self = shift; my $appbase = $self->appbase; my $branch = $self->branch;
 
-   my $branch = $self->branch; my $vcs = $self->vcs;
+   my $home = $self->config->my_home; my $vcs = $self->vcs;
+
+  (my $rel_appbase = $appbase) =~ s{ $home [\\/] }{}mx;
 
    $self->debug and $self->info
-      ( "Appbase: ${appbase}, Branch: ${branch}, VCS: ${vcs}" );
+      ( "Appbase: ${rel_appbase}, Branch: ${branch}, VCS: ${vcs}" );
 
-   return $appbase->catdir( $branch )->exists ? $appbase->catdir( $branch )
+   return $vcs eq 'none'                      ? $appbase
         : $appbase->catdir( '.git'  )->exists ? $appbase
         : $appbase->catdir( '.svn'  )->exists ? $appbase
-        : $vcs eq 'none'                      ? $appbase
+        : $appbase->catdir( $branch )->exists ? $appbase->catdir( $branch )
                                               : undef;
 }
 
@@ -307,7 +309,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 5 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 6 $ of L<Module::Provision::Base>
 
 =head1 Description
 
@@ -378,6 +380,12 @@ or C<svn>
 
 Changes the current working directory to the one supplied and returns it.
 Throws if the operation was not successful
+
+=head2 default_branch_for_vcs
+
+   $branch_name = $self->default_branch_for_vcs;
+
+Returns the default branch name for the currently selected VCS
 
 =head1 Diagnostics
 

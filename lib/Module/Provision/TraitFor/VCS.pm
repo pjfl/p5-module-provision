@@ -1,9 +1,9 @@
-# @(#)Ident: VCS.pm 2013-06-28 15:15 pjf ;
+# @(#)Ident: VCS.pm 2013-06-28 19:43 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 6 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
@@ -211,7 +211,7 @@ sub _initialize_git {
 
    $self->add_hooks();
 
-   $self->run_cmd( 'git add .' ); $self->run_cmd  ( "git commit -m ${msg}" );
+   $self->run_cmd( 'git add .' ); $self->run_cmd( "git commit -m '${msg}'" );
    return;
 }
 
@@ -226,7 +226,7 @@ sub _initialize_svn {
    my $url    = 'file://'.$repository->catdir( $branch );
    my $msg    = $self->loc( 'Initialized by [_1]', $class );
 
-   $self->run_cmd( "svn import ${branch} ${url} -m ${msg}" );
+   $self->run_cmd( "svn import ${branch} ${url} -m '${msg}'" );
 
    my $appldir = $self->appldir; $appldir->rmtree;
 
@@ -323,7 +323,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 5 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 6 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
@@ -365,7 +365,7 @@ Do not turn on automatic Revision keyword expansion. Defaults to C<FALSE>
 
 =head2 add_hooks
 
-   $self->add_hooks;
+   $exit_code = $self->add_hooks;
 
 Adds and re-adds any hooks in the VCS
 
@@ -375,9 +375,16 @@ Adds and re-adds any hooks in the VCS
 
 Add the target file to the VCS
 
+=head2 get_emacs_state_file_path
+
+   $io_object = $self->get_emacs_state_file_path( $file_name );
+
+Returns the L<File::DataClass::IO> object for the path to the Emacs editor's
+state file
+
 =head2 set_branch
 
-   $self->set_branch;
+   $exit_code = $self->set_branch;
 
 Sets the current branch to the value supplied on the command line
 

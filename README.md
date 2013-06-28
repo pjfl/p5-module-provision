@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.17.$Rev: 5 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.17.$Rev: 6 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -32,6 +32,9 @@ This documents version v0.17.$Rev: 5 $ of [Module::Provision](https://metacpan.o
 
     # Update the version numbers of the project files
     mp update_version 0.1 0.2
+
+    # Stateful setting of the current working branch
+    mp set_branch <branch_name>
 
     # Command line help
     mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -170,7 +173,7 @@ This class defines no attributes
 
 ## cpan\_upload
 
-    module-provision cpan_upload 'optional_version_number'
+    module-provision cpan_upload <optional_version_number>
 
 By default uploads the projects current distribution to CPAN
 
@@ -182,7 +185,7 @@ Deletes a specified version of the projects distributions from CPAN
 
 ## dist
 
-    module-provision dist Foo::Bar 'Optional one line abstract'
+    module-provision dist Foo::Bar <'Optional one line abstract'>
 
 Create a new distribution specified by the module name on the command line
 
@@ -208,13 +211,13 @@ Initialise the `.module\_provision` directory and create the `index.json` file
 
 ## module
 
-    module-provision module Foo::Bat 'Optional one line abstract'
+    module-provision module Foo::Bat <'Optional one line abstract'>
 
 Creates a new module specified by the class name on the command line
 
 ## program
 
-    module-provision program bar-cli 'Optional one line abstract'
+    module-provision program bar-cli <'Optional one line abstract'>
 
 Creates a new program specified by the program name on the command line
 
@@ -231,9 +234,18 @@ removed from, or updated in the project file
 
 Runs the projects tests
 
+## set\_branch
+
+    module-provision set_branch <branch_name>
+
+Persistently sets the branch name used on this project. If `branch_name` is
+omitted defaults to the branch name appropriate for the VCS being used. Edits
+the currently selected editor's state file for the project to reflect the
+changing pathnames
+
 ## set\_cpan\_password
 
-    module-provision set_cpan_password your_PAUSE_server_password
+    module-provision set_cpan_password <your_PAUSE_server_password>
 
 Sets the password used to connect to the PAUSE server. Once used the
 command line program `cpan-upload` will not work since it cannot

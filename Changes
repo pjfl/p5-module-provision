@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.17.5    2013-06-28 17:26:53
+0.17.6    2013-06-28 20:53:45
+          - Prove now runs individual test scripts
           - Added set_branch
           - Mooified
 

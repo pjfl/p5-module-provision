@@ -1,10 +1,10 @@
-# @(#)Ident: Provision.pm 2013-06-28 16:26 pjf ;
+# @(#)Ident: Provision.pm 2013-06-28 19:23 pjf ;
 
 package Module::Provision;
 
 use 5.01;
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 6 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -32,7 +32,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.17.$Rev: 5 $ of L<Module::Provision>
+This documents version v0.17.$Rev: 6 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -60,6 +60,9 @@ This documents version v0.17.$Rev: 5 $ of L<Module::Provision>
 
    # Update the version numbers of the project files
    mp update_version 0.1 0.2
+
+   # Stateful setting of the current working branch
+   mp set_branch <branch_name>
 
    # Command line help
    mp -? | -H | -h [sub-command] | list_methods | dump_self
@@ -198,7 +201,7 @@ This class defines no attributes
 
 =head2 cpan_upload
 
-   module-provision cpan_upload 'optional_version_number'
+   module-provision cpan_upload <optional_version_number>
 
 By default uploads the projects current distribution to CPAN
 
@@ -210,7 +213,7 @@ Deletes a specified version of the projects distributions from CPAN
 
 =head2 dist
 
-   module-provision dist Foo::Bar 'Optional one line abstract'
+   module-provision dist Foo::Bar <'Optional one line abstract'>
 
 Create a new distribution specified by the module name on the command line
 
@@ -236,13 +239,13 @@ Initialise the F<.module_provision> directory and create the F<index.json> file
 
 =head2 module
 
-   module-provision module Foo::Bat 'Optional one line abstract'
+   module-provision module Foo::Bat <'Optional one line abstract'>
 
 Creates a new module specified by the class name on the command line
 
 =head2 program
 
-   module-provision program bar-cli 'Optional one line abstract'
+   module-provision program bar-cli <'Optional one line abstract'>
 
 Creates a new program specified by the program name on the command line
 
@@ -259,9 +262,18 @@ removed from, or updated in the project file
 
 Runs the projects tests
 
+=head2 set_branch
+
+   module-provision set_branch <branch_name>
+
+Persistently sets the branch name used on this project. If C<branch_name> is
+omitted defaults to the branch name appropriate for the VCS being used. Edits
+the currently selected editor's state file for the project to reflect the
+changing pathnames
+
 =head2 set_cpan_password
 
-   module-provision set_cpan_password your_PAUSE_server_password
+   module-provision set_cpan_password <your_PAUSE_server_password>
 
 Sets the password used to connect to the PAUSE server. Once used the
 command line program C<cpan-upload> will not work since it cannot
