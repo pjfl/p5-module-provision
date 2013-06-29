@@ -1,14 +1,14 @@
-# @(#)Ident: Config.pm 2013-06-26 20:05 pjf ;
+# @(#)Ident: Config.pm 2013-06-28 21:47 pjf ;
 
 package Module::Provision::Config;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 7 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( fullname loginid logname untaint_cmdline
                                 untaint_identifier );
-use File::DataClass::Types  qw( NonEmptySimpleStr Path SimpleStr );
+use File::DataClass::Types  qw( HashRef NonEmptySimpleStr Path SimpleStr );
 use Moo;
 
 extends qw(Class::Usul::Config::Programs);
@@ -26,6 +26,9 @@ has 'base'             => is => 'lazy', isa => Path, coerce => Path->coercion,
 
 has 'builder'          => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'MB';
+
+has 'default_branches' => is => 'lazy', isa => HashRef,
+   default             => sub { { git => 'master', svn => 'trunk' } };
 
 has 'delete_files_uri' => is => 'lazy', isa => NonEmptySimpleStr;
 
@@ -99,7 +102,7 @@ Module::Provision::Config - Attributes set from the config file
 
 =head1 Version
 
-This documents version v0.17.$Rev: 4 $ of L<Module::Provision::Config>
+This documents version v0.17.$Rev: 7 $ of L<Module::Provision::Config>
 
 =head1 Description
 

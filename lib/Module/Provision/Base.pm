@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-06-28 19:07 pjf ;
+# @(#)Ident: Base.pm 2013-06-28 21:53 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 6 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 7 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
@@ -63,8 +63,13 @@ has 'appbase'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
 has 'appldir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
+has 'branch_file'     => is => 'lazy', isa => Path, coerce => Path->coercion,
+   default            => sub { [ $_[ 0 ]->appbase, '.branch' ] };
+
 has 'binsdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->appldir, 'bin' ] };
+
+has 'default_branch'  => is => 'lazy', isa => SimpleStr;
 
 has 'dist_module'     => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->homedir.'.pm' ] };
@@ -111,11 +116,6 @@ sub chdir {
    return $dir;
 }
 
-sub default_branch_for_vcs {
-   return $_[ 0 ]->vcs eq 'git' ? 'master' :
-          $_[ 0 ]->vcs eq 'svn' ? 'trunk'  : NUL;
-}
-
 # Private methods
 sub _build_appbase {
    my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
@@ -143,11 +143,9 @@ sub _build_appldir {
 sub _build_branch {
    my $self = shift; my $branch = $ENV{BRANCH}; $branch and return $branch;
 
-   my $file = $self->appbase->catfile( '.branch' );
+   $self->branch_file->exists and return $self->branch_file->chomp->getline;
 
-   $file->exists and return $file->chomp->getline;
-
-   return $self->default_branch_for_vcs;
+   return $self->default_branch;
 }
 
 sub _build_builder {
@@ -159,6 +157,10 @@ sub _build_builder {
    }
 
    return undef;
+}
+
+sub _build_default_branch {
+   return $_[ 0 ]->config->default_branches->{ $_[ 0 ]->vcs } || NUL;
 }
 
 sub _build_dist_version {
@@ -309,7 +311,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 6 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 7 $ of L<Module::Provision::Base>
 
 =head1 Description
 
@@ -380,12 +382,6 @@ or C<svn>
 
 Changes the current working directory to the one supplied and returns it.
 Throws if the operation was not successful
-
-=head2 default_branch_for_vcs
-
-   $branch_name = $self->default_branch_for_vcs;
-
-Returns the default branch name for the currently selected VCS
 
 =head1 Diagnostics
 
