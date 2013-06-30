@@ -1,9 +1,9 @@
-# @(#)Ident: PrereqDifferences.pm 2013-06-30 01:34 pjf ;
+# @(#)Ident: PrereqDifferences.pm 2013-06-30 18:53 pjf ;
 
 package Module::Provision::TraitFor::PrereqDifferences;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile is_member emit throw );
@@ -11,18 +11,18 @@ use English                 qw( -no_match_vars );
 use Module::Metadata;
 use Moo::Role;
 
-requires qw( appldir builder chdir debug ensure_class_loaded extra_argv
-             get_meta io libdir manifest_paths output project_file run_cmd );
+requires qw( appldir builder chdir debug ensure_class_loaded get_meta io
+             libdir manifest_paths next_argv output project_file run_cmd );
 
 # Public methods
 sub prereq_diffs : method {
-   my $self    = shift;
+   my $self = shift;
 
    $self->ensure_class_loaded( 'CPAN' );
    $self->ensure_class_loaded( 'Module::CoreList' );
    $self->ensure_class_loaded( 'Pod::Eventual::Simple' );
 
-   my $field   = shift @{ $self->extra_argv } || q(requires);
+   my $field   = $self->next_argv || 'requires';
    my $filter  = "_filter_${field}_paths";
    my $sources = $self->$filter( $self->_source_paths );
    my $depends = $self->_filter_dependents( $self->_dependencies( $sources ) );
@@ -307,7 +307,7 @@ Module::Provision::TraitFor::PrereqDifferences - Displays a prerequisite differe
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of
+This documents version v0.17.$Rev: 11 $ of
 L<Module::Provision::TraitFor::PrereqDifferences>
 
 =head1 Description

@@ -1,9 +1,9 @@
-# @(#)Ident: VCS.pm 2013-06-30 01:36 pjf ;
+# @(#)Ident: VCS.pm 2013-06-30 18:51 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
@@ -12,9 +12,9 @@ use Moo::Role;
 use Perl::Version;
 use Unexpected::Types       qw( Bool );
 
-requires qw( add_leader appbase appldir branch chdir config
-             default_branch dist_version distname editor
-             exec_perms get_line loc output quiet run_cmd vcs );
+requires qw( add_leader appbase appldir branch chdir config default_branch
+             dist_version distname editor exec_perms get_line
+             loc next_argv output quiet run_cmd vcs );
 
 # Public attributes
 has 'no_auto_rev' => is => 'ro', isa => Bool, default => FALSE,
@@ -80,7 +80,7 @@ sub set_branch : method {
    my $self = shift; my $bfile = $self->branch_file;
 
    my $old_branch = $self->branch;
-   my $new_branch = shift @{ $self->extra_argv } || $self->default_branch;
+   my $new_branch = $self->next_argv || $self->default_branch;
 
    not $new_branch and $bfile->exists and $bfile->unlink and return OK;
        $new_branch and $bfile->println( $new_branch );
@@ -322,7 +322,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 11 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 

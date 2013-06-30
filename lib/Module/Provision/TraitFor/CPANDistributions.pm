@@ -1,9 +1,9 @@
-# @(#)Ident: CPANDistributions.pm 2013-06-29 22:16 pjf ;
+# @(#)Ident: CPANDistributions.pm 2013-06-30 18:50 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
@@ -16,7 +16,7 @@ use Moo::Role;
 use Unexpected::Types        qw( NonEmptySimpleStr );
 
 requires qw( add_leader config debug distname dist_version dumper
-             ensure_class_loaded extra_argv info io loc log output yorn );
+             ensure_class_loaded info io loc log next_argv output yorn );
 
 # Private attributes
 has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
@@ -24,7 +24,7 @@ has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
 
 # Public methods
 sub cpan_upload : method {
-   my $self = shift; my $ver = shift @{ $self->extra_argv }; my $file;
+   my $self = shift; my $ver = $self->next_argv; my $file;
 
    if ($ver) { $file = $self->distname."-${ver}.tar.gz" }
    else { $file = $self->distname.'-v'.$self->dist_version.'.tar.gz' }
@@ -46,7 +46,7 @@ sub cpan_upload : method {
 sub delete_cpan_files : method {
    my $self   = shift;
    my $args   = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
-   my $files  = $self->_convert_versions_to_paths( $self->extra_argv, $args );
+   my $files  = $self->_convert_versions_to_paths( $self->next_argv, $args );
    my $prompt = $self->loc( 'Really delete files from CPAN' );
       $prompt = $self->add_leader( $prompt );
 
@@ -67,8 +67,7 @@ sub delete_cpan_files : method {
 sub set_cpan_password : method {
    my $self  = shift;
    my $args  = $self->_read_pauserc;
-   my $pword = shift @{ $self->extra_argv }
-      or throw $self->loc( 'No password' );
+   my $pword = $self->next_argv or throw $self->loc( 'No password' );
 
    $args->{password} = encrypt_for_config( $self->config, $pword );
    $self->_write_pauserc( $args );
@@ -231,7 +230,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of
+This documents version v0.17.$Rev: 11 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description

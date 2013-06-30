@@ -1,16 +1,17 @@
-# @(#)Ident: AddingFiles.pm 2013-06-30 00:36 pjf ;
+# @(#)Ident: AddingFiles.pm 2013-06-30 18:47 pjf ;
 
 package Module::Provision::TraitFor::AddingFiles;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile throw );
 use Moo::Role;
 
-requires qw( add_to_vcs appldir binsdir exec_perms extra_argv libdir loc method
-             module_abstract output project render_template stash testdir );
+requires qw( add_to_vcs appldir binsdir exec_perms libdir loc method
+             module_abstract next_argv output project
+             render_template stash testdir );
 
 # Construction
 around 'generate_metadata' => sub {
@@ -53,10 +54,10 @@ sub test : method {
 
 # Private methods
 sub _get_target {
-   my ($self, $dir, $f) = @_; my $argv = $self->extra_argv;
+   my ($self, $dir, $f) = @_;
 
-   my $car      = shift @{ $argv } or throw $self->loc( 'No target specified' );
-   my $abstract = shift @{ $argv }
+   my $car      = $self->next_argv or throw $self->loc( 'No target specified' );
+   my $abstract = $self->next_argv
                || ($self->method eq 'program' ? $self->_program_abstract
                                               : $self->module_abstract );
 
@@ -99,7 +100,7 @@ Module::Provision::TraitFor::AddingFiles - Adds additional files to the project
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::AddingFiles>
+This documents version v0.17.$Rev: 11 $ of L<Module::Provision::TraitFor::AddingFiles>
 
 =head1 Description
 

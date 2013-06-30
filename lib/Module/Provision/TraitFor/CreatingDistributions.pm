@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-06-30 01:37 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-06-30 18:43 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( emit throw trim );
@@ -13,7 +13,7 @@ use MooX::Options;
 use Unexpected::Types       qw( NonEmptySimpleStr );
 
 requires qw( appbase appldir branch builder chdir config exec_perms
-             extra_argv homedir incdir io method output project_file
+             homedir incdir io method output next_argv project_file
              quiet render_templates run_cmd stash testdir vcs );
 
 # Object attributes (public)
@@ -39,8 +39,7 @@ around '_build_builder' => sub {
 around '_build_project' => sub {
    my ($next, $self, @args) = @_; my $project;
 
-   $self->method eq 'dist' and $project = shift @{ $self->extra_argv }
-      and return $project;
+   $self->method eq 'dist' and $project = $self->next_argv and return $project;
 
    return $self->$next( @args );
 };
@@ -83,10 +82,10 @@ sub dist_post_hook {
 }
 
 sub dist_pre_hook {
-   my $self = shift; my $argv = $self->extra_argv; umask $self->_create_mask;
+   my $self = shift; umask $self->_create_mask;
 
    $self->appbase->exists or $self->appbase->mkpath( $self->exec_perms );
-   $self->stash->{abstract} = shift @{ $argv } || $self->stash->{abstract};
+   $self->stash->{abstract} = $self->next_argv || $self->stash->{abstract};
    $self->chdir( $self->appbase );
    return;
 }
@@ -132,7 +131,7 @@ sub metadata : method {
 sub prove : method {
    my $self = shift; $self->chdir( $self->appldir );
 
-   my $cmd = $self->_get_test_command( shift @{ $self->extra_argv } );
+   my $cmd = $self->_get_test_command( $self->next_argv );
 
    $ENV{AUTHOR_TESTING} = TRUE; $ENV{TEST_MEMORY} = TRUE;
    $ENV{TEST_SPELLING}  = TRUE;
@@ -143,7 +142,7 @@ sub prove : method {
 
 sub show_tab_title : method {
    my $self = shift;
-   my $file = shift @{ $self->extra_argv } || $self->_project_file_path;
+   my $file = $self->next_argv || $self->_project_file_path;
    my $text = (grep { m{ tab-title: }msx } $self->io( $file )->getlines)[ -1 ];
 
    emit trim( (split m{ : }msx, $text || NUL, 2)[ 1 ] ).SPC.$self->appbase;
@@ -186,7 +185,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.17.$Rev: 11 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 

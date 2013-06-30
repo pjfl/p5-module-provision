@@ -1,15 +1,15 @@
-# @(#)Ident: UpdatingContent.pm 2013-06-30 01:48 pjf ;
+# @(#)Ident: UpdatingContent.pm 2013-06-30 18:45 pjf ;
 
 package Module::Provision::TraitFor::UpdatingContent;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( throw );
 use Moo::Role;
 
-requires qw( appldir extra_argv manifest_paths loc output );
+requires qw( appldir loc manifest_paths next_argv output );
 
 # Public methods
 sub substitute_version {
@@ -71,7 +71,7 @@ sub _get_ignore_rev_regex {
 }
 
 sub _get_update_args {
-   return (shift @{ $_[ 0 ]->extra_argv }, shift @{ $_[ 0 ]->extra_argv });
+   return ($_[ 0 ]->next_argv, $_[ 0 ]->next_argv);
 }
 
 1;
@@ -95,7 +95,7 @@ Module::Provision::TraitFor::UpdatingContent - Perform search and replace on pro
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of
+This documents version v0.17.$Rev: 11 $ of
 L<Module::Provision::TraitFor::UpdatingContent>
 
 =head1 Description
