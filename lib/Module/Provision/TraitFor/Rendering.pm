@@ -1,9 +1,9 @@
-# @(#)Ident: Rendering.pm 2013-06-30 00:33 pjf ;
+# @(#)Ident: Rendering.pm 2013-06-30 16:03 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 9 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix is_arrayref distname throw );
@@ -11,7 +11,7 @@ use File::DataClass::Types  qw( ArrayRef Bool Directory Path SimpleStr );
 use File::ShareDir            ( );
 use Moo::Role;
 use MooX::Options;
-use Scalar::Util            qw( weaken );
+use Scalar::Util            qw( blessed weaken );
 use Template;
 
 requires qw( add_leader appldir builder config dist_module exec_perms file
@@ -190,7 +190,7 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.17.$Rev: 9 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 
