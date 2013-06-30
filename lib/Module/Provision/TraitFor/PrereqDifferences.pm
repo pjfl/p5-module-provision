@@ -1,9 +1,9 @@
-# @(#)Ident: PrereqDifferences.pm 2013-06-27 16:30 pjf ;
+# @(#)Ident: PrereqDifferences.pm 2013-06-30 01:34 pjf ;
 
 package Module::Provision::TraitFor::PrereqDifferences;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile is_member emit throw );
@@ -307,7 +307,7 @@ Module::Provision::TraitFor::PrereqDifferences - Displays a prerequisite differe
 
 =head1 Version
 
-This documents version v0.17.$Rev: 4 $ of
+This documents version v0.17.$Rev: 8 $ of
 L<Module::Provision::TraitFor::PrereqDifferences>
 
 =head1 Description
@@ -320,11 +320,12 @@ Defines no attributes
 
 =head1 Subroutines/Methods
 
-=head2 prereq_diffs
+=head2 prereq_diffs - Displays a prerequisite difference report
 
    $exit_code = $self->prereq_diffs;
 
-Displays a prerequisite difference report
+Shows which dependencies should be added to, removed from, or updated
+in the the distributions project file
 
 =head1 Diagnostics
 

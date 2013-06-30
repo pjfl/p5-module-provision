@@ -1,9 +1,9 @@
-# @(#)Ident: VCS.pm 2013-06-28 21:41 pjf ;
+# @(#)Ident: VCS.pm 2013-06-30 01:36 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 7 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
@@ -322,7 +322,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 7 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
@@ -362,11 +362,11 @@ Do not turn on automatic Revision keyword expansion. Defaults to C<FALSE>
 
 =head1 Subroutines/Methods
 
-=head2 add_hooks
+=head2 add_hooks - Adds and re-adds any hooks used in the VCS
 
    $exit_code = $self->add_hooks;
 
-Adds and re-adds any hooks in the VCS
+Returns the exit code
 
 =head2 add_to_vcs
 
@@ -381,7 +381,7 @@ Add the target file to the VCS
 Returns the L<File::DataClass::IO> object for the path to the Emacs editor's
 state file
 
-=head2 set_branch
+=head2 set_branch - Set the VCS branch name
 
    $exit_code = $self->set_branch;
 

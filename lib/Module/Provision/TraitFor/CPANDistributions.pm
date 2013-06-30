@@ -1,9 +1,9 @@
-# @(#)Ident: CPANDistributions.pm 2013-06-26 20:57 pjf ;
+# @(#)Ident: CPANDistributions.pm 2013-06-29 22:16 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
@@ -231,7 +231,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.17.$Rev: 4 $ of
+This documents version v0.17.$Rev: 8 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description
@@ -246,19 +246,19 @@ Defines no attributes
 
 =head1 Subroutines/Methods
 
-=head2 cpan_upload
+=head2 cpan_upload - Uploads a distribution to CPAN
 
    $exit_code = $self->cpan_upload;
 
-Uploads a distribution to CPAN
+Uses L<CPAN::Uploader> to do the heavy lifting
 
-=head2 delete_cpan_files
+=head2 delete_cpan_files - Deletes a distribution from CPAN
 
    $exit_code = $self->delete_cpan_files;
 
-Deletes distributions from CPAN
+You must specify the version of the distribution to delete
 
-=head2 set_cpan_password
+=head2 set_cpan_password - Set the PAUSE server password
 
    $exit_code = $self->set_cpan_password;
 

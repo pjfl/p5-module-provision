@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-06-28 19:47 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-06-30 01:37 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 6 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( emit throw trim );
@@ -186,7 +186,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.17.$Rev: 6 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
@@ -220,11 +220,11 @@ variable
 Creates the required directories for the new distribution. If subclassed this
 method can be modified to include additional directories
 
-=head2 dist
+=head2 dist - Create a new distribution
 
    $exit_code = $self->dist;
 
-Create a new distribution specified by the module name on the command line
+The distributions main module name is specified on the command line
 
 =head2 dist_post_hook
 
@@ -242,12 +242,12 @@ Runs before the new distribution is created. If subclassed this method
 can be modified to perform additional actions before the project directories
 are created
 
-=head2 edit_project
+=head2 edit_project - Edit the project file
 
    $exit_code = $self->edit_project;
 
-Edit the project file (one of; F<dist.ini>, F<Build.PL>, or
-F<Makefile.PL>) in the current directory
+The project file is one of; F<dist.ini>, F<Build.PL>, or
+F<Makefile.PL> in the current directory
 
 =head2 generate_metadata
 
@@ -256,19 +256,19 @@ F<Makefile.PL>) in the current directory
 Generates the distribution metadata files. If the create_flag is C<TRUE>
 returns the name of the F<README.md> file
 
-=head2 metadata
+=head2 metadata - Generate the distribution metadata files
 
    $exit_code = $self->metadata;
 
 Calls L</generate_metadata> with the create flag set to C<FALSE>
 
-=head2 prove
+=head2 prove - Runs the tests for the distribution
 
    $exit_code = $self->prove;
 
-Tests the distribution
+Returns the exit code
 
-=head2 show_tab_title
+=head2 show_tab_title - Display the tab title for the current distribution
 
    $exit_code = $self->show_tab_title;
 

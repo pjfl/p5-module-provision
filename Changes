@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.17.6    2013-06-28 20:53:45
+0.17.8    2013-06-30 02:51:27
+          - List methods displays abstracts
           - Added branch_file attribute
           - Prove now runs individual test scripts
           - Added set_branch

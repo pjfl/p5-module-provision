@@ -1,9 +1,9 @@
-# @(#)Ident: AddingFiles.pm 2013-06-22 18:26 pjf ;
+# @(#)Ident: AddingFiles.pm 2013-06-30 00:36 pjf ;
 
 package Module::Provision::TraitFor::AddingFiles;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile throw );
@@ -99,7 +99,7 @@ Module::Provision::TraitFor::AddingFiles - Adds additional files to the project
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of L<Module::Provision::TraitFor::AddingFiles>
+This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::AddingFiles>
 
 =head1 Description
 
@@ -118,19 +118,19 @@ Defines no attributes
 
 =head1 Subroutines/Methods
 
-=head2 module
+=head2 module - Create a new Perl module file
 
    $exit_code = $self->module;
 
 Creates a new module specified by the class name on the command line
 
-=head2 program
+=head2 program - Create a new Perl program file
 
    $exit_code = $self->program;
 
 Creates a new program specified by the program name on the command line
 
-=head2 test
+=head2 test - Create a new Perl test script
 
    $exit_code = $self->test;
 

@@ -1,9 +1,9 @@
-# @(#)Ident: Rendering.pm 2013-06-22 17:45 pjf ;
+# @(#)Ident: Rendering.pm 2013-06-30 00:33 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix is_arrayref distname throw );
@@ -190,7 +190,7 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.17.$Rev: 2 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.17.$Rev: 8 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 
@@ -220,7 +220,7 @@ F<.module_provision>
 
 =head1 Subroutines/Methods
 
-=head2 init_templates
+=head2 init_templates - Initialize the template directory
 
    $exit_code = $self->init_templates;
 

@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-06-28 21:53 pjf ;
+# @(#)Ident: Base.pm 2013-06-29 23:49 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 7 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
@@ -311,7 +311,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 7 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 8 $ of L<Module::Provision::Base>
 
 =head1 Description
 
