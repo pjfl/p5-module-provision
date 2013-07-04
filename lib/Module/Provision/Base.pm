@@ -1,15 +1,15 @@
-# @(#)Ident: Base.pm 2013-07-04 12:08 pjf ;
+# @(#)Ident: Base.pm 2013-07-04 14:16 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 13 $ =~ /\d+/gmx );
 
-use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
                                 throw );
 use Class::Usul::Time       qw( time2str );
 use English                 qw( -no_match_vars );
+use File::DataClass::Constants;
 use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
                                 Object OctalNum Path PositiveInt SimpleStr );
 use Module::Metadata;
@@ -86,7 +86,7 @@ has 'incdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->appldir, 'inc' ] };
 
 has 'initial_wd'      => is => 'ro',   isa => Directory,
-   default            => sub { $_[ 0 ]->io()->cwd };
+   default            => sub { $_[ 0 ]->io( CURDIR ) };
 
 has 'libdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
@@ -311,7 +311,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 12 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 13 $ of L<Module::Provision::Base>
 
 =head1 Description
 

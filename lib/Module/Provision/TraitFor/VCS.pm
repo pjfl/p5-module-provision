@@ -1,14 +1,15 @@
-# @(#)Ident: VCS.pm 2013-07-04 12:02 pjf ;
+# @(#)Ident: VCS.pm 2013-07-04 14:04 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 13 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
 use Moo::Role;
 use Perl::Version;
+use Scalar::Util            qw( blessed );
 use Unexpected::Types       qw( Bool );
 
 requires qw( add_leader appbase appldir branch chdir config default_branch
@@ -321,7 +322,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 12 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 13 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
