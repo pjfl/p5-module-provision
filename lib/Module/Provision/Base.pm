@@ -1,15 +1,14 @@
-# @(#)Ident: Base.pm 2013-06-29 23:49 pjf ;
+# @(#)Ident: Base.pm 2013-07-04 12:08 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
                                 throw );
 use Class::Usul::Time       qw( time2str );
-use Cwd                     qw( getcwd );
 use English                 qw( -no_match_vars );
 use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
                                 Object OctalNum Path PositiveInt SimpleStr );
@@ -87,7 +86,7 @@ has 'incdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->appldir, 'inc' ] };
 
 has 'initial_wd'      => is => 'ro',   isa => Directory,
-   coerce             => Directory->coercion, default => sub { [ getcwd ] };
+   default            => sub { $_[ 0 ]->io()->cwd };
 
 has 'libdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
    default            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
@@ -241,10 +240,11 @@ sub _build_stash {
             copyright_year => time2str( '%Y' ),
             creation_date  => time2str,
             dist_module    => $self->dist_module->abs2rel( $self->appldir ),
-            dist_version   => $self->dist_version,
+            dist_version   => NUL.$self->dist_version,
             distname       => $self->distname,
             first_name     => lc ((split SPC, $author)[ 0 ]),
             home_page      => $config->home_page,
+            initial_wd     => $self->initial_wd,
             last_name      => lc ((split SPC, $author)[ -1 ]),
             license        => $self->license,
             license_class  => $self->_license_keys->{ $self->license },
@@ -311,7 +311,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 12 $ of L<Module::Provision::Base>
 
 =head1 Description
 

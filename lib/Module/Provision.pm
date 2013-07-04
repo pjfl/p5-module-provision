@@ -1,10 +1,10 @@
-# @(#)Ident: Provision.pm 2013-06-30 01:50 pjf ;
+# @(#)Ident: Provision.pm 2013-07-04 12:13 pjf ;
 
 package Module::Provision;
 
 use 5.01;
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -32,7 +32,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.17.$Rev: 8 $ of L<Module::Provision>
+This documents version v0.17.$Rev: 12 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -216,6 +216,12 @@ Deletes a specified version of the projects distributions from CPAN
    module-provision dist Foo::Bar <'Optional one line abstract'>
 
 Create a new distribution specified by the module name on the command line
+
+=head2 dump_stash
+
+   module-provision dump_stash
+
+Dump the hash ref used to render a template
 
 =head2 edit_project
 

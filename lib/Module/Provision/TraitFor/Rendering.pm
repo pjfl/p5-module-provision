@@ -1,9 +1,9 @@
-# @(#)Ident: Rendering.pm 2013-06-30 16:03 pjf ;
+# @(#)Ident: Rendering.pm 2013-07-04 12:12 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 9 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix is_arrayref distname throw );
@@ -35,6 +35,10 @@ has '_template_index' => is => 'lazy', isa => Path, coerce => Path->coercion,
 has '_template_list'  => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
 # Public methods
+sub dump_stash : method {
+   my $self = shift; $self->dumper( $self->stash ); return OK;
+}
+
 sub init_templates : method {
    my $self = shift; $self->_template_list; return OK;
 }
@@ -190,7 +194,7 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.17.$Rev: 9 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.17.$Rev: 12 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 
@@ -219,6 +223,12 @@ F<.module_provision>
 =back
 
 =head1 Subroutines/Methods
+
+=head2 dump_stash - Dump the hash ref used to render a template
+
+   $exit_code = $self->dump_stash;
+
+Uses the internal dumper method to produce a pretty coloured listing
 
 =head2 init_templates - Initialize the template directory
 

@@ -1,13 +1,12 @@
-# @(#)Ident: CreatingDistributions.pm 2013-06-30 18:43 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-07-04 12:01 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( emit throw trim );
-use Cwd                     qw( getcwd );
 use Moo::Role;
 use MooX::Options;
 use Unexpected::Types       qw( NonEmptySimpleStr );
@@ -185,7 +184,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.17.$Rev: 11 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.17.$Rev: 12 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 

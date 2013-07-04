@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.17.$Rev: 10 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.17.$Rev: 12 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
@@ -188,6 +188,12 @@ Deletes a specified version of the projects distributions from CPAN
     module-provision dist Foo::Bar <'Optional one line abstract'>
 
 Create a new distribution specified by the module name on the command line
+
+## dump\_stash
+
+    module-provision dump_stash
+
+Dump the hash ref used to render a template
 
 ## edit\_project
 

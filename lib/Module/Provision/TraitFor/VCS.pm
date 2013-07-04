@@ -1,13 +1,12 @@
-# @(#)Ident: VCS.pm 2013-06-30 18:51 pjf ;
+# @(#)Ident: VCS.pm 2013-07-04 12:02 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 12 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
-use Cwd                     qw( getcwd );
 use Moo::Role;
 use Perl::Version;
 use Unexpected::Types       qw( Bool );
@@ -322,7 +321,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 11 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 12 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 
