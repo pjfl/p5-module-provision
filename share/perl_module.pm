@@ -1,15 +1,16 @@
-# @(#)Ident: perl_module.pm 2013-06-21 19:01 pjf ;
+# @(#)Ident: perl_module.pm 2013-07-06 18:31 pjf ;
 
 package [% module %];
 
 [% use_perl %]
+use namespace::sweep;
 use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions qw(throw);
+use Class::Usul::Functions  qw( throw );
 use Moo;
 
-extends qw(Class::Usul::Programs);
+extends q(Class::Usul::Programs);
 
 1;
 

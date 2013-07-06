@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-07-04 14:16 pjf ;
+# @(#)Ident: Base.pm 2013-07-06 18:31 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 13 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 14 $ =~ /\d+/gmx );
 
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir distname
                                 throw );
@@ -231,6 +231,8 @@ sub _build_stash {
 
    my $project = $self->project; my $perl_ver = $self->config->min_perl_ver;
 
+   my $perl_code = $self->method eq 'dist' ? "use ${perl_ver};" : NUL;
+
    return { abstract       => $self->module_abstract,
             appdir         => class2appdir $self->distname,
             author         => $author,
@@ -244,7 +246,7 @@ sub _build_stash {
             distname       => $self->distname,
             first_name     => lc ((split SPC, $author)[ 0 ]),
             home_page      => $config->home_page,
-            initial_wd     => $self->initial_wd,
+            initial_wd     => NUL.$self->initial_wd,
             last_name      => lc ((split SPC, $author)[ -1 ]),
             license        => $self->license,
             license_class  => $self->_license_keys->{ $self->license },
@@ -252,8 +254,7 @@ sub _build_stash {
             perl           => $perl_ver,
             prefix         => (split m{ :: }mx, lc $project)[ -1 ],
             project        => $project,
-            use_perl       => $self->method eq 'dist'
-                            ? "use ${perl_ver};" : q(), };
+            use_perl       => $perl_code, };
 }
 
 sub _build_vcs {
@@ -311,7 +312,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.17.$Rev: 13 $ of L<Module::Provision::Base>
+This documents version v0.17.$Rev: 14 $ of L<Module::Provision::Base>
 
 =head1 Description
 
