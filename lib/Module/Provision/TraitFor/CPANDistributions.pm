@@ -1,9 +1,9 @@
-# @(#)Ident: CPANDistributions.pm 2013-07-04 14:23 pjf ;
+# @(#)Ident: CPANDistributions.pm 2013-07-10 12:21 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 13 $ =~ /\d+/gmx );
+use version;  our $VERSION = qv( sprintf '0.17.%d', q$Rev: 15 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
@@ -47,7 +47,7 @@ sub cpan_upload : method {
 sub delete_cpan_files : method {
    my $self   = shift;
    my $args   = $self->_read_pauserc; $args->{subdir} //= lc $self->distname;
-   my $files  = $self->_convert_versions_to_paths( $self->next_argv, $args );
+   my $files  = $self->_convert_versions_to_paths( $self->extra_argv, $args );
    my $prompt = $self->loc( 'Really delete files from CPAN' );
       $prompt = $self->add_leader( $prompt );
 
@@ -66,11 +66,9 @@ sub delete_cpan_files : method {
 }
 
 sub set_cpan_password : method {
-   my $self  = shift;
-   my $args  = $self->_read_pauserc;
-   my $pword = $self->next_argv or throw $self->loc( 'No password' );
+   my $self = shift; my $args = $self->_read_pauserc;
 
-   $args->{password} = encrypt_for_config( $self->config, $pword );
+   $args->{password} = $self->next_argv or throw $self->loc( 'No password' );
    $self->_write_pauserc( $args );
    return OK;
 }
@@ -85,7 +83,7 @@ sub _convert_versions_to_paths {
    my ($self, $versions, $args) = @_; my $paths = []; $args ||= {};
 
    my $distname = $self->distname;
-   my $subdir   = $args->{subdir} ? $args->{subdir}.'/' : q();
+   my $subdir   = $args->{subdir} ? $args->{subdir}.'/' : NUL;
 
    for my $version (@{ $versions || [] }) {
       for my $extn (qw(meta readme tar.gz)) {
@@ -155,7 +153,7 @@ sub _read_pauserc {
 
       exists $attr->{ $k }
          and throw $self->loc( 'Multiple enties for [_1]', $k );
-      $attr->{ $k } = $v || q();
+      $attr->{ $k } = $v || NUL;
    }
 
    my $pword; exists $attr->{password}
@@ -203,7 +201,7 @@ sub _write_pauserc {
 
    my $file = $self->config->my_home->catfile( '.pause' );
 
-   $attr or throw $self->loc( 'No data in write to [_1]', $file );
+   $attr->{password} = encrypt_for_config( $self->config, $attr->{password} );
 
    $file->println( "${_} ".$attr->{ $_ } ) for (sort keys %{ $attr });
 
@@ -231,7 +229,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.17.$Rev: 13 $ of
+This documents version v0.17.$Rev: 15 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description
