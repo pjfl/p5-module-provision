@@ -1,9 +1,9 @@
-# @(#)Ident: UpdatingContent.pm 2013-06-30 18:45 pjf ;
+# @(#)Ident: UpdatingContent.pm 2013-07-11 14:57 pjf ;
 
 package Module::Provision::TraitFor::UpdatingContent;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 11 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 16 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( throw );
@@ -23,7 +23,9 @@ sub substitute_version {
 sub update_copyright_year : method {
    my $self = shift; my ($from, $to) = $self->_get_update_args;
 
-   my $prefix = 'Copyright (c)'; $self->output( 'Updating copyright year' );
+   my $prefix = $self->loc( 'Copyright (c)' );
+
+   $self->output( 'Updating copyright year' );
 
    for my $path (@{ $self->manifest_paths }) {
       $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
@@ -95,7 +97,7 @@ Module::Provision::TraitFor::UpdatingContent - Perform search and replace on pro
 
 =head1 Version
 
-This documents version v0.17.$Rev: 11 $ of
+This documents version v0.17.$Rev: 16 $ of
 L<Module::Provision::TraitFor::UpdatingContent>
 
 =head1 Description

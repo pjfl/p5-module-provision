@@ -1,9 +1,9 @@
-# @(#)Ident: VCS.pm 2013-07-04 14:04 pjf ;
+# @(#)Ident: VCS.pm 2013-07-11 14:53 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 13 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 16 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
@@ -206,11 +206,11 @@ sub _initialize_git {
    my $self = shift;
    my $msg  = $self->loc( 'Initialized by [_1]', blessed $self );
 
-   $self->chdir( $self->appldir ); $self->run_cmd( 'git init' );
+   $self->chdir( $self->appldir );
 
-   $self->add_hooks();
+   $self->run_cmd( 'git init'   ); $self->add_hooks;
 
-   $self->run_cmd( 'git add .' ); $self->run_cmd( "git commit -m '${msg}'" );
+   $self->run_cmd( 'git add .'  ); $self->run_cmd( "git commit -m '${msg}'" );
    return;
 }
 
@@ -322,7 +322,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.17.$Rev: 13 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.17.$Rev: 16 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 

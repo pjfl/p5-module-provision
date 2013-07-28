@@ -1,13 +1,13 @@
-# @(#)Ident: Build.PL 2013-06-27 01:54 pjf ;
+# @(#)Ident: Build.PL 2013-07-28 18:39 pjf ;
 
 use strict;
 use warnings;
 use inc::Bob; # Module::Build subclass
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 16 $ =~ /\d+/gmx );
 
 Bob->new( {
-   module    => q(Module::Provision),
-   home_page => q(http://www.roxsoft.co.uk),
+   module    => 'Module::Provision',
+   home_page => 'http://www.roxsoft.co.uk',
    requires  => {
       'perl'                  => 5.01,
       'namespace::sweep'      => 0.006,
@@ -18,7 +18,7 @@ Bob->new( {
       'Dist::Zilla'           => 4.300033,
       'Dist::Zilla::Plugin::ReadmeAnyFromPod'  => 0.120120,
       'Dist::Zilla::Plugin::VersionFromModule' => 0.08,
-      'File::DataClass'       => q(0.21.0),
+      'File::DataClass'       => q(0.22.0),
       'File::ShareDir'        => 1.02,
       'File::Slurp'           => 9999.13,
       'HTTP::Message'         => 6.06,
@@ -44,7 +44,7 @@ Bob->new( {
       'Module::Build'         => 0.4004, },
    build_requires             => {
       'version'               => 0.88,
-      'File::DataClass'       => q(0.21.0),
+      'File::DataClass'       => q(0.22.0),
       'Module::Build'         => 0.4004, },
    no_index_dir               => [ qw(bin examples inc share t) ],
 } )->create_build_script; # Goal!
