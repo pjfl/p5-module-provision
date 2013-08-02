@@ -1,10 +1,10 @@
-# @(#)Ident: Provision.pm 2013-07-30 13:02 pjf ;
+# @(#)Ident: Provision.pm 2013-08-02 18:44 pjf ;
 
 package Module::Provision;
 
 use 5.01;
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 19 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.17.%d', q$Rev: 20 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -32,7 +32,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.17.$Rev: 19 $ of L<Module::Provision>
+This documents version v0.17.$Rev: 20 $ of L<Module::Provision>
 
 =head1 Synopsis
 
