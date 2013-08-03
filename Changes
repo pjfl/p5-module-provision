@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.17.20   2013-08-02 19:45:33
+0.17.22   2013-08-03 20:22:50
+          - Moved Moo::Role to after function imports
           - Another new method for CPANTesting min Perl ver
           - New method for CPANTesting min Perl ver
           - Added fremen and frogman to tier gruber
