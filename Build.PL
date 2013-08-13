@@ -1,9 +1,9 @@
-# @(#)Ident: Build.PL 2013-08-10 14:26 pjf ;
+# @(#)Ident: Build.PL 2013-08-12 19:42 pjf ;
 
 use strict;
 use warnings;
 use inc::Bob; # Module::Build subclass
-use version; our $VERSION = qv( sprintf '0.18.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.18.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 Bob->new( {
    module    => 'Module::Provision',
@@ -16,9 +16,12 @@ Bob->new( {
       'CPAN::Uploader'        => 0.103004,
       'Date::Format'          => 2.24,
       'Dist::Zilla'           => 4.300033,
-      'Dist::Zilla::Plugin::ManifestInRoot'    => q(0.1.2),
-      'Dist::Zilla::Plugin::ReadmeAnyFromPod'  => 0.120120,
-      'Dist::Zilla::Plugin::VersionFromModule' => 0.08,
+      'Dist::Zilla::Plugin::ManifestInRoot'        => q(0.1.2),
+      'Dist::Zilla::Plugin::Meta::Dynamic::Config' => 0.04,
+      'Dist::Zilla::Plugin::ModuleBuild::Custom'   => 4.16,
+      'Dist::Zilla::Plugin::ReadmeAnyFromPod'      => 0.120120,
+      'Dist::Zilla::Plugin::Signature'             => 1.100930,
+      'Dist::Zilla::Plugin::VersionFromModule'     => 0.08,
       'File::DataClass'       => q(0.23.0),
       'File::ShareDir'        => 1.02,
       'File::Slurp'           => 9999.13,

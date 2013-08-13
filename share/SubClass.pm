@@ -1,4 +1,4 @@
-# @(#)Ident: SubClass.pm 2013-08-10 14:06 pjf ;
+# @(#)Ident: SubClass.pm 2013-08-12 15:14 pjf ;
 
 use Pod::Select;
 
@@ -71,3 +71,9 @@ sub _normalize_prereqs { # Dynamic config
 
    return $p;
 }
+
+# Local Variables:
+# mode: perl
+# tab-width: 3
+# End:
+# vim: expandtab shiftwidth=3:

@@ -1,4 +1,4 @@
-# @(#)Ident: Bob.pm 2013-08-10 14:21 pjf ;
+# @(#)Ident: Bob.pm 2013-08-12 17:52 pjf ;
 
 package Bob;
 
@@ -10,7 +10,7 @@ sub whimper { print {*STDOUT} $_[ 0 ]."\n"; exit 0 }
 
 BEGIN { my $reason; $reason = CPANTesting::should_abort and whimper $reason; }
 
-use version; our $VERSION = qv( '1.23' );
+use version; our $VERSION = qv( '1.24' );
 
 use File::Spec::Functions qw( catfile );
 use Module::Build;
@@ -98,7 +98,7 @@ sub __get_notes {
    $notes->{create_readme_md } = defined $p->{create_readme_md}
                                ? $p->{create_readme_md } :  1;
    $notes->{create_readme_pod} = $p->{create_readme_pod} || 0;
-   $notes->{is_cpan_testing  } = CPANTesting::is_testing();
+   $notes->{is_reporting     } = CPANTesting::is_testing();
    $notes->{min_perl_version } = $p->{_min_perl_ver};
    # Add a note to stop CPAN testing if requested in Build.PL
    $notes->{stop_tests       } = CPANTesting::test_exceptions( $p );
@@ -154,3 +154,4 @@ sub __get_svn_repository {
 # mode: perl
 # tab-width: 3
 # End:
+# vim: expandtab shiftwidth=3:

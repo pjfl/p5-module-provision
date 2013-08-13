@@ -1,4 +1,4 @@
-# @(#)$Ident: Build.PL 2013-07-13 10:19 pjf ;
+# @(#)$Ident: Build.PL 2013-08-12 15:16 pjf ;
 
 use strict;
 use warnings;
@@ -28,3 +28,4 @@ Bob->new( {
 # tab-title: [% project %]
 # tab-width: 3
 # End:
+# vim: expandtab shiftwidth=3:
