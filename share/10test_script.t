@@ -1,4 +1,4 @@
-# @(#)Ident: 10test_script.t 2013-08-12 17:45 pjf ;
+# @(#)Ident: 10test_script.t 2013-08-13 15:47 pjf ;
 
 use strict;
 use warnings;
@@ -14,8 +14,7 @@ my $notes = {};
 
 BEGIN {
    my $builder = eval { Module::Build->current };
-
-   $builder and $notes = $builder->notes;
+      $builder and $notes = $builder->notes;
 }
 
 use_ok '[% project %]';

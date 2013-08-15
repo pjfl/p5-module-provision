@@ -1,8 +1,8 @@
-# @(#)Ident: 10test_script.t 2013-08-08 13:06 pjf ;
+# @(#)Ident: 10test_script.t 2013-08-13 15:53 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.18.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.18.%d', q$Rev: 6 $ =~ /\d+/gmx );
 use File::Spec::Functions   qw( catdir catfile updir );
 use FindBin                 qw( $Bin );
 use lib                 catdir( $Bin, updir, 'lib' );
@@ -10,13 +10,12 @@ use lib                 catdir( $Bin, updir, 'lib' );
 use Module::Build;
 use Test::More;
 
-my $reason;
+my $notes = {};
 
 BEGIN {
    my $builder = eval { Module::Build->current };
-
-   $builder and $reason = $builder->notes->{stop_tests};
-   $reason  and $reason =~ m{ \A TESTS: }mx and plan skip_all => $reason;
+      $builder and $notes = $builder->notes;
+   lc $^O eq 'mswin32' and plan skip_all => 'TESTS: RT#87575';
 }
 
 use Cwd qw( getcwd );
@@ -50,32 +49,29 @@ sub test_cleanup {
    return;
 }
 
-SKIP: {
-   $reason =~ m{ \A tests: }mx and skip $reason, 7;
-   $prog = test_mp( 'MB', 'init_templates' ); $prog->run;
+$prog = test_mp( 'MB', 'init_templates' ); $prog->run;
 
-   ok -f catfile( qw(t code_templates index.json) ), 'Creates template index';
+ok -f catfile( qw(t code_templates index.json) ), 'Creates template index';
 
-   $prog->dist_pre_hook;
+$prog->dist_pre_hook;
 
-   like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
+like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
 
-   $prog->create_directories;
+$prog->create_directories;
 
-   ok -d catdir( qw(lib Foo) ), 'Creates lib/Foo dir';
-   ok -d 'inc', 'Creates inc dir';
-   ok -d 't', 'Creates t dir';
+ok -d catdir( qw(lib Foo) ), 'Creates lib/Foo dir';
+ok -d 'inc', 'Creates inc dir';
+ok -d 't', 'Creates t dir';
 
-   $prog->render_templates;
+$prog->render_templates;
 
-   ok -f catfile( qw(lib Foo Bar.pm) ), 'Creates lib/Foo/Bar.pm';
-   ok -f 'Build.PL', 'Creates Build.PL';
+ok -f catfile( qw(lib Foo Bar.pm) ), 'Creates lib/Foo/Bar.pm';
+ok -f 'Build.PL', 'Creates Build.PL';
 
-   test_cleanup( $owd );
-}
+test_cleanup( $owd );
 
 SKIP: {
-   $ENV{AUTHOR_TESTING} or skip 'tests: Only for developers', 3;
+   $ENV{AUTHOR_TESTING} or skip 'extended testing', 1;
 
    $prog = test_mp( 'DZ' );
 
