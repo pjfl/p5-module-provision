@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+          - Switched to Dist::Zilla
+
 0.18.4    2013-08-10 22:17:28
           - Updated share/dist.ini. Added share/DZ_Build.PL
           - Stopping testing on windows until RT#87575 is fixed
