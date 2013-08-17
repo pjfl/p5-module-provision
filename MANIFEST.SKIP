@@ -33,7 +33,7 @@
 \b_build
 
 # Avoid Dist::Zilla config file
-\bdist.ini$
+^dist.ini$
 
 # Avoid Devel::Cover generated files
 \bcover_db

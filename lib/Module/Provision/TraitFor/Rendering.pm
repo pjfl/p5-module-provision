@@ -1,9 +1,9 @@
-# @(#)Ident: Rendering.pm 2013-08-12 18:10 pjf ;
+# @(#)Ident: Rendering.pm 2013-08-15 23:25 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.18.%d', q$Rev: 5 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.19.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix is_arrayref distname throw );
@@ -122,10 +122,7 @@ sub _build__template_list {
    my $builders  = {
       DZ => [ [ 'dist.ini',           '_appldir' ],
               [ 'DZ_Build.PL',      [ '_appldir', 'Build.PL' ], ], ],
-      MB => [ [ 'Build.PL',           '_appldir' ],
-              [ 'Bob.pm',             '_incdir'  ],
-              [ 'CPANTesting.pm',     '_incdir'  ],
-              [ 'SubClass.pm',        '_incdir'  ], ],
+      MB => [ [ 'Build.PL',           '_appldir' ], ],
       MI => [ [ 'MI_Makefile.PL',   [ '_appldir', 'Makefile.PL' ], ], ], };
    my $templates = [ [ 'Changes',         '_appldir'     ],
                      [ 'MANIFEST.SKIP',   '_appldir'     ],
@@ -195,7 +192,7 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.18.$Rev: 5 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.19.$Rev: 5 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 

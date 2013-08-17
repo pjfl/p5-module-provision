@@ -1,8 +1,8 @@
-# @(#)Ident: 10test_script.t 2013-08-13 15:53 pjf ;
+# @(#)Ident: 10test_script.t 2013-08-17 15:35 pjf ;
 
 use strict;
 use warnings;
-use version; our $VERSION = qv( sprintf '0.18.%d', q$Rev: 6 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.19.%d', q$Rev: 5 $ =~ /\d+/gmx );
 use File::Spec::Functions   qw( catdir catfile updir );
 use FindBin                 qw( $Bin );
 use lib                 catdir( $Bin, updir, 'lib' );
@@ -10,14 +10,16 @@ use lib                 catdir( $Bin, updir, 'lib' );
 use Module::Build;
 use Test::More;
 
-my $notes = {};
+my $notes = {}; my $perl_ver;
 
 BEGIN {
    my $builder = eval { Module::Build->current };
-      $builder and $notes = $builder->notes;
+   $builder and $notes = $builder->notes;
+   $perl_ver = $notes->{min_perl_version} || 5.008;
    lc $^O eq 'mswin32' and plan skip_all => 'TESTS: RT#87575';
 }
 
+use Test::Requires "${perl_ver}";
 use Cwd qw( getcwd );
 use File::DataClass::IO;
 
@@ -44,14 +46,14 @@ sub test_mp {
 sub test_cleanup {
    my $owd = shift; chdir $owd;
 
-   io( catdir( qw(t Foo-Bar)        ) )->rmtree();
-   io( catdir( qw(t code_templates) ) )->rmtree();
+   io( catdir( qw( t Foo-Bar )        ) )->rmtree();
+   io( catdir( qw( t code_templates ) ) )->rmtree();
    return;
 }
 
 $prog = test_mp( 'MB', 'init_templates' ); $prog->run;
 
-ok -f catfile( qw(t code_templates index.json) ), 'Creates template index';
+ok -f catfile( qw( t code_templates index.json ) ), 'Creates template index';
 
 $prog->dist_pre_hook;
 
@@ -59,13 +61,13 @@ like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
 
 $prog->create_directories;
 
-ok -d catdir( qw(lib Foo) ), 'Creates lib/Foo dir';
+ok -d catdir( qw( lib Foo ) ), 'Creates lib/Foo dir';
 ok -d 'inc', 'Creates inc dir';
 ok -d 't', 'Creates t dir';
 
 $prog->render_templates;
 
-ok -f catfile( qw(lib Foo Bar.pm) ), 'Creates lib/Foo/Bar.pm';
+ok -f catfile( qw( lib Foo Bar.pm ) ), 'Creates lib/Foo/Bar.pm';
 ok -f 'Build.PL', 'Creates Build.PL';
 
 test_cleanup( $owd );
@@ -94,9 +96,9 @@ SKIP: {
 
 done_testing;
 
-unlink catfile( qw(t .foo-bar.rev) );
-unlink catfile( qw(t ipc_srlock.lck) );
-unlink catfile( qw(t ipc_srlock.shm) );
+unlink catfile( qw( t .foo-bar.rev ) );
+unlink catfile( qw( t ipc_srlock.lck ) );
+unlink catfile( qw( t ipc_srlock.shm ) );
 
 # Local Variables:
 # mode: perl
