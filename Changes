@@ -1,5 +1,8 @@
 Revision history for Module::Provision
 
+0.20.1    2013-08-17 16:43:40
+          - Bumped dependencies
+
 0.19.5    2013-08-17 16:37:36
           - Switched to Dist::Zilla
 
