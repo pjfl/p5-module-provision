@@ -1,6 +1,7 @@
 Revision history for Module::Provision
 
-0.20.1    2013-08-17 16:43:40
+0.20.2    2013-08-19 14:59:28
+          - Fixed prereq report with Dzil
           - Bumped dependencies
 
 0.19.5    2013-08-17 16:37:36
