@@ -1,9 +1,9 @@
-# @(#)Ident: PrereqDifferences.pm 2013-08-19 13:54 pjf ;
+# @(#)Ident: PrereqDifferences.pm 2013-08-20 22:58 pjf ;
 
 package Module::Provision::TraitFor::PrereqDifferences;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.20.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.20.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile is_member emit throw );
@@ -142,10 +142,11 @@ sub _filter_configure_requires_paths {
 }
 
 sub _filter_requires_paths {
-   my $file = $_[ 0 ]->project_file;
+   my $file    = $_[ 0 ]->project_file;
+   my $pattern = $file eq 'dist.ini' ? '(?: Build.PL | Makefile.PL )' : $file;
 
-   return [ grep { not m{ \A inc }mx and not m{ \.t \z }mx and $_ ne $file }
-                @{ $_[ 1 ] } ];
+   return [ grep { not m{ \A inc }mx and not m{ \.t \z }mx
+                      and not m{ \A $pattern \z }mx } @{ $_[ 1 ] } ];
 }
 
 sub _is_perl_source {
@@ -319,7 +320,7 @@ Module::Provision::TraitFor::PrereqDifferences - Displays a prerequisite differe
 
 =head1 Version
 
-This documents version v0.20.$Rev: 2 $ of
+This documents version v0.20.$Rev: 3 $ of
 L<Module::Provision::TraitFor::PrereqDifferences>
 
 =head1 Description
