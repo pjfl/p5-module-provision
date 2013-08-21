@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.18.$Rev: 5 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.22.$Rev: 2 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
 
 # Synopsis
 
