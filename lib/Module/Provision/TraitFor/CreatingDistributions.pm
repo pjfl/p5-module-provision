@@ -3,7 +3,7 @@
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.25.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.26.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( emit emit_to throw trim );
@@ -204,7 +204,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.25.$Rev: 3 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.26.$Rev: 1 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 

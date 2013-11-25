@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+0.26.1    2013-11-25 21:28:18
+          - Dropped DZ::P::MarkdownInRoot from dist.ini
           - Added select_project
           - Added ::Config::test_env_vars
 

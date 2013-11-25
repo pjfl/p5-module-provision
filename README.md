@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.25.$Rev: 1 $ of [Module::Provision](https://metacpan.org/module/Module::Provision)
+This documents version v0.26.$Rev: 0 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
 
 # Synopsis
 
@@ -41,21 +41,21 @@ This documents version v0.25.$Rev: 1 $ of [Module::Provision](https://metacpan.o
 
 # Description
 
-[Module::Provision](https://metacpan.org/module/Module::Provision) is used to create a skeletal CPAN distribution,
+[Module::Provision](https://metacpan.org/pod/Module::Provision) is used to create a skeletal CPAN distribution,
 including basic builder scripts, tests, documentation, and module
 code. It creates a VCS repository and, with Git as the VCS, installs
 some hooks that mimic the RCS Revision keyword expansion
 
-On first use the directory `~/.module\_provision` is created and
+On first use the directory `~/.module_provision` is created and
 populated with templates and an index file `index.json`. The author
 name, id, and email are derived from the system (the environment
 variables `AUTHOR` and `EMAIL` take precedence). They can be
 overridden by the values in the configuration file
-`~/.module\_provision/module\_provision.json`
+`~/.module_provision/module_provision.json`
 
 If the default builder (`MB`) is used, then the project file
 `Build.PL` loads `inc::Bob` which instantiates an inline subclass of
-[Module::Build](https://metacpan.org/module/Module::Build). The code for the subclass is in
+[Module::Build](https://metacpan.org/pod/Module::Build). The code for the subclass is in
 `inc::SubClass`. The file `inc::CPANTesting` allows for fine grained
 control over which tests are run by which CPAN Testing smokers
 
@@ -64,7 +64,7 @@ changed from the command line or from the configuration file
 
 If the Git VCS is used `precommit` and `commit-msg` hooks are
 installed. The `precommit` hook will expand the RCS Revision keyword
-in files on the master branch if the file `.distribution\_name.rev`
+in files on the master branch if the file `.distribution_name.rev`
 exists in the parent of the working tree. The `precommit` hook will
 also update the version number and date/time stamp in the change log
 (`Changes`).  The `commit-msg` hook will extract the first comment
@@ -97,7 +97,7 @@ The alias:
 
     alias ident='ack "@\(#\)"'
 
-uses the [App::Ack](https://metacpan.org/module/App::Ack) program to implement the old SYSV R4 `ident`
+uses the [App::Ack](https://metacpan.org/pod/App::Ack) program to implement the old SYSV R4 `ident`
 command
 
 The templates for the project files `dist.ini`, `Build.PL`, and
@@ -113,7 +113,7 @@ Emacs:
 
 Perl mode is preferred over C-Perl mode since the former has better
 syntax highlighting. Tabs are expanded to three spaces. The
-`tab-title` variable is used by [Yakuake::Sessions](https://metacpan.org/module/Yakuake::Sessions) to set the tab
+`tab-title` variable is used by [Yakuake::Sessions](https://metacpan.org/pod/Yakuake::Sessions) to set the tab
 title for the terminal emulator. The `load-project-state` Lisp looks
 like this:
 
@@ -123,7 +123,7 @@ like this:
              (message (concat "Not found: " state-file)))))
 
 It assumes that the TinyDesk state file containing the list of files to edit
-for the project has been saved in `~/.emacs.d/config/state.\[% appdir %\]`. To
+for the project has been saved in `~/.emacs.d/config/state.[% appdir %]`. To
 work on a project; change directory to the working copy, edit the project
 file `Build.PL` with Emacs, this will load all of the other files in the
 project into separate buffers displaying each in the tab bar. This Lisp code
@@ -144,10 +144,10 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 # Configuration and Environment
 
 The configuration file defaults to
-`~/.module\_provision/module\_provision.json`. All of the attributes
-listed in [Module::Provision::Config](https://metacpan.org/module/Module::Provision::Config) can be set from the
+`~/.module_provision/module_provision.json`. All of the attributes
+listed in [Module::Provision::Config](https://metacpan.org/pod/Module::Provision::Config) can be set from the
 configuration file in addition to the attributes listed in
-[Class::Usul::Config::Programs](https://metacpan.org/module/Class::Usul::Config::Programs) and [Class::Usul::Config](https://metacpan.org/module/Class::Usul::Config). A typical
+[Class::Usul::Config::Programs](https://metacpan.org/pod/Class::Usul::Config::Programs) and [Class::Usul::Config](https://metacpan.org/pod/Class::Usul::Config). A typical
 file looks like;
 
     {
@@ -160,10 +160,10 @@ file looks like;
        "home_page": "http://www.example.com"
     }
 
-Creating `logs` and `tmp` directories in `~/.module\_provision` will cause
+Creating `logs` and `tmp` directories in `~/.module_provision` will cause
 the log and temporary files to use them instead of `/tmp`
 
-Extends [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base). Applies these traits;
+Extends [Module::Provision::Base](https://metacpan.org/pod/Module::Provision::Base). Applies these traits;
 `AddingFiles`, `CreatingDistributions`, `Rendering`,
 `UpdatingContent`, and `VCS`
 
@@ -213,7 +213,7 @@ Generates the distribution metadata files
 
     module-provision init_templates
 
-Initialise the `.module\_provision` directory and create the `index.json` file
+Initialise the `.module_provision` directory and create the `index.json` file
 
 ## module
 
@@ -239,6 +239,13 @@ removed from, or updated in the project file
     module-provision prove
 
 Runs the projects tests
+
+## select\_project
+
+    cd $(module_provision -q select_project 2>&1 1>/dev/tty)
+
+Displays a list of available projects. Calls `edit_project` on the selected
+option
 
 ## set\_branch
 
@@ -293,13 +300,13 @@ Add `-D` to command line to turn on debug output
 
 # Dependencies
 
-- [Module::Provision::Base](https://metacpan.org/module/Module::Provision::Base)
-- [Module::Provision::TraitFor::AddingFiles](https://metacpan.org/module/Module::Provision::TraitFor::AddingFiles)
-- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/module/Module::Provision::TraitFor::CreatingDistributions)
-- [Module::Provision::TraitFor::Rendering](https://metacpan.org/module/Module::Provision::TraitFor::Rendering)
-- [Module::Provision::TraitFor::UpdatingContent](https://metacpan.org/module/Module::Provision::TraitFor::UpdatingContent)
-- [Module::Provision::TraitFor::VCS](https://metacpan.org/module/Module::Provision::TraitFor::VCS)
-- [Moo](https://metacpan.org/module/Moo)
+- [Module::Provision::Base](https://metacpan.org/pod/Module::Provision::Base)
+- [Module::Provision::TraitFor::AddingFiles](https://metacpan.org/pod/Module::Provision::TraitFor::AddingFiles)
+- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/pod/Module::Provision::TraitFor::CreatingDistributions)
+- [Module::Provision::TraitFor::Rendering](https://metacpan.org/pod/Module::Provision::TraitFor::Rendering)
+- [Module::Provision::TraitFor::UpdatingContent](https://metacpan.org/pod/Module::Provision::TraitFor::UpdatingContent)
+- [Module::Provision::TraitFor::VCS](https://metacpan.org/pod/Module::Provision::TraitFor::VCS)
+- [Moo](https://metacpan.org/pod/Moo)
 
 # Incompatibilities
 
@@ -316,7 +323,7 @@ and pull requests are welcome
 
 Larry Wall - For the Perl programming language
 
-[Module::Starter](https://metacpan.org/module/Module::Starter) - For some of the documentation and tests
+[Module::Starter](https://metacpan.org/pod/Module::Starter) - For some of the documentation and tests
 
 # Author
 
@@ -327,7 +334,7 @@ Peter Flanigan, `<pjfl@cpan.org>`
 Copyright (c) 2013 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself. See [perlartistic](https://metacpan.org/module/perlartistic)
+under the same terms as Perl itself. See [perlartistic](https://metacpan.org/pod/perlartistic)
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT WARRANTY; without even the implied warranty of
