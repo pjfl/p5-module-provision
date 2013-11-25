@@ -1,9 +1,9 @@
-# @(#)Ident: CreatingDistributions.pm 2013-11-25 15:53 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2013-11-25 16:00 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.25.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.25.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( emit emit_to throw trim );
@@ -204,7 +204,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.25.$Rev: 2 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.25.$Rev: 3 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
@@ -285,6 +285,14 @@ Calls L</generate_metadata> with the create flag set to C<FALSE>
    $exit_code = $self->prove;
 
 Returns the exit code
+
+=head2 select_project - List available projects and select one to edit
+
+   $exit_code = $self->select_project
+
+Use from the shell like this:
+
+   cd $(module_provision -q select_project 2>&1 1>/dev/tty)
 
 =head2 show_tab_title - Display the tab title for the current distribution
 
