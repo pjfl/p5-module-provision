@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Use DZ::P::AbstractFromPOD
           - Use DZ::P::LicenseFromModule
           - Fixed fd3 usage in select_project
 

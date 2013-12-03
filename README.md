@@ -4,7 +4,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.26.$Rev: 0 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
+This documents version v0.26.$Rev: 2 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
 
 # Synopsis
 
@@ -242,7 +242,7 @@ Runs the projects tests
 
 ## select\_project
 
-    cd $(module_provision -q select_project 2>&1 1>/dev/tty)
+    cd $(module_provision -q select_project 3>&1 1>/dev/tty 2>/dev/null)
 
 Displays a list of available projects. Calls `edit_project` on the selected
 option
