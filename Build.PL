@@ -1,4 +1,4 @@
-# @(#)$Ident: Build.PL 2013-12-12 01:17 pjf ;
+# @(#)$Ident: Build.PL 2013-12-12 10:14 pjf ;
 
 use strict;
 use warnings;
@@ -11,6 +11,7 @@ my $perl_ver = ##{ $meta2{prereqs}->{runtime}->{requires}->{perl} ##};
 my $name     = '##{ $zilla->name ##}'; $name =~ s{ - }{::}gmx;
 
 $] >= $perl_ver
+   or $ENV{AUTOMATED_TESTING}
    or $ENV{PERL_CPAN_REPORTER_CONFIG}
    or $ENV{PERL5_CPANPLUS_IS_VERSION}
    or whimper "Minimum required Perl version is ${perl_ver}";
