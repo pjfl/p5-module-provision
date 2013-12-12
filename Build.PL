@@ -1,4 +1,4 @@
-# @(#)$Ident: Build.PL 2013-12-12 21:06 pjf ;
+# @(#)$Ident: Build.PL 2013-12-12 21:31 pjf ;
 
 use strict;
 use warnings;
@@ -17,7 +17,8 @@ unless ($] >= $perl_ver) {
       or $ENV{PERL_CPAN_REPORTER_CONFIG}
       or $ENV{PERL5_CPANPLUS_IS_VERSION}
       or whimper "Minimum required Perl version is ${perl_ver}";
-   delete $prereqs->{build_requires};
+   $prereqs->{build_requires} = $prereqs->{configure_requires};
+   $prereqs->{build_requires}->{ 'Test::Requires' } = 0.06;
    delete $prereqs->{requires};
 }
 
