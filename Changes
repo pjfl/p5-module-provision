@@ -1,5 +1,8 @@
 Revision history for Module::Provision
 
+          - Stopped localizing error messages
+          - Added update_file method to copy from template dir
+
 0.29.1    2013-12-12 21:26:25
           - Remove prereqs below min_perl_ver
 

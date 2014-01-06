@@ -1,15 +1,16 @@
-# @(#)Ident: VCS.pm 2013-10-03 14:43 pjf ;
+# @(#)Ident: VCS.pm 2014-01-06 16:02 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( is_win32 throw );
 use Class::Usul::Types      qw( Bool );
 use Perl::Version;
 use Scalar::Util            qw( blessed );
+use Unexpected::Functions   qw( Unspecified );
 use Moo::Role;
 
 requires qw( add_leader appbase appldir branch chdir config default_branch
@@ -63,7 +64,7 @@ sub add_hooks : method {
 sub add_to_vcs {
    my ($self, $target, $type) = @_;
 
-   $target or throw $self->loc( 'VCS target not specified' );
+   $target or throw class => Unspecified, args => [ 'VCS target' ];
    $self->vcs eq 'git' and $self->_add_to_git( $target, $type );
    $self->vcs eq 'svn' and $self->_add_to_svn( $target, $type );
    return;
@@ -114,7 +115,7 @@ sub _add_git_hooks {
 sub _add_tag {
    my ($self, $tag) = @_;
 
-   $tag or throw $self->loc( 'VCS tag version not specified' );
+   $tag or throw class => Unspecified, args => [ 'VCS tag version' ];
    $self->output( 'Creating tagged release v[_1]', { args => [ $tag ] } );
    $self->vcs eq 'git' and $self->_add_tag_to_git( $tag );
    $self->vcs eq 'svn' and $self->_add_tag_to_svn( $tag );
@@ -321,7 +322,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.29.$Rev: 1 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.29.$Rev: 2 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 

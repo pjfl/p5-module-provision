@@ -1,9 +1,9 @@
-# @(#)Ident: Base.pm 2013-11-26 12:27 pjf ;
+# @(#)Ident: Base.pm 2014-01-06 16:07 pjf ;
 
 package Module::Provision::Base;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Moo;
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir throw );
@@ -16,6 +16,7 @@ use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
 use Module::Metadata;
 use Perl::Version;
 use Type::Utils             qw( enum );
+use Unexpected::Functions   qw( Unspecified );
 
 extends q(Class::Usul::Programs);
 
@@ -108,9 +109,9 @@ has '_license_keys'   => is => 'lazy', isa => HashRef;
 sub chdir {
    my ($self, $dir) = @_;
 
-         $dir or throw $self->loc( 'Directory not specified in chdir' );
-   chdir $dir or throw $self->loc( 'Directory [_1] cannot chdir: [_2]',
-                                   $dir, $OS_ERROR );
+         $dir or throw class => Unspecified, args => [ 'Chdir directory' ];
+   chdir $dir or throw error => 'Directory [_1] cannot chdir: [_2]',
+                       args  => [ $dir, $OS_ERROR ];
    return $dir;
 }
 
@@ -211,13 +212,14 @@ sub _build_project {
       for my $file (grep { $_->exists }
                     map  { $dir->catfile( $BUILDERS{ $_ } ) } __builders()) {
          $module = __get_module_from( $file->all ) and return $module;
-         throw $self->loc( 'File [_1] contains no module name', $file );
+         throw error => 'File [_1] contains no module name', args => [ $file ];
       }
 
       $prev = $dir; $dir = $dir->parent;
    }
 
-   throw $self->loc( 'Path [_1] contains no project files', $self->initial_wd );
+   throw error => 'Path [_1] contains no project files',
+         args  => [ $self->initial_wd ];
    return; # Never reached
 }
 
@@ -322,7 +324,7 @@ Module::Provision::Base - Immutable data object
 
 =head1 Version
 
-This documents version v0.29.$Rev: 1 $ of L<Module::Provision::Base>
+This documents version v0.29.$Rev: 2 $ of L<Module::Provision::Base>
 
 =head1 Description
 

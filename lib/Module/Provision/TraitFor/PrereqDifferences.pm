@@ -1,13 +1,12 @@
-# @(#)Ident: PrereqDifferences.pm 2013-11-23 13:27 pjf ;
+# @(#)Ident: PrereqDifferences.pm 2014-01-06 15:58 pjf ;
 
 package Module::Provision::TraitFor::PrereqDifferences;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions  qw( classfile ensure_class_loaded
-                                is_member emit throw );
+use Class::Usul::Functions  qw( classfile ensure_class_loaded is_member emit );
 use Config::Tiny;
 use English                 qw( -no_match_vars );
 use Module::Metadata;
@@ -322,7 +321,7 @@ Module::Provision::TraitFor::PrereqDifferences - Displays a prerequisite differe
 
 =head1 Version
 
-This documents version v0.29.$Rev: 1 $ of
+This documents version v0.29.$Rev: 2 $ of
 L<Module::Provision::TraitFor::PrereqDifferences>
 
 =head1 Description

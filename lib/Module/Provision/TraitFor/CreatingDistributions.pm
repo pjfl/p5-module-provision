@@ -1,12 +1,12 @@
-# @(#)Ident: CreatingDistributions.pm 2013-11-26 23:34 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2014-01-06 15:58 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions  qw( emit emit_to throw trim );
+use Class::Usul::Functions  qw( emit emit_to trim );
 use Class::Usul::Types      qw( ArrayRef NonEmptySimpleStr );
 use English                 qw( -no_match_vars );
 use IO::Handle;
@@ -209,7 +209,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.29.$Rev: 1 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.29.$Rev: 2 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
