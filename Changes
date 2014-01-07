@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Apply C::U::T::MetaData for get_meta method
           - Stopped localizing error messages
           - Added update_file method to copy from template dir
 
