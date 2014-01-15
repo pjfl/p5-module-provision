@@ -1,12 +1,12 @@
-# @(#)Ident: Rendering.pm 2014-01-06 17:20 pjf ;
+# @(#)Ident: Rendering.pm 2014-01-12 02:27 pjf ;
 
 package Module::Provision::TraitFor::Rendering;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions  qw( app_prefix is_arrayref distname throw );
+use Class::Usul::Functions  qw( app_prefix is_arrayref distname io throw );
 use File::DataClass::Types  qw( ArrayRef Bool Directory Path SimpleStr );
 use File::ShareDir            ( );
 use Scalar::Util            qw( blessed weaken );
@@ -16,7 +16,7 @@ use Moo::Role;
 use Class::Usul::Options;
 
 requires qw( add_leader appldir builder config dist_module exec_perms file
-             incdir initial_wd io loc log perms stash testdir vcs yorn );
+             incdir initial_wd loc log perms stash testdir vcs yorn );
 
 # Object attributes (public)
 option 'force'        => is => 'ro',   isa => Bool, default => FALSE,
@@ -46,7 +46,7 @@ sub expand_tuple {
    for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
       if (is_arrayref $tuple->[ $i ]) {
          $tuple->[ $i ]->[ 0 ] = $self->_deref_tmpl( $tuple->[ $i ]->[ 0 ] );
-         $tuple->[ $i ] = $self->io( $tuple->[ $i ] );
+         $tuple->[ $i ] = io( $tuple->[ $i ] );
       }
       else {
          $tuple->[ $i ] = $self->_deref_tmpl( $tuple->[ $i ] );
@@ -104,12 +104,12 @@ sub _build_template_dir {
    my $self  = shift;
    my $class = blessed $self;
    my $tgt   = $self->templates
-             ? $self->io( [ $self->templates ] )->absolute( $self->initial_wd )
-             : $self->io( [ $self->config->my_home, '.'.(app_prefix $class) ] );
+             ? io( [ $self->templates ] )->absolute( $self->initial_wd )
+             : io( [ $self->config->my_home, '.'.(app_prefix $class) ] );
 
    $tgt->exists and return $tgt; $tgt->mkpath( $self->exec_perms );
 
-   my $dist  = $self->io( File::ShareDir::dist_dir( distname $class ) );
+   my $dist  = io( File::ShareDir::dist_dir( distname $class ) );
 
    $_->copy( $tgt ) for ($dist->all_files);
 
@@ -199,7 +199,7 @@ Module::Provision::TraitFor::Rendering - Renders Templates
 
 =head1 Version
 
-This documents version v0.29.$Rev: 2 $ of L<Module::Provision::TraitFor::Rendering>
+This documents version v0.29.$Rev: 4 $ of L<Module::Provision::TraitFor::Rendering>
 
 =head1 Description
 

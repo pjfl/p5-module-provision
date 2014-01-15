@@ -1,12 +1,12 @@
-# @(#)Ident: VCS.pm 2014-01-06 16:02 pjf ;
+# @(#)Ident: VCS.pm 2014-01-10 21:02 pjf ;
 
 package Module::Provision::TraitFor::VCS;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions  qw( is_win32 throw );
+use Class::Usul::Functions  qw( io is_win32 throw );
 use Class::Usul::Types      qw( Bool );
 use Perl::Version;
 use Scalar::Util            qw( blessed );
@@ -89,7 +89,7 @@ sub set_branch : method {
 
    $self->can( $method ) or return OK;
 
-   my $sfname = __get_state_file_name( $self->io( $self->project_file ) );
+   my $sfname = __get_state_file_name( $self->project_file );
    my $sfpath = $self->$method( $sfname );
    my $sep    = is_win32 ? "\\" : '/';
 
@@ -296,7 +296,7 @@ sub _svn_ignore_meta_files {
 sub __get_state_file_name {
    return (map  { m{ load-project-state \s+ [\'\"](.+)[\'\"] }mx; }
            grep { m{ eval: \s+ \( \s* load-project-state }mx }
-           $_[ 0 ]->getlines)[ -1 ];
+           io( $_[ 0 ] )->getlines)[ -1 ];
 }
 
 sub __tag_from_version {
@@ -322,7 +322,7 @@ Module::Provision::TraitFor::VCS - Version Control
 
 =head1 Version
 
-This documents version v0.29.$Rev: 2 $ of L<Module::Provision::TraitFor::VCS>
+This documents version v0.29.$Rev: 4 $ of L<Module::Provision::TraitFor::VCS>
 
 =head1 Description
 

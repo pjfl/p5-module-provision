@@ -1,9 +1,9 @@
-# @(#)Ident: AddingFiles.pm 2014-01-06 17:34 pjf ;
+# @(#)Ident: AddingFiles.pm 2014-01-10 19:11 pjf ;
 
 package Module::Provision::TraitFor::AddingFiles;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile throw );
@@ -127,7 +127,7 @@ Module::Provision::TraitFor::AddingFiles - Adds additional files to the project
 
 =head1 Version
 
-This documents version v0.29.$Rev: 2 $ of L<Module::Provision::TraitFor::AddingFiles>
+This documents version v0.29.$Rev: 4 $ of L<Module::Provision::TraitFor::AddingFiles>
 
 =head1 Description
 
@@ -164,7 +164,7 @@ Creates a new program specified by the program name on the command line
 
 Creates a new test specified by the test file name on the command line
 
-=head2 update_file - Updates a project file with one from the template dir.
+=head2 update_file - Updates a project file with one from the template directory
 
    $exit_code = $self->update;
 

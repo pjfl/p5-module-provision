@@ -1,14 +1,14 @@
-# @(#)Ident: CPANDistributions.pm 2014-01-06 16:36 pjf ;
+# @(#)Ident: CPANDistributions.pm 2014-01-12 02:31 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::sweep;
-use version;  our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version;  our $VERSION = qv( sprintf '0.29.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
                                  is_encrypted );
-use Class::Usul::Functions   qw( ensure_class_loaded throw );
+use Class::Usul::Functions   qw( ensure_class_loaded io throw );
 use Class::Usul::Types       qw( NonEmptySimpleStr );
 use English                  qw( -no_match_vars );
 use HTTP::Request::Common    qw( POST );
@@ -18,7 +18,7 @@ use Unexpected::Functions    qw( Unspecified );
 use Moo::Role;
 
 requires qw( add_leader config debug distname dist_version dumper
-             info io loc log next_argv output yorn );
+             info loc log next_argv output yorn );
 
 # Private attributes
 has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
@@ -73,7 +73,7 @@ sub set_cpan_password : method {
    my $self = shift; my $args = $self->_read_rc_file;
 
    $args->{password} = $self->next_argv
-      or throw class => Unspecified, args  => [ 'Password' ];
+      or throw class => Unspecified, args  => [ 'password' ];
    $self->_write_rc_file( $args );
    return OK;
 }
@@ -152,18 +152,19 @@ sub _log_http_debug {
 sub _read_rc_file {
    my $self = shift; my $dir = $self->config->my_home; my $attr = {};
 
-   for ($self->io( [ $dir, '.pause' ] )->chomp->getlines) {
+   for (io( [ $dir, '.pause' ] )->chomp->getlines) {
       ($_ and $_ !~ m{ \A \s* \# }mx) or next;
 
       my ($k, $v) = m{ \A \s* (\w+) (?: \s+ (.+))? \z }mx;
 
       exists $attr->{ $k }
          and throw error => 'Multiple entries for [_1]', args => [ $k ];
-      $attr->{ $k } = $v || NUL;
+      $attr->{ $k } = $v // NUL;
    }
 
    my $pword; exists $attr->{password}
-      and $pword = $attr->{password} and is_encrypted( $pword )
+      and $pword = $attr->{password}
+      and is_encrypted( $pword )
       and $attr->{password} = decrypt_from_config( $self->config, $pword );
 
    return $attr;
@@ -236,7 +237,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.29.$Rev: 2 $ of
+This documents version v0.29.$Rev: 4 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description

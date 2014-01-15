@@ -1,12 +1,12 @@
-# @(#)Ident: CreatingDistributions.pm 2014-01-06 15:58 pjf ;
+# @(#)Ident: CreatingDistributions.pm 2014-01-12 02:28 pjf ;
 
 package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.29.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
-use Class::Usul::Functions  qw( emit emit_to trim );
+use Class::Usul::Functions  qw( emit emit_to io trim );
 use Class::Usul::Types      qw( ArrayRef NonEmptySimpleStr );
 use English                 qw( -no_match_vars );
 use IO::Handle;
@@ -14,7 +14,7 @@ use Moo::Role;
 use Class::Usul::Options;
 
 requires qw( appbase appldir branch builder chdir config exec_perms
-             homedir incdir io method output next_argv project_file
+             homedir incdir method output next_argv project_file
              quiet render_templates run_cmd stash testdir vcs );
 
 # Object attributes (public)
@@ -162,7 +162,7 @@ sub select_project : method {
 sub show_tab_title : method {
    my $self = shift;
    my $file = $self->next_argv || $self->_project_file_path;
-   my $text = (grep { m{ tab-title: }msx } $self->io( $file )->getlines)[ -1 ];
+   my $text = (grep { m{ tab-title: }msx } io( $file )->getlines)[ -1 ];
 
    emit trim( (split m{ : }msx, $text || NUL, 2)[ 1 ] ).SPC.$self->appbase;
    return OK;
@@ -209,7 +209,7 @@ Module::Provision::TraitFor::CreatingDistributions - Create distributions
 
 =head1 Version
 
-This documents version v0.29.$Rev: 2 $ of L<Module::Provision::TraitFor::CreatingDistributions>
+This documents version v0.29.$Rev: 4 $ of L<Module::Provision::TraitFor::CreatingDistributions>
 
 =head1 Description
 
