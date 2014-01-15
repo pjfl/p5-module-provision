@@ -1,9 +1,9 @@
-# @(#)Ident: CPANDistributions.pm 2014-01-12 02:31 pjf ;
+# @(#)Ident: CPANDistributions.pm 2014-01-15 16:31 pjf ;
 
 package Module::Provision::TraitFor::CPANDistributions;
 
 use namespace::sweep;
-use version;  our $VERSION = qv( sprintf '0.29.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version;  our $VERSION = qv( sprintf '0.30.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
 use Class::Usul::Constants;
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
@@ -14,7 +14,7 @@ use English                  qw( -no_match_vars );
 use HTTP::Request::Common    qw( POST );
 use HTTP::Status;
 use Scalar::Util             qw( blessed );
-use Unexpected::Functions    qw( Unspecified );
+use Unexpected::Functions    qw( PathNotFound Unspecified );
 use Moo::Role;
 
 requires qw( add_leader config debug distname dist_version dumper
@@ -34,7 +34,7 @@ sub cpan_upload : method {
       -f $file or $file = $self->distname.'-v'.$self->dist_version.'.tar.gz';
    }
 
-   -f $file or throw error => 'File [_1] not found', args => [ $file ];
+   -f $file or throw class => PathNotFound, args => [ $file ];
 
    ensure_class_loaded( 'CPAN::Uploader' );
 
@@ -237,7 +237,7 @@ Module::Provision::TraitFor::CPANDistributions - Uploads/Deletes distributions t
 
 =head1 Version
 
-This documents version v0.29.$Rev: 4 $ of
+This documents version v0.30.$Rev: 1 $ of
 L<Module::Provision::TraitFor::CPANDistributions>
 
 =head1 Description
