@@ -1,5 +1,8 @@
 Revision history for Module::Provision
 
+          - Removed dependency on File::Slurp. Not needed since
+            D:Z:P:ManifestInRoot became a seperate dist
+
 0.32.1    2014-05-01 15:32:09
           - Removed Ident and VERSION lines
 
