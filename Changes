@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Better parsing of module name from project file
           - Validate args in call to update_copyright_year
 
 0.34.1    2014-05-19 12:45:10
