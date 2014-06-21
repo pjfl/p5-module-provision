@@ -2,7 +2,7 @@ package Module::Provision;
 
 use 5.010001;
 use namespace::sweep;
-use version; our $VERSION = qv( sprintf '0.34.%d', q$Rev: 3 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.34.%d', q$Rev: 4 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -29,7 +29,13 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.34.$Rev: 3 $ of L<Module::Provision>
+This documents version v0.34.$Rev: 4 $ of L<Module::Provision>
+
+=begin markdown
+
+[![CPAN version](https://badge.fury.io/pl/Module-Provision.svg)](http://badge.fury.io/pl/Module-Provision)
+
+=end markdown
 
 =head1 Synopsis
 
