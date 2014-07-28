@@ -1,6 +1,6 @@
 package Module::Provision::TraitFor::VCS;
 
-use namespace::sweep;
+use namespace::autoclean;
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( io is_win32 throw );

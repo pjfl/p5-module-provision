@@ -1,6 +1,6 @@
 package Module::Provision::TraitFor::PrereqDifferences;
 
-use namespace::sweep;
+use namespace::autoclean;
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( classfile ensure_class_loaded

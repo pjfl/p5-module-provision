@@ -1,6 +1,6 @@
 package Module::Provision::Config;
 
-use namespace::sweep;
+use namespace::autoclean;
 
 use Moo;
 use Class::Usul::Constants;

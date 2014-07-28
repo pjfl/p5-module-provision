@@ -1,6 +1,6 @@
 package Module::Provision::TraitFor::UpdatingContent;
 
-use namespace::sweep;
+use namespace::autoclean;
 
 use Class::Usul::Constants;
 use Class::Usul::Functions qw( throw );

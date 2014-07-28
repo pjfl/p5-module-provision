@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Replaced namespace::sweep with namespace::autoclean
           - Added fury badge
           - Better parsing of module name from project file
           - Validate args in call to update_copyright_year

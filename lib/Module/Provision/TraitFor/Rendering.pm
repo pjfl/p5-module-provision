@@ -1,6 +1,6 @@
 package Module::Provision::TraitFor::Rendering;
 
-use namespace::sweep;
+use namespace::autoclean;
 
 use Class::Usul::Constants;
 use Class::Usul::Functions  qw( app_prefix is_arrayref distname io throw );
