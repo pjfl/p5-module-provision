@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Add .pm files to prereq_diffs for build_requires
           - Ignore t/* files in prereq_diffs for requires
           - Replaced namespace::sweep with namespace::autoclean
           - Added fury badge
