@@ -138,7 +138,8 @@ sub _build_template_list {
                      [ '05kwalitee.t',    '_testdir'     ],
                      [ '06yaml.t',        '_testdir'     ],
                      [ '07podspelling.t', '_testdir'     ],
-                     [ '10test_script.t', '_testdir'     ], ];
+                     [ '10test_script.t', '_testdir'     ],
+                     [ 'boilerplate.pm',  '_testdir'     ], ];
    my $vcs = {
       git => [ [ 'gitcommit-msg', [ '_appldir', '.gitcommit-msg' ] ],
                [ 'gitignore',     [ '_appldir', '.gitignore'     ] ],
