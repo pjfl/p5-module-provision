@@ -50,7 +50,7 @@ sub update_version : method {
       $self->substitute_version( $path, $from, $to );
    }
 
-   $self->update_version_post_hook;
+   $self->update_version_post_hook( $from, $to );
    return OK;
 }
 

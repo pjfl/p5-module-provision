@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+0.35.11   2014-10-28 13:29:54
+          - Added release method to ::VCS
           - Added t::boilerplate.pm
           - Add .pm files to prereq_diffs for build_requires
           - Ignore t/* files in prereq_diffs for requires

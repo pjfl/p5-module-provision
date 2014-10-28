@@ -1,5 +1,7 @@
 use t::boilerplate;
 
+use Test::More;
+
 use_ok '[% project %]';
 
 done_testing;
