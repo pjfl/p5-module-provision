@@ -244,7 +244,7 @@ Uses the internal dumper method to produce a pretty coloured listing
 
 Expands the references in the passed tuple
 
-=head2 init_templates - Initialize the template directory
+=head2 init_templates - Initialise the template directory
 
    $exit_code = $self->init_templates;
 

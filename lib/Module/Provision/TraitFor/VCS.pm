@@ -236,7 +236,7 @@ sub _get_version_numbers {
 
 sub _initialize_git {
    my $self = shift;
-   my $msg  = $self->loc( 'Initialized by [_1]', blessed $self );
+   my $msg  = $self->loc( 'Initialised by [_1]', blessed $self );
 
    $self->chdir( $self->appldir ); $self->run_cmd( 'git init' );
 
@@ -254,7 +254,7 @@ sub _initialize_svn {
 
    my $branch = $self->branch;
    my $url    = 'file://'.$repository->catdir( $branch );
-   my $msg    = $self->loc( 'Initialized by [_1]', $class );
+   my $msg    = $self->loc( 'Initialised by [_1]', $class );
 
    $self->run_cmd( "svn import ${branch} ${url} -m '${msg}'" );
 
@@ -277,7 +277,7 @@ sub _initialize_svn {
 sub _initialize_vcs {
    my $self = shift;
 
-   $self->vcs ne 'none' and $self->output( 'Initializing VCS' );
+   $self->vcs ne 'none' and $self->output( 'Initialising VCS' );
    $self->vcs eq 'git'  and $self->_initialize_git;
    $self->vcs eq 'svn'  and $self->_initialize_svn;
    return;
@@ -359,7 +359,7 @@ Interface to Version Control Systems
 
 Modifies
 L<Module::Provision::TraitFor::CreatingDistributions/dist_post_hook>
-where it initializes the VCS, ignore meta files and resets the
+where it initialises the VCS, ignore meta files and resets the
 revision number file
 
 Modifies
