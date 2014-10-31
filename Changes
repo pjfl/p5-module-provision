@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+          - Attr builder for appbase also tries grandparent of initial_wd
+
 0.36.1    2014-10-28 13:45:12
           - Fixed spelling
 

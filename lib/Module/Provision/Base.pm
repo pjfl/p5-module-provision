@@ -116,7 +116,13 @@ sub chdir {
 sub _build_appbase {
    my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
 
-   return $base->catdir( $self->distname );
+   $base = $base->catdir( $self->distname ); $base->exists and return $base;
+
+   my $file = __get_project_file( $self->initial_wd );
+
+   $base = $file->parent->parent;
+   $base->exists or throw 'Cannot find application base';
+   return $base;
 }
 
 sub _build_appldir {
@@ -203,21 +209,12 @@ sub _build_module_abstract {
 }
 
 sub _build_project {
-   my $self = shift; my $dir = $self->initial_wd; my ($prev, $module);
+   my $self   = shift;
+   my $file   = __get_project_file( $self->initial_wd );
+   my $module = __get_module_from( $file->all )
+      or throw error => 'File [_1] contains no module name', args => [ $file ];
 
-   while (not $prev or $prev ne $dir) { # Search for dist.ini first
-      for my $file (grep { $_->exists }
-                    map  { $dir->catfile( $BUILDERS{ $_ } ) } __builders()) {
-         $module = __get_module_from( $file->all ) and return $module;
-         throw error => 'File [_1] contains no module name', args => [ $file ];
-      }
-
-      $prev = $dir; $dir = $dir->parent;
-   }
-
-   throw error => 'Path [_1] contains no project files',
-         args  => [ $self->initial_wd ];
-   return; # Never reached
+   return $module;
 }
 
 sub _build_project_file {
@@ -285,6 +282,22 @@ sub __get_module_from { # Return main module name from contents of project file
        map    { m{ \A \s* (?:module_name|module|name) \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
        grep   { m{ \A \s*   (module|name) }imx }
        split m{ [\n] }mx, $_[ 0 ])[ 0 ];
+}
+
+sub __get_project_file {
+   my $initial_wd = shift; my $dir = $initial_wd; my $prev;
+
+   while (not $prev or $prev ne $dir) { # Search for dist.ini first
+      for my $file (grep { $_->exists }
+                    map  { $dir->catfile( $BUILDERS{ $_ } ) } __builders()) {
+         return $file
+      }
+
+      $prev = $dir; $dir = $dir->parent;
+   }
+
+   throw error => 'Path [_1] contains no project file', args => [ $initial_wd ];
+   return; # Never reached
 }
 
 sub __parse_manifest_line { # Robbed from ExtUtils::Manifest
