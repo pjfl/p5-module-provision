@@ -21,7 +21,8 @@ option 'force'        => is => 'ro',   isa => Bool, default => FALSE,
    short              => 'f';
 
 option 'templates'    => is => 'ro',   isa => SimpleStr, default => NUL,
-   documentation      => 'Non default location of the code templates';
+   documentation      => 'Non default location of the code templates',
+   format             => 's';
 
 has 'template_dir'    => is => 'lazy', isa => Directory,
    coerce             => Directory->coercion, init_arg => undef;
