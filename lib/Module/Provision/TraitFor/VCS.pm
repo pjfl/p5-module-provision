@@ -2,17 +2,17 @@ package Module::Provision::TraitFor::VCS;
 
 use namespace::autoclean;
 
-use Class::Usul::Constants;
-use Class::Usul::Functions  qw( io is_win32 throw );
-use Class::Usul::Types      qw( Bool Str );
+use Class::Usul::Constants qw( EXCEPTION_CLASS FALSE OK TRUE );
+use Class::Usul::Functions qw( io is_win32 throw );
+use Class::Usul::Types     qw( Bool Str );
 use Perl::Version;
-use Scalar::Util            qw( blessed );
-use Unexpected::Functions   qw( Unspecified );
+use Scalar::Util           qw( blessed );
+use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
 
 requires qw( add_leader appbase appldir branch chdir config default_branch
-             dist_version distname editor exec_perms get_line
-             loc next_argv output quiet run_cmd vcs );
+             dist_version distname editor exec_perms generate_metadata
+             get_line loc next_argv output quiet run_cmd vcs );
 
 # Public attributes
 has 'no_auto_rev'  => is => 'ro',  isa => Bool, default => FALSE,
@@ -20,98 +20,19 @@ has 'no_auto_rev'  => is => 'ro',  isa => Bool, default => FALSE,
 
 has '_new_version' => is => 'rwp', isa => Str;
 
-# Construction
-around 'dist_post_hook' => sub {
-   my ($next, $self, @args) = @_; $self->_initialize_vcs;
-
-   my $r = $self->$next( @args );
-
-   $self->vcs eq 'git' and $self->_reset_rev_file( TRUE );
-   $self->vcs eq 'svn' and $self->_svn_ignore_meta_files;
-   return $r;
+# Private functions
+my $_get_state_file_name = sub {
+   return (map  { m{ load-project-state \s+ [\'\"](.+)[\'\"] }mx; }
+           grep { m{ eval: \s+ \( \s* load-project-state }mx }
+           io( $_[ 0 ] )->getlines)[ -1 ];
 };
 
-around 'substitute_version' => sub {
-   my ($next, $self, $path, @args) = @_; my $r = $self->$next( $path, @args );
-
-   $self->vcs eq 'git' and $self->_reset_rev_keyword( $path );
-   return $r;
+my $_tag_from_version = sub {
+   my $ver = shift; return $ver->component( 0 ).'.'.$ver->component( 1 );
 };
-
-around 'update_version_pre_hook' => sub {
-   my ($next, $self, @args) = @_;
-
-   return $self->$next( $self->_get_version_numbers( @args ) );
-};
-
-around 'update_version_post_hook' => sub {
-   my ($next, $self, @args) = @_; $self->_set__new_version( $args[ 1 ] );
-
-   my $result = $self->$next( @args );
-
-   $self->vcs eq 'git' and $self->_reset_rev_file( FALSE );
-
-   return $result;
-};
-
-# Public methods
-sub add_hooks : method {
-   my $self = shift;
-
-   $self->vcs eq 'git' and $self->_add_git_hooks( @{ $self->config->hooks } );
-
-   return OK;
-}
-
-sub add_to_vcs {
-   my ($self, $target, $type) = @_;
-
-   $target or throw class => Unspecified, args => [ 'VCS target' ];
-   $self->vcs eq 'git' and $self->_add_to_git( $target, $type );
-   $self->vcs eq 'svn' and $self->_add_to_svn( $target, $type );
-   return;
-}
-
-sub get_emacs_state_file_path {
-   my ($self, $file) = @_; my $home = $self->config->my_home;
-
-   return $home->catfile( '.emacs.d', 'config', "state.${file}" );
-}
-
-sub release : method {
-   my $self = shift;
-
-   $self->update_version; $self->_commit_release;
-
-   $self->_add_tag( $self->_new_version );
-
-   return OK;
-}
-
-sub set_branch : method {
-   my $self = shift; my $bfile = $self->branch_file;
-
-   my $old_branch = $self->branch;
-   my $new_branch = $self->next_argv || $self->default_branch;
-
-   not $new_branch and $bfile->exists and $bfile->unlink and return OK;
-       $new_branch and $bfile->println( $new_branch );
-
-   my $method = 'get_'.$self->editor.'_state_file_path';
-
-   $self->can( $method ) or return OK;
-
-   my $sfname = __get_state_file_name( $self->project_file );
-   my $sfpath = $self->$method( $sfname );
-   my $sep    = is_win32 ? "\\" : '/';
-
-   $sfpath->substitute( "${sep}\Q${old_branch}\E${sep}",
-                        "${sep}${new_branch}${sep}" );
-   return OK;
-}
 
 # Private methods
-sub _add_git_hooks {
+my $_add_git_hooks = sub {
    my ($self, @hooks) = @_;
 
    for my $hook (grep { -e ".git${_}" } @hooks) {
@@ -122,19 +43,9 @@ sub _add_git_hooks {
    }
 
    return;
-}
+};
 
-sub _add_tag {
-   my ($self, $tag) = @_;
-
-   $tag or throw class => Unspecified, args => [ 'VCS tag version' ];
-   $self->output( 'Creating tagged release v[_1]', { args => [ $tag ] } );
-   $self->vcs eq 'git' and $self->_add_tag_to_git( $tag );
-   $self->vcs eq 'svn' and $self->_add_tag_to_svn( $tag );
-   return;
-}
-
-sub _add_tag_to_git {
+my $_add_tag_to_git = sub {
    my ($self, $tag) = @_;
 
    my $message = $self->loc( $self->config->tag_message );
@@ -143,31 +54,18 @@ sub _add_tag_to_git {
    $self->run_cmd( "git tag -d v${tag}", { err => 'null', expected_rv => 1 } );
    $self->run_cmd( "git tag ${sign} -m '${message}' v${tag}" );
    return;
-}
+};
 
-sub _add_tag_to_svn {
-   my ($self, $tag) = @_; my $params = $self->quiet ? {} : { out => 'stdout' };
-
-   my $repo    = $self->_get_svn_repository;
-   my $from    = "${repo}/trunk";
-   my $to      = "${repo}/tags/v${tag}";
-   my $message = $self->loc( $self->config->tag_message )." v${tag}";
-   my $cmd     = "svn copy --parents -m '${message}' ${from} ${to}";
-
-   $self->run_cmd( $cmd, $params );
-   return;
-}
-
-sub _add_to_git {
+my $_add_to_git = sub {
    my ($self, $target, $type) = @_;
 
    my $params = $self->quiet ? {} : { out => 'stdout' };
 
    $self->run_cmd( "git add ${target}", $params );
    return;
-}
+};
 
-sub _add_to_svn {
+my $_add_to_svn = sub {
    my ($self, $target, $type) = @_;
 
    my $params = $self->quiet ? {} : { out => 'stdout' };
@@ -178,42 +76,34 @@ sub _add_to_svn {
    $type and $type eq 'program'
       and $self->run_cmd( "svn propset svn:executable '*' ${target}", $params );
    return;
-}
+};
 
-sub _commit_release {
-   my $self = shift; my $msg = $self->config->tag_message;
-
-   $self->vcs eq 'git' and $self->_commit_release_to_git( $msg );
-   $self->vcs eq 'svn' and $self->_commit_release_to_svn( $msg );
-   return;
-}
-
-sub _commit_release_to_git {
+my $_commit_release_to_git = sub {
    my ($self, $msg) = @_;
 
    $self->run_cmd( 'git add .'  ); $self->run_cmd( "git commit -m '${msg}'" );
 
    return;
-}
+};
 
-sub _commit_release_to_svn {
+my $_commit_release_to_svn = sub {
    # TODO: Fill this in
-}
+};
 
-sub _get_rev_file {
+my $_get_rev_file = sub {
    my $self = shift; ($self->no_auto_rev or $self->vcs ne 'git') and return;
 
    return $self->appldir->parent->catfile( lc '.'.$self->distname.'.rev' );
-}
+};
 
-sub _get_svn_repository {
+my $_get_svn_repository = sub {
    my $self = shift; my $info = $self->run_cmd( 'svn info' )->stdout;
 
    return (split m{ : \s }mx, (grep { m{ \A Repository \s Root: }mx }
                                split  m{ \n }mx, $info)[ 0 ])[ 1 ];
-}
+};
 
-sub _get_version_numbers {
+my $_get_version_numbers = sub {
    my ($self, @args) = @_; $args[ 0 ] and $args[ 1 ] and return @args;
 
    my $prompt = $self->add_leader( $self->loc( 'Enter major/minor 0 or 1'  ) );
@@ -225,27 +115,16 @@ sub _get_version_numbers {
    if ($from = $args[ 0 ]) { $ver = Perl::Version->new( $from ) }
    else {
       $ver  = $self->dist_version or return @args;
-      $from = __tag_from_version( $ver );
+      $from = $_tag_from_version->( $ver );
    }
 
    $ver->component( $comp, $ver->component( $comp ) + $bump );
    $comp == 0 and $ver->component( 1, 0 );
 
-   return ($from, __tag_from_version( $ver ));
-}
+   return ($from, $_tag_from_version->( $ver ));
+};
 
-sub _initialize_git {
-   my $self = shift;
-   my $msg  = $self->loc( 'Initialised by [_1]', blessed $self );
-
-   $self->chdir( $self->appldir ); $self->run_cmd( 'git init' );
-
-   $self->add_hooks; $self->_commit_release_to_git( $msg );
-
-   return;
-}
-
-sub _initialize_svn {
+my $_initialize_svn = sub {
    my $self = shift; my $class = blessed $self; $self->chdir( $self->appbase );
 
    my $repository = $self->appbase->catdir( $self->repository );
@@ -272,47 +151,9 @@ sub _initialize_svn {
    $self->chdir( $self->appldir );
    $self->run_cmd( 'svn update' );
    return;
-}
+};
 
-sub _initialize_vcs {
-   my $self = shift;
-
-   $self->vcs ne 'none' and $self->output( 'Initialising VCS' );
-   $self->vcs eq 'git'  and $self->_initialize_git;
-   $self->vcs eq 'svn'  and $self->_initialize_svn;
-   return;
-}
-
-sub _reset_rev_file {
-   my ($self, $create) = @_; my $file = $self->_get_rev_file;
-
-   $file and ($create or $file->exists)
-         and $file->println( $create ? '1' : '0' );
-   return;
-}
-
-sub _reset_rev_keyword {
-   my ($self, $path) = @_;
-
-   my $zero = 0; # Zero variable prevents unwanted Rev keyword expansion
-
-   $self->_get_rev_file and $path->substitute
-      ( '\$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$', '$Rev: '.$zero.' $' );
-   return;
-}
-
-sub _should_add_tag {
-   my ($self, $from, $to) = @_;
-
-   ($self->vcs ne 'none' and $from and $to) or return FALSE;
-
-   my $from_ver = Perl::Version->new( $from );
-   my $to_ver   = Perl::Version->new( $to   );
-
-   return $to_ver > $from_ver ? TRUE : FALSE;
-}
-
-sub _svn_ignore_meta_files {
+my $_svn_ignore_meta_files = sub {
    my $self = shift; $self->chdir( $self->appldir );
 
    my $ignores = "LICENSE\nMANIFEST\nMETA.json\nMETA.yml\nREADME\nREADME.md";
@@ -321,17 +162,164 @@ sub _svn_ignore_meta_files {
    $self->run_cmd( 'svn commit -m "Ignoring meta files" .' );
    $self->run_cmd( 'svn update' );
    return;
+};
+
+my $_add_tag_to_svn = sub {
+   my ($self, $tag) = @_; my $params = $self->quiet ? {} : { out => 'stdout' };
+
+   my $repo    = $self->$_get_svn_repository;
+   my $from    = "${repo}/trunk";
+   my $to      = "${repo}/tags/v${tag}";
+   my $message = $self->loc( $self->config->tag_message )." v${tag}";
+   my $cmd     = "svn copy --parents -m '${message}' ${from} ${to}";
+
+   $self->run_cmd( $cmd, $params );
+   return;
+};
+
+my $_commit_release = sub {
+   my $self = shift; my $msg = $self->config->tag_message;
+
+   $self->vcs eq 'git' and $self->$_commit_release_to_git( $msg );
+   $self->vcs eq 'svn' and $self->$_commit_release_to_svn( $msg );
+   return;
+};
+
+my $_initialize_git = sub {
+   my $self = shift;
+   my $msg  = $self->loc( 'Initialised by [_1]', blessed $self );
+
+   $self->chdir( $self->appldir ); $self->run_cmd( 'git init' );
+
+   $self->add_hooks; $self->$_commit_release_to_git( $msg );
+
+   return;
+};
+
+my $_reset_rev_file = sub {
+   my ($self, $create) = @_; my $file = $self->$_get_rev_file;
+
+   $file and ($create or $file->exists)
+         and $file->println( $create ? '1' : '0' );
+   return;
+};
+
+my $_reset_rev_keyword = sub {
+   my ($self, $path) = @_;
+
+   my $zero = 0; # Zero variable prevents unwanted Rev keyword expansion
+
+   $self->$_get_rev_file and $path->substitute
+      ( '\$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$', '$Rev: '.$zero.' $' );
+   return;
+};
+
+my $_add_tag = sub {
+   my ($self, $tag) = @_;
+
+   $tag or throw Unspecified, [ 'VCS tag version' ];
+   $self->output( 'Creating tagged release v[_1]', { args => [ $tag ] } );
+   $self->vcs eq 'git' and $self->$_add_tag_to_git( $tag );
+   $self->vcs eq 'svn' and $self->$_add_tag_to_svn( $tag );
+   return;
+};
+
+my $_initialize_vcs = sub {
+   my $self = shift;
+
+   $self->vcs ne 'none' and $self->output( 'Initialising VCS' );
+   $self->vcs eq 'git'  and $self->$_initialize_git;
+   $self->vcs eq 'svn'  and $self->$_initialize_svn;
+   return;
+};
+
+# Construction
+around 'dist_post_hook' => sub {
+   my ($next, $self, @args) = @_; $self->$_initialize_vcs;
+
+   my $r = $self->$next( @args );
+
+   $self->vcs eq 'git' and $self->$_reset_rev_file( TRUE );
+   $self->vcs eq 'svn' and $self->$_svn_ignore_meta_files;
+   return $r;
+};
+
+around 'substitute_version' => sub {
+   my ($next, $self, $path, @args) = @_; my $r = $self->$next( $path, @args );
+
+   $self->vcs eq 'git' and $self->$_reset_rev_keyword( $path );
+   return $r;
+};
+
+around 'update_version_pre_hook' => sub {
+   my ($next, $self, @args) = @_;
+
+   return $self->$next( $self->$_get_version_numbers( @args ) );
+};
+
+around 'update_version_post_hook' => sub {
+   my ($next, $self, @args) = @_; $self->_set__new_version( $args[ 1 ] );
+
+   my $result = $self->$next( @args );
+
+   $self->vcs eq 'git' and $self->$_reset_rev_file( FALSE );
+
+   return $result;
+};
+
+# Public methods
+sub add_hooks : method {
+   my $self = shift;
+
+   $self->vcs eq 'git' and $self->$_add_git_hooks( @{ $self->config->hooks } );
+
+   return OK;
 }
 
-# Private functions
-sub __get_state_file_name {
-   return (map  { m{ load-project-state \s+ [\'\"](.+)[\'\"] }mx; }
-           grep { m{ eval: \s+ \( \s* load-project-state }mx }
-           io( $_[ 0 ] )->getlines)[ -1 ];
+sub add_to_vcs {
+   my ($self, $target, $type) = @_;
+
+   $target or throw Unspecified, [ 'VCS target' ];
+   $self->vcs eq 'git' and $self->$_add_to_git( $target, $type );
+   $self->vcs eq 'svn' and $self->$_add_to_svn( $target, $type );
+   return;
 }
 
-sub __tag_from_version {
-   my $ver = shift; return $ver->component( 0 ).'.'.$ver->component( 1 );
+sub get_emacs_state_file_path {
+   my ($self, $file) = @_; my $home = $self->config->my_home;
+
+   return $home->catfile( '.emacs.d', 'config', "state.${file}" );
+}
+
+sub release : method {
+   my $self = shift;
+
+   $self->update_version;  $self->generate_metadata;
+   $self->$_commit_release; $self->$_add_tag( $self->_new_version );
+
+   return OK;
+}
+
+sub set_branch : method {
+   my $self = shift; my $bfile = $self->branch_file;
+
+   my $old_branch = $self->branch;
+   my $new_branch = $self->next_argv || $self->default_branch;
+
+   not $new_branch and $bfile->exists and $bfile->unlink and return OK;
+       $new_branch and $bfile->println( $new_branch );
+
+   my $method = 'get_'.$self->editor.'_state_file_path';
+
+   $self->can( $method ) or return OK;
+
+   my $sfname = $_get_state_file_name->( $self->project_file );
+   my $sfpath = $self->$method( $sfname );
+   my $sep    = is_win32 ? "\\" : '/';
+
+   $sfpath->substitute( "${sep}\Q${old_branch}\E${sep}",
+                        "${sep}${new_branch}${sep}" );
+   return OK;
 }
 
 1;

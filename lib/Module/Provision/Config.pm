@@ -3,11 +3,11 @@ package Module::Provision::Config;
 use namespace::autoclean;
 
 use Moo;
-use Class::Usul::Constants;
-use Class::Usul::Functions  qw( fullname loginid logname untaint_cmdline
-                                untaint_identifier );
-use File::DataClass::Types  qw( ArrayRef HashRef NonEmptySimpleStr
-                                Path SimpleStr );
+use Class::Usul::Constants qw( NUL );
+use Class::Usul::Functions qw( fullname loginid logname untaint_cmdline
+                               untaint_identifier );
+use File::DataClass::Types qw( ArrayRef HashRef NonEmptySimpleStr
+                               Path SimpleStr );
 
 extends qw(Class::Usul::Config::Programs);
 

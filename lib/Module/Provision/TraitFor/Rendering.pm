@@ -2,13 +2,13 @@ package Module::Provision::TraitFor::Rendering;
 
 use namespace::autoclean;
 
-use Class::Usul::Constants;
-use Class::Usul::Functions  qw( app_prefix is_arrayref distname io throw );
-use File::DataClass::Types  qw( ArrayRef Bool Directory Path SimpleStr );
-use File::ShareDir            ( );
-use Scalar::Util            qw( blessed weaken );
+use Class::Usul::Constants qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
+use Class::Usul::Functions qw( app_prefix is_arrayref distname io throw );
+use File::DataClass::Types qw( ArrayRef Bool Directory Path SimpleStr );
+use File::ShareDir           ( );
+use Scalar::Util           qw( blessed weaken );
 use Template;
-use Unexpected::Functions   qw( Unspecified );
+use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
 use Class::Usul::Options;
 
@@ -32,71 +32,31 @@ has 'template_list'   => is => 'lazy', isa => ArrayRef, init_arg => undef;
 has '_template_index' => is => 'lazy', isa => Path, coerce => Path->coercion,
    init_arg           => undef;
 
-# Public methods
-sub dump_stash : method {
-   my $self = shift; $self->dumper( $self->stash ); return OK;
-}
-
-sub expand_tuple {
-   my ($self, $tuple) = @_;
-
-   for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
-      if (is_arrayref $tuple->[ $i ]) {
-         $tuple->[ $i ]->[ 0 ] = $self->_deref_tmpl( $tuple->[ $i ]->[ 0 ] );
-         $tuple->[ $i ] = io( $tuple->[ $i ] );
-      }
-      else {
-         $tuple->[ $i ] = $self->_deref_tmpl( $tuple->[ $i ] );
-      }
-   }
-
-   return $tuple;
-}
-
-sub init_templates : method {
-   my $self = shift; $self->template_list; return OK;
-}
-
-sub render_template {
-   my ($self, $template, $target) = @_;
-
-   $template or throw class => Unspecified, args => [ 'Template' ];
-   $target   or throw class => Unspecified, args => [ 'Template target' ];
-
-   $target->exists and $target->is_dir
-      and $target = $target->catfile( $template );
-   $template = $self->template_dir->catfile( $template );
-
-   $template->exists or
-      return $self->log->warn( $self->loc( 'Path [_1] not found', $template ) );
-
-   my $file  = $target->filename; my $prompt;
-
-   $target->exists and not $self->force
-      and $prompt = $self->loc( 'File [_1] exists, overwrite?', $file )
-      and not $self->yorn( $self->add_leader( $prompt ), FALSE, TRUE )
-      and return $target;
-
-   my $tmplt = Template->new( $self->_template_args ) or throw $Template::ERROR;
-   my $text  = NUL;
-
-   $tmplt->process( $template->pathname, $self->stash, \$text )
-      or throw $tmplt->error();
-   $target->perms( $self->perms )->print( $text ); $target->close;
-   return $target;
-}
-
-sub render_templates {
-   my $self = shift; $self->output( 'Rendering templates' );
-
-   for my $tuple (map { $self->expand_tuple( $_ ) } @{ $self->template_list }) {
-      $self->render_template( @{ $tuple } );
-   }
-
-   return;
-}
-
 # Private methods
+my $_deref_tmpl = sub {
+   my ($self, $car) = @_; '_' ne substr $car, 0, 1 and return $car;
+
+   my $reader = substr $car, 1; return $self->$reader();
+};
+
+my $_merge_lists = sub {
+   my ($self, $args) = @_; my $list = $args->{templates};
+
+   push @{ $list }, @{ $args->{builders}->{ $self->builder } };
+   $self->vcs ne 'none' and push @{ $list }, @{ $args->{vcs}->{ $self->vcs } };
+
+   return $list;
+};
+
+my $_template_args = sub {
+   my $self = shift; weaken( $self ); my $args = { ABSOLUTE => TRUE, };
+
+   $args->{VARIABLES}->{loc} = sub { $self->loc( @_ ) };
+
+   return $args;
+};
+
+# Construction
 sub _build_template_dir {
    my $self  = shift;
    my $class = blessed $self;
@@ -122,7 +82,7 @@ sub _build_template_list {
 
    my $data; $index->exists and $data = $self->file->data_load
       ( paths => [ $index ], storage_class => 'Any' )
-      and return $self->_merge_lists( $data );
+      and return $self->$_merge_lists( $data );
    my $builders  = {
       DZ => [ [ 'dist.ini',           '_appldir' ],
               [ 'DZ_Build.PL',      [ '_appldir', 'Build.PL' ], ], ],
@@ -150,30 +110,72 @@ sub _build_template_list {
    $data = { builders => $builders, templates => $templates, vcs => $vcs };
    $self->file->data_dump
       ( data => $data, path => $index, storage_class => 'Any' );
-   return $self->_merge_lists( $data );
+   return $self->$_merge_lists( $data );
 }
 
-sub _deref_tmpl {
-   my ($self, $car) = @_; '_' ne substr $car, 0, 1 and return $car;
-
-   my $reader = substr $car, 1; return $self->$reader();
+# Public methods
+sub dump_stash : method {
+   my $self = shift; $self->dumper( $self->stash ); return OK;
 }
 
-sub _merge_lists {
-   my ($self, $args) = @_; my $list = $args->{templates};
+sub expand_tuple {
+   my ($self, $tuple) = @_;
 
-   push @{ $list }, @{ $args->{builders}->{ $self->builder } };
-   $self->vcs ne 'none' and push @{ $list }, @{ $args->{vcs}->{ $self->vcs } };
+   for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
+      if (is_arrayref $tuple->[ $i ]) {
+         $tuple->[ $i ]->[ 0 ] = $self->$_deref_tmpl( $tuple->[ $i ]->[ 0 ] );
+         $tuple->[ $i ] = io( $tuple->[ $i ] );
+      }
+      else {
+         $tuple->[ $i ] = $self->$_deref_tmpl( $tuple->[ $i ] );
+      }
+   }
 
-   return $list;
+   return $tuple;
 }
 
-sub _template_args {
-   my $self = shift; weaken( $self ); my $args = { ABSOLUTE => TRUE, };
+sub init_templates : method {
+   my $self = shift; $self->template_list; return OK;
+}
 
-   $args->{VARIABLES}->{loc} = sub { $self->loc( @_ ) };
+sub render_template {
+   my ($self, $template, $target) = @_;
 
-   return $args;
+   $template or throw Unspecified, [ 'Template' ];
+   $target   or throw Unspecified, [ 'Template target' ];
+
+   $target->exists and $target->is_dir
+      and $target = $target->catfile( $template );
+   $template = $self->template_dir->catfile( $template );
+
+   $template->exists or
+      return $self->log->warn( $self->loc( 'Path [_1] not found', $template ) );
+
+   my $file  = $target->filename; my $prompt;
+
+   $target->exists and not $self->force
+      and $prompt = $self->loc( 'File [_1] exists, overwrite?', $file )
+      and not $self->yorn( $self->add_leader( $prompt ), FALSE, TRUE )
+      and return $target;
+
+   my $tmplt = Template->new( $self->$_template_args )
+      or throw $Template::ERROR;
+   my $text  = NUL;
+
+   $tmplt->process( $template->pathname, $self->stash, \$text )
+      or throw $tmplt->error();
+   $target->perms( $self->perms )->print( $text ); $target->close;
+   return $target;
+}
+
+sub render_templates {
+   my $self = shift; $self->output( 'Rendering templates' );
+
+   for my $tuple (map { $self->expand_tuple( $_ ) } @{ $self->template_list }) {
+      $self->render_template( @{ $tuple } );
+   }
+
+   return;
 }
 
 1;

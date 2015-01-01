@@ -2,12 +2,25 @@ package Module::Provision::TraitFor::UpdatingContent;
 
 use namespace::autoclean;
 
-use Class::Usul::Constants;
+use Class::Usul::Constants qw( EXCEPTION_CLASS OK );
 use Class::Usul::Functions qw( throw );
 use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
 
 requires qw( appldir loc manifest_paths next_argv output );
+
+# Private methods
+my $_get_ignore_rev_regex = sub {
+   my $self = shift;
+
+   my $ignore_rev = $self->appldir->catfile( '.gitignore-rev' )->chomp;
+
+   return $ignore_rev->exists ? join '|', $ignore_rev->getlines : undef;
+};
+
+my $_get_update_args = sub {
+   return ($_[ 0 ]->next_argv, $_[ 0 ]->next_argv);
+};
 
 # Public methods
 sub substitute_version {
@@ -19,13 +32,13 @@ sub substitute_version {
 }
 
 sub update_copyright_year : method {
-   my $self = shift; my ($from, $to) = $self->_get_update_args;
+   my $self = shift; my ($from, $to) = $self->$_get_update_args;
 
    my $prefix = $self->loc( 'Copyright (c)' );
 
-   $prefix or throw class => Unspecified, args => [ 'prefix' ];
-   $from   or throw class => Unspecified, args => [ 'from'   ];
-   $to     or throw class => Unspecified, args => [ 'to'     ];
+   $prefix or throw Unspecified, [ 'prefix' ];
+   $from   or throw Unspecified, [ 'from'   ];
+   $to     or throw Unspecified, [ 'to'     ];
 
    $self->output( 'Updating copyright year' );
 
@@ -37,9 +50,9 @@ sub update_copyright_year : method {
 }
 
 sub update_version : method {
-   my $self = shift; my ($from, $to) = $self->_get_update_args;
+   my $self = shift; my ($from, $to) = $self->$_get_update_args;
 
-   my $ignore = $self->_get_ignore_rev_regex;
+   my $ignore = $self->$_get_ignore_rev_regex;
 
    $self->output( 'Updating version numbers' );
 
@@ -63,19 +76,6 @@ sub update_version_pre_hook { # Can be modified by applied traits
    ($args[ 0 ] and $args[ 1 ]) or throw 'Insufficient arguments';
 
    return @args;
-}
-
-# Private methods
-sub _get_ignore_rev_regex {
-   my $self = shift;
-
-   my $ignore_rev = $self->appldir->catfile( '.gitignore-rev' )->chomp;
-
-   return $ignore_rev->exists ? join '|', $ignore_rev->getlines : undef;
-}
-
-sub _get_update_args {
-   return ($_[ 0 ]->next_argv, $_[ 0 ]->next_argv);
 }
 
 1;

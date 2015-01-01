@@ -3,7 +3,7 @@ package Module::Provision::Base;
 use namespace::autoclean;
 
 use Moo;
-use Class::Usul::Constants;
+use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL );
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir io throw );
 use Class::Usul::Options;
 use Class::Usul::Time       qw( time2str );
@@ -20,6 +20,54 @@ extends q(Class::Usul::Programs);
 my %BUILDERS = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', 'MI' => 'Makefile.PL');
 my $BUILDER  = enum 'Builder' => [ qw( DZ MB MI ) ];
 my $VCS      = enum 'VCS'     => [ qw( git none svn ) ];
+
+# Private functions
+my $_builders = sub {
+   return (sort keys %BUILDERS);
+};
+
+my $_distname = sub {
+   (my $y = $_[ 0 ] || NUL) =~ s{ :: }{-}gmx; return $y;
+};
+
+my $_get_module_from = sub { # Return main module name from project file
+   return
+      (map    { s{ [-] }{::}gmx; $_ }
+       map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
+       map    { m{ \A \s* (?:module_name|module|name) \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
+       grep   { m{ \A \s*   (module|name) }imx }
+       split m{ [\n] }mx, $_[ 0 ])[ 0 ];
+};
+
+my $_parse_manifest_line = sub { # Robbed from ExtUtils::Manifest
+   my $line = shift; my ($file, $comment);
+
+   # May contain spaces if enclosed in '' (in which case, \\ and \' are escapes)
+   if (($file, $comment) = $line =~ m{ \A \' (\\[\\\']|.+)+ \' \s* (.*) }mx) {
+      $file =~ s{ \\ ([\\\']) }{$1}gmx;
+   }
+   else {
+       ($file, $comment) = $line =~ m{ \A (\S+) \s* (.*) }mx;
+   }
+
+   return [ $file, $comment ];
+};
+
+my $_get_project_file = sub {
+   my $initial_wd = shift; my $dir = $initial_wd; my $prev;
+
+   while (not $prev or $prev ne $dir) { # Search for dist.ini first
+      for my $file (grep { $_->exists }
+                    map  { $dir->catfile( $BUILDERS{ $_ } ) } $_builders->()) {
+         return $file
+      }
+
+      $prev = $dir; $dir = $dir->parent;
+   }
+
+   throw 'Path [_1] contains no project file', [ $initial_wd ];
+   return; # Never reached
+};
 
 # Override defaults in base class
 has '+config_class' => default => sub { 'Module::Provision::Config' };
@@ -73,7 +121,7 @@ has 'dist_module'     => is => 'lazy', isa => Path, coerce => Path->coercion,
 has 'dist_version'    => is => 'lazy', isa => Object;
 
 has 'distname'        => is => 'lazy', isa => NonEmptySimpleStr,
-   default            => sub { __distname( $_[ 0 ]->project ) };
+   default            => sub { $_distname->( $_[ 0 ]->project ) };
 
 has 'exec_perms'      => is => 'lazy', isa => PositiveInt;
 
@@ -102,23 +150,13 @@ has 'testdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
 # Object attributes (private)
 has '_license_keys'   => is => 'lazy', isa => HashRef;
 
-# Public methods
-sub chdir {
-   my ($self, $dir) = @_;
-
-         $dir or throw class => Unspecified, args => [ 'directory' ];
-   chdir $dir or throw error => 'Directory [_1] cannot chdir: [_2]',
-                       args  => [ $dir, $OS_ERROR ];
-   return $dir;
-}
-
-# Private methods
+# Construction
 sub _build_appbase {
    my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
 
    $base = $base->catdir( $self->distname ); $base->exists and return $base;
 
-   my $file = __get_project_file( $self->initial_wd );
+   my $file = $_get_project_file->( $self->initial_wd );
 
    $base = $file->parent->parent;
    $base->exists or throw 'Cannot find application base';
@@ -154,7 +192,7 @@ sub _build_builder {
    my $self = shift; my $appldir = $self->appldir;
 
    for (grep { $_->[ 1 ]->exists }
-        map  { [ $_, $appldir->catfile( $BUILDERS{ $_ } ) ] } __builders()) {
+        map  { [ $_, $appldir->catfile( $BUILDERS{ $_ } ) ] } $_builders->()) {
       return $_->[ 0 ];
    }
 
@@ -199,7 +237,7 @@ sub _build_manifest_paths {
    my $self = shift;
 
    return [ grep { $_->exists }
-            map  { io( __parse_manifest_line( $_ )->[ 0 ] ) }
+            map  { io( $_parse_manifest_line->( $_ )->[ 0 ] ) }
             grep { not m{ \A \s* [\#] }mx }
             $self->appldir->catfile( 'MANIFEST' )->chomp->getlines ];
 }
@@ -210,9 +248,9 @@ sub _build_module_abstract {
 
 sub _build_project {
    my $self   = shift;
-   my $file   = __get_project_file( $self->initial_wd );
-   my $module = __get_module_from( $file->all )
-      or throw error => 'File [_1] contains no module name', args => [ $file ];
+   my $file   = $_get_project_file->( $self->initial_wd );
+   my $module = $_get_module_from->( $file->all )
+      or throw 'File [_1] contains no module name', [ $file ];
 
    return $module;
 }
@@ -266,52 +304,13 @@ sub _build_vcs {
                                                         : 'none';
 }
 
-# Private functions
-sub __builders {
-   return (sort keys %BUILDERS);
-}
+# Public methods
+sub chdir {
+   my ($self, $dir) = @_;
 
-sub __distname {
-   (my $y = $_[ 0 ] || NUL) =~ s{ :: }{-}gmx; return $y;
-}
-
-sub __get_module_from { # Return main module name from contents of project file
-   return
-      (map    { s{ [-] }{::}gmx; $_ }
-       map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
-       map    { m{ \A \s* (?:module_name|module|name) \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
-       grep   { m{ \A \s*   (module|name) }imx }
-       split m{ [\n] }mx, $_[ 0 ])[ 0 ];
-}
-
-sub __get_project_file {
-   my $initial_wd = shift; my $dir = $initial_wd; my $prev;
-
-   while (not $prev or $prev ne $dir) { # Search for dist.ini first
-      for my $file (grep { $_->exists }
-                    map  { $dir->catfile( $BUILDERS{ $_ } ) } __builders()) {
-         return $file
-      }
-
-      $prev = $dir; $dir = $dir->parent;
-   }
-
-   throw error => 'Path [_1] contains no project file', args => [ $initial_wd ];
-   return; # Never reached
-}
-
-sub __parse_manifest_line { # Robbed from ExtUtils::Manifest
-   my $line = shift; my ($file, $comment);
-
-   # May contain spaces if enclosed in '' (in which case, \\ and \' are escapes)
-   if (($file, $comment) = $line =~ m{ \A \' (\\[\\\']|.+)+ \' \s* (.*) }mx) {
-      $file =~ s{ \\ ([\\\']) }{$1}gmx;
-   }
-   else {
-       ($file, $comment) = $line =~ m{ \A (\S+) \s* (.*) }mx;
-   }
-
-   return [ $file, $comment ];
+         $dir or throw Unspecified, [ 'directory' ];
+   chdir $dir or throw 'Directory [_1] cannot chdir: [_2]', [ $dir, $OS_ERROR ];
+   return $dir;
 }
 
 1;

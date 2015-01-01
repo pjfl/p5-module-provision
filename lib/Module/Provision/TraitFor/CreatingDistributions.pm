@@ -2,10 +2,10 @@ package Module::Provision::TraitFor::CreatingDistributions;
 
 use namespace::autoclean;
 
-use Class::Usul::Constants;
-use Class::Usul::Functions  qw( emit emit_to io trim );
-use Class::Usul::Types      qw( ArrayRef NonEmptySimpleStr );
-use English                 qw( -no_match_vars );
+use Class::Usul::Constants qw( FAILED FALSE OK SPC TRUE );
+use Class::Usul::Functions qw( emit emit_to io trim );
+use Class::Usul::Types     qw( ArrayRef NonEmptySimpleStr );
+use English                qw( -no_match_vars );
 use IO::Handle;
 use Moo::Role;
 use Class::Usul::Options;
@@ -18,6 +18,26 @@ requires qw( appbase appldir branch builder chdir config exec_perms
 option 'editor'     => is => 'lazy', isa => NonEmptySimpleStr,
    documentation    => 'Which text editor to use',
    default          => sub { $_[ 0 ]->config->editor }, format => 's';
+
+# Private functions
+my $_set_env_true = sub {
+   $ENV{ $_ } = TRUE for (@_); return;
+};
+
+# Private methods
+my $_create_mask = sub {
+   return oct '0777' ^ $_[ 0 ]->exec_perms;
+};
+
+my $_get_test_command = sub {
+   return $_[ 1 ]                  ? 'prove -lv '.$_[ 1 ]
+        : $_[ 0 ]->builder eq 'DZ' ? 'dzil test'
+                                   : 'prove t';
+};
+
+my $_project_file_path = sub {
+   return $_[ 0 ]->appldir->catfile( $_[ 0 ]->project_file );
+};
 
 # Construction
 around '_build_appldir' => sub {
@@ -80,7 +100,7 @@ sub dist_post_hook {
 }
 
 sub dist_pre_hook {
-   my $self = shift; umask $self->_create_mask;
+   my $self = shift; umask $self->$_create_mask;
 
    $self->appbase->exists or $self->appbase->mkpath( $self->exec_perms );
    $self->stash->{abstract} = $self->next_argv || $self->stash->{abstract};
@@ -89,7 +109,7 @@ sub dist_pre_hook {
 }
 
 sub edit_project : method {
-   my $self = shift; my $path = $self->_project_file_path;
+   my $self = shift; my $path = $self->$_project_file_path;
 
    $self->run_cmd( $self->editor.SPC.$path, { async => TRUE } );
    return OK;
@@ -129,9 +149,9 @@ sub metadata : method {
 sub prove : method {
    my $self = shift; $self->chdir( $self->appldir );
 
-   my $cmd = $self->_get_test_command( $self->next_argv );
+   my $cmd = $self->$_get_test_command( $self->next_argv );
 
-   __set_env_true( @{ $self->config->test_env_vars } );
+   $_set_env_true->( @{ $self->config->test_env_vars } );
 
    $self->output ( 'Testing [_1]', { args => [ $self->appldir ] } );
    $self->run_cmd( $cmd, $self->quiet ? {} : { out => 'stdout' } );
@@ -163,32 +183,12 @@ sub select_project : method {
 
 sub show_tab_title : method {
    my $self = shift;
-   my $file = $self->next_argv || $self->_project_file_path;
+   my $file = $self->next_argv || $self->$_project_file_path;
    my $text = (grep { m{ tab-title: }msx } io( $file )->getlines)[ -1 ]
            || ':'.$self->distname;
 
    emit trim( (split m{ : }msx, $text, 2)[ 1 ] ).SPC.$self->appbase;
    return OK;
-}
-
-# Private methods
-sub _create_mask {
-   return oct '0777' ^ $_[ 0 ]->exec_perms;
-}
-
-sub _get_test_command {
-   return $_[ 1 ]                  ? 'prove -lv '.$_[ 1 ]
-        : $_[ 0 ]->builder eq 'DZ' ? 'dzil test'
-                                   : 'prove t';
-}
-
-sub _project_file_path {
-   return $_[ 0 ]->appldir->catfile( $_[ 0 ]->project_file );
-}
-
-# Private functions
-sub __set_env_true {
-   $ENV{ $_ } = TRUE for (@_); return;
 }
 
 1;
