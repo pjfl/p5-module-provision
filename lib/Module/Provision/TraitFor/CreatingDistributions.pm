@@ -40,11 +40,19 @@ my $_project_file_path = sub {
 };
 
 # Construction
+around '_build_appbase' => sub {
+   my ($orig, $self, @args) = @_; my $appbase = $orig->( $self, @args );
+
+   return !$appbase && $self->method eq 'dist'
+        ? $self->base->absolute( $self->initial_wd )->catdir( $self->distname )
+        : $appbase;
+};
+
 around '_build_appldir' => sub {
    my ($next, $self, @args) = @_; my $appldir = $self->$next( @args );
 
    return !$appldir && $self->method eq 'dist'
-          ? $self->appbase->catdir( $self->branch ) : $appldir ;
+        ? $self->appbase->catdir( $self->branch ) : $appldir ;
 };
 
 around '_build_builder' => sub {

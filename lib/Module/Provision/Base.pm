@@ -3,8 +3,9 @@ package Module::Provision::Base;
 use namespace::autoclean;
 
 use Moo;
-use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL );
-use Class::Usul::Functions  qw( app_prefix class2appdir classdir io throw );
+use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL SPC );
+use Class::Usul::Functions  qw( app_prefix class2appdir classdir
+                                first_char io throw );
 use Class::Usul::Options;
 use Class::Usul::Time       qw( time2str );
 use English                 qw( -no_match_vars );
@@ -12,6 +13,7 @@ use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
                                 Object OctalNum Path PositiveInt SimpleStr );
 use Module::Metadata;
 use Perl::Version;
+use Try::Tiny;
 use Type::Utils             qw( enum );
 use Unexpected::Functions   qw( Unspecified );
 
@@ -34,7 +36,8 @@ my $_get_module_from = sub { # Return main module name from project file
    return
       (map    { s{ [-] }{::}gmx; $_ }
        map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
-       map    { m{ \A \s* (?:module_name|module|name) \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
+       map    { m{ \A \s* (?:module_name|module|name)
+                      \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
        grep   { m{ \A \s*   (module|name) }imx }
        split m{ [\n] }mx, $_[ 0 ])[ 0 ];
 };
@@ -54,7 +57,7 @@ my $_parse_manifest_line = sub { # Robbed from ExtUtils::Manifest
 };
 
 my $_get_project_file = sub {
-   my $initial_wd = shift; my $dir = $initial_wd; my $prev;
+   my $dir = shift; my $prev;
 
    while (not $prev or $prev ne $dir) { # Search for dist.ini first
       for my $file (grep { $_->exists }
@@ -65,8 +68,7 @@ my $_get_project_file = sub {
       $prev = $dir; $dir = $dir->parent;
    }
 
-   throw 'Path [_1] contains no project file', [ $initial_wd ];
-   return; # Never reached
+   return;
 };
 
 # Override defaults in base class
@@ -76,7 +78,7 @@ has '+config_class' => default => sub { 'Module::Provision::Config' };
 #   Visible to the command line
 option 'base'       => is => 'lazy', isa => Path, format => 's',
    documentation    => 'Directory containing new projects',
-   coerce           => Path->coercion, default => sub { $_[ 0 ]->config->base };
+   coerce           => Path->coercion, builder => sub { $_[ 0 ]->config->base };
 
 option 'branch'     => is => 'lazy', isa => SimpleStr, format => 's',
    documentation    => 'The name of the initial branch to create', short => 'b';
@@ -86,18 +88,22 @@ option 'builder'    => is => 'lazy', isa => $BUILDER, format => 's',
 
 option 'license'    => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
    documentation    => 'License used for the project',
-   default          => sub { $_[ 0 ]->config->license };
+   builder          => sub { $_[ 0 ]->config->license };
 
 option 'perms'      => is => 'ro',   isa => OctalNum, format => 'i',
    documentation    => 'Default permission for file / directory creation',
    coerce           => OctalNum->coercion, default => '640';
+
+option 'plugin'     => is => 'ro',   isa => SimpleStr, format => 's',
+   documentation    => 'Name of optional plugin to load',
+   default          => NUL, short => 'M';
 
 option 'project'    => is => 'lazy', isa => NonEmptySimpleStr, format => 's',
    documentation    => 'Package name of the new projects main module';
 
 option 'repository' => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
    documentation    => 'Directory containing the SVN repository',
-   default          => sub { $_[ 0 ]->config->repository };
+   builder          => sub { $_[ 0 ]->config->repository };
 
 option 'vcs'        => is => 'lazy', isa => $VCS, format => 's',
    documentation    => 'Which VCS to use: git, none, or svn';
@@ -108,33 +114,33 @@ has 'appbase'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 has 'appldir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
 has 'branch_file'     => is => 'lazy', isa => Path, coerce => Path->coercion,
-   default            => sub { [ $_[ 0 ]->appbase, '.branch' ] };
+   builder            => sub { [ $_[ 0 ]->appbase, '.branch' ] };
 
 has 'binsdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
-   default            => sub { [ $_[ 0 ]->appldir, 'bin' ] };
+   builder            => sub { [ $_[ 0 ]->appldir, 'bin' ] };
 
 has 'default_branch'  => is => 'lazy', isa => SimpleStr;
 
 has 'dist_module'     => is => 'lazy', isa => Path, coerce => Path->coercion,
-   default            => sub { [ $_[ 0 ]->homedir.'.pm' ] };
+   builder            => sub { [ $_[ 0 ]->homedir.'.pm' ] };
 
 has 'dist_version'    => is => 'lazy', isa => Object;
 
 has 'distname'        => is => 'lazy', isa => NonEmptySimpleStr,
-   default            => sub { $_distname->( $_[ 0 ]->project ) };
+   builder            => sub { $_distname->( $_[ 0 ]->project ) };
 
 has 'exec_perms'      => is => 'lazy', isa => PositiveInt;
 
 has 'homedir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
 
 has 'incdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
-   default            => sub { [ $_[ 0 ]->appldir, 'inc' ] };
+   builder            => sub { [ $_[ 0 ]->appldir, 'inc' ] };
 
 has 'initial_wd'      => is => 'ro',   isa => Directory,
-   default            => sub { io()->cwd };
+   builder            => sub { io()->cwd };
 
 has 'libdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
-   default            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
+   builder            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
 
 has 'manifest_paths'  => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
@@ -145,22 +151,31 @@ has 'project_file'    => is => 'lazy', isa => NonEmptySimpleStr;
 has 'stash'           => is => 'lazy', isa => HashRef;
 
 has 'testdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
-   default            => sub { [ $_[ 0 ]->appldir, 't' ] };
+   builder            => sub { [ $_[ 0 ]->appldir, 't' ] };
 
 # Object attributes (private)
 has '_license_keys'   => is => 'lazy', isa => HashRef;
 
 # Construction
+sub BUILD {
+   my $self = shift; my $plugin = $self->plugin or return;
+
+   if (first_char $plugin eq '+') { $plugin = substr $plugin, 1 }
+   else { $plugin = "Module::Provision::TraitFor::${plugin}" }
+
+   try   { Role::Tiny->apply_roles_to_object( $self, $plugin ) }
+   catch {
+      $_ =~ m{ \ACan\'t \s+ locate }mx or throw $_;
+      throw 'Module [_1] not found in @INC', [ $plugin ];
+   };
+
+   return;
+}
+
 sub _build_appbase {
-   my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
+   my $self = shift;
 
-   $base = $base->catdir( $self->distname ); $base->exists and return $base;
-
-   my $file = $_get_project_file->( $self->initial_wd );
-
-   $base = $file->parent->parent;
-   $base->exists or throw 'Cannot find application base';
-   return $base;
+   return $self->base->absolute( $self->initial_wd )->catdir( $self->distname );
 }
 
 sub _build_appldir {
@@ -248,7 +263,8 @@ sub _build_module_abstract {
 
 sub _build_project {
    my $self   = shift;
-   my $file   = $_get_project_file->( $self->initial_wd );
+   my $file   = $_get_project_file->( $self->initial_wd )
+      or throw 'Path [_1] contains no project file', [ $self->initial_wd ];
    my $module = $_get_module_from->( $file->all )
       or throw 'File [_1] contains no module name', [ $file ];
 
@@ -297,9 +313,9 @@ sub _build_vcs {
    my $self = shift; my $appbase = $self->appbase;
 
    return $appbase->catdir( '.git'            )->exists ? 'git'
-        : $appbase->catdir( qw( master .git ) )->exists ? 'git'
+        : $appbase->catdir( 'master', '.git'  )->exists ? 'git'
         : $appbase->catdir( '.svn'            )->exists ? 'svn'
-        : $appbase->catdir( qw( trunk  .svn ) )->exists ? 'svn'
+        : $appbase->catdir( 'trunk', '.svn'   )->exists ? 'svn'
         : $appbase->catdir( $self->repository )->exists ? 'svn'
                                                         : 'none';
 }
@@ -376,6 +392,10 @@ Permissions used to create files. Defaults to C<644>. Directories and
 programs have the execute bit turned on if the corresponding read bit
 is on
 
+=item C<plugin>
+
+Optional trait to load and apply
+
 =item C<project>
 
 The class name of the new project. Should be the first extra argument on the
@@ -393,6 +413,10 @@ or C<svn>
 =back
 
 =head1 Subroutines/Methods
+
+=head2 BUILD
+
+Load and apply optional traits
 
 =head2 chdir
 
