@@ -22,3 +22,4 @@ README.pod
 t/ipc_srlock*
 *.tar.gz
 Module-Provision-*
+lib/Module/Provision/TraitFor/Debian.pm

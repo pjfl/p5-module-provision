@@ -5,7 +5,7 @@ use namespace::autoclean;
 use Moo;
 use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL SPC );
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir
-                                first_char io throw );
+                                first_char io is_arrayref throw );
 use Class::Usul::Options;
 use Class::Usul::Time       qw( time2str );
 use English                 qw( -no_match_vars );
@@ -94,9 +94,11 @@ option 'perms'      => is => 'ro',   isa => OctalNum, format => 'i',
    documentation    => 'Default permission for file / directory creation',
    coerce           => OctalNum->coercion, default => '640';
 
-option 'plugin'     => is => 'ro',   isa => SimpleStr, format => 's',
+option 'plugins'    => is => 'ro',   isa => ArrayRef[NonEmptySimpleStr],
    documentation    => 'Name of optional plugin to load',
-   default          => NUL, short => 'M';
+   coerce           => sub { (is_arrayref $_[ 0 ])
+                                ? $_[ 0 ] : [ split m{ , }mx, $_[ 0 ] ] },
+   default          => sub { [] }, format => 's', short => 'M';
 
 option 'project'    => is => 'lazy', isa => NonEmptySimpleStr, format => 's',
    documentation    => 'Package name of the new projects main module';
@@ -158,16 +160,18 @@ has '_license_keys'   => is => 'lazy', isa => HashRef;
 
 # Construction
 sub BUILD {
-   my $self = shift; my $plugin = $self->plugin or return;
+   my $self = shift;
 
-   if (first_char $plugin eq '+') { $plugin = substr $plugin, 1 }
-   else { $plugin = "Module::Provision::TraitFor::${plugin}" }
+   for my $plugin (@{ $self->plugins }) {
+      if (first_char $plugin eq '+') { $plugin = substr $plugin, 1 }
+      else { $plugin = "Module::Provision::TraitFor::${plugin}" }
 
-   try   { Role::Tiny->apply_roles_to_object( $self, $plugin ) }
-   catch {
-      $_ =~ m{ \ACan\'t \s+ locate }mx or throw $_;
-      throw 'Module [_1] not found in @INC', [ $plugin ];
-   };
+      try   { Role::Tiny->apply_roles_to_object( $self, $plugin ) }
+      catch {
+         $_ =~ m{ \ACan\'t \s+ locate }mx or throw $_;
+         throw 'Module [_1] not found in @INC', [ $plugin ];
+      };
+   }
 
    return;
 }
@@ -175,6 +179,8 @@ sub BUILD {
 sub _build_appbase {
    my $self = shift;
 
+   # TODO: There was a patch to use the grandparent of the dir containing
+   # the project file but it caused a problem
    return $self->base->absolute( $self->initial_wd )->catdir( $self->distname );
 }
 
