@@ -3,7 +3,7 @@ package Module::Provision::Config;
 use namespace::autoclean;
 
 use Moo;
-use Class::Usul::Constants qw( NUL );
+use Class::Usul::Constants qw( NUL TRUE );
 use Class::Usul::Functions qw( fullname loginid logname untaint_cmdline
                                untaint_identifier );
 use File::DataClass::Types qw( ArrayRef HashRef NonEmptySimpleStr
@@ -25,7 +25,7 @@ has 'author_email'     => is => 'lazy', isa => NonEmptySimpleStr,
 has 'author_id'        => is => 'lazy', isa => NonEmptySimpleStr,
    builder             => sub { loginid };
 
-has 'base'             => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'base'             => is => 'lazy', isa => Path, coerce => TRUE,
    builder             => sub { $_[ 0 ]->my_home };
 
 has 'builder'          => is => 'lazy', isa => NonEmptySimpleStr,
@@ -59,7 +59,7 @@ has 'module_abstract'  => is => 'lazy', isa => NonEmptySimpleStr,
 has 'repository'       => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'repository';
 
-has 'seed_file'        => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'seed_file'        => is => 'lazy', isa => Path, coerce => TRUE,
    builder             => sub { [ qw( ~ .ssh pause.key ) ] };
 
 has 'signing_key'      => is => 'lazy', isa => SimpleStr,

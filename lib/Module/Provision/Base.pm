@@ -3,14 +3,15 @@ package Module::Provision::Base;
 use namespace::autoclean;
 
 use Moo;
-use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL SPC );
+use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL SPC TRUE );
 use Class::Usul::Functions  qw( app_prefix class2appdir classdir
                                 first_char io is_arrayref throw );
 use Class::Usul::Options;
 use Class::Usul::Time       qw( time2str );
 use English                 qw( -no_match_vars );
 use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
-                                Object OctalNum Path PositiveInt SimpleStr );
+                                Object OctalNum Path PositiveInt
+                                SimpleStr Undef );
 use Module::Metadata;
 use Perl::Version;
 use Try::Tiny;
@@ -76,9 +77,9 @@ has '+config_class' => default => sub { 'Module::Provision::Config' };
 
 # Object attributes (public)
 #   Visible to the command line
-option 'base'       => is => 'lazy', isa => Path, format => 's',
+option 'base'       => is => 'lazy', isa => Path, coerce => TRUE,
    documentation    => 'Directory containing new projects',
-   coerce           => Path->coercion, builder => sub { $_[ 0 ]->config->base };
+   builder          => sub { $_[ 0 ]->config->base }, format => 's';
 
 option 'branch'     => is => 'lazy', isa => SimpleStr, format => 's',
    documentation    => 'The name of the initial branch to create', short => 'b';
@@ -90,15 +91,15 @@ option 'license'    => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
    documentation    => 'License used for the project',
    builder          => sub { $_[ 0 ]->config->license };
 
-option 'perms'      => is => 'ro',   isa => OctalNum, format => 'i',
+option 'perms'      => is => 'ro',   isa => OctalNum, coerce => TRUE,
    documentation    => 'Default permission for file / directory creation',
-   coerce           => OctalNum->coercion, default => '640';
+   default          => '640', format => 'i';
 
 option 'plugins'    => is => 'ro',   isa => ArrayRef[NonEmptySimpleStr],
-   documentation    => 'Name of optional plugin to load',
+   documentation    => 'Name of optional plugins to load, comma seprated list',
+   builder          => sub { [] }, format => 's', short => 'M',
    coerce           => sub { (is_arrayref $_[ 0 ])
-                                ? $_[ 0 ] : [ split m{ , }mx, $_[ 0 ] ] },
-   default          => sub { [] }, format => 's', short => 'M';
+                                ? $_[ 0 ] : [ split m{ , }mx, $_[ 0 ] ] };
 
 option 'project'    => is => 'lazy', isa => NonEmptySimpleStr, format => 's',
    documentation    => 'Package name of the new projects main module';
@@ -111,19 +112,19 @@ option 'vcs'        => is => 'lazy', isa => $VCS, format => 's',
    documentation    => 'Which VCS to use: git, none, or svn';
 
 #   Ingnored by the command line
-has 'appbase'         => is => 'lazy', isa => Path, coerce => Path->coercion;
+has 'appbase'         => is => 'lazy', isa => Path, coerce => TRUE;
 
-has 'appldir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
+has 'appldir'         => is => 'lazy', isa => Path, coerce => TRUE;
 
-has 'branch_file'     => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'branch_file'     => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appbase, '.branch' ] };
 
-has 'binsdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'binsdir'         => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appldir, 'bin' ] };
 
 has 'default_branch'  => is => 'lazy', isa => SimpleStr;
 
-has 'dist_module'     => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'dist_module'     => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->homedir.'.pm' ] };
 
 has 'dist_version'    => is => 'lazy', isa => Object;
@@ -133,26 +134,30 @@ has 'distname'        => is => 'lazy', isa => NonEmptySimpleStr,
 
 has 'exec_perms'      => is => 'lazy', isa => PositiveInt;
 
-has 'homedir'         => is => 'lazy', isa => Path, coerce => Path->coercion;
+has 'homedir'         => is => 'lazy', isa => Path, coerce => TRUE;
 
-has 'incdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'incdir'          => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appldir, 'inc' ] };
 
 has 'initial_wd'      => is => 'ro',   isa => Directory,
    builder            => sub { io()->cwd };
 
-has 'libdir'          => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'libdir'          => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
 
 has 'manifest_paths'  => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
 has 'module_abstract' => is => 'lazy', isa => NonEmptySimpleStr;
 
+has 'module_metadata' => is => 'lazy', isa => Object | Undef, builder => sub {
+   Module::Metadata->new_from_file
+      ( $_[ 0 ]->dist_module->abs2rel( $_[ 0 ]->appldir ), collect_pod => 1 ) };
+
 has 'project_file'    => is => 'lazy', isa => NonEmptySimpleStr;
 
 has 'stash'           => is => 'lazy', isa => HashRef;
 
-has 'testdir'         => is => 'lazy', isa => Path, coerce => Path->coercion,
+has 'testdir'         => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appldir, 't' ] };
 
 # Object attributes (private)
@@ -177,11 +182,18 @@ sub BUILD {
 }
 
 sub _build_appbase {
-   my $self = shift;
+   my $self    = shift;
+   my $base    = $self->base->absolute( $self->initial_wd );
+   my $appbase = $base->catdir( $self->distname );
 
-   # TODO: There was a patch to use the grandparent of the dir containing
-   # the project file but it caused a problem
-   return $self->base->absolute( $self->initial_wd )->catdir( $self->distname );
+   $appbase->exists and return $appbase;
+
+   # This is so you can rename the dist directory
+   my $file         = $_get_project_file->( $self->initial_wd );
+   my $grand_parent = $file && $file->parent && $file->parent->parent;
+
+   $grand_parent and $grand_parent->exists and return $grand_parent;
+   return $appbase;
 }
 
 sub _build_appldir {
@@ -225,11 +237,9 @@ sub _build_default_branch {
 }
 
 sub _build_dist_version {
-   my $self   = shift;
-   my $module = $self->dist_module->abs2rel( $self->appldir );
-   my $info   = Module::Metadata->new_from_file( $module );
+   my $self = shift; my $meta = $self->module_metadata;
 
-   return Perl::Version->new( $info ? $info->version : '0.1.1' );
+   return Perl::Version->new( $meta ? $meta->version : '0.1.1' );
 }
 
 sub _build_exec_perms {
@@ -264,7 +274,12 @@ sub _build_manifest_paths {
 }
 
 sub _build_module_abstract {
-   return $_[ 0 ]->loc( $_[ 0 ]->config->module_abstract );
+   my $self = shift; my $meta = $self->module_metadata; my $abstract;
+
+   $meta and ($abstract = $meta->pod( 'Name' ) // NUL)
+      =~ s{ \A [^\-]+ \s* [\-] \s* }{}mx; chomp $abstract;
+
+   return $self->loc( $abstract || $self->config->module_abstract );
 }
 
 sub _build_project {
