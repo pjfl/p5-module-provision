@@ -3,74 +3,26 @@ package Module::Provision::Base;
 use namespace::autoclean;
 
 use Moo;
-use Class::Usul::Constants  qw( EXCEPTION_CLASS NUL SPC TRUE );
-use Class::Usul::Functions  qw( app_prefix class2appdir classdir
-                                first_char io is_arrayref throw );
+use Class::Usul::Constants qw( EXCEPTION_CLASS NUL SPC TRUE );
+use Class::Usul::Functions qw( app_prefix class2appdir classdir
+                               distname first_char io is_arrayref throw );
 use Class::Usul::Options;
-use Class::Usul::Time       qw( time2str );
-use English                 qw( -no_match_vars );
-use File::DataClass::Types  qw( ArrayRef Directory HashRef NonEmptySimpleStr
-                                Object OctalNum Path PositiveInt
-                                SimpleStr Undef );
+use Class::Usul::Time      qw( time2str );
+use English                qw( -no_match_vars );
+use File::DataClass::Types qw( ArrayRef Directory HashRef NonEmptySimpleStr
+                               Object OctalNum Path PositiveInt
+                               SimpleStr Undef );
 use Module::Metadata;
 use Perl::Version;
 use Try::Tiny;
-use Type::Utils             qw( enum );
-use Unexpected::Functions   qw( Unspecified );
+use Type::Utils            qw( enum );
+use Unexpected::Functions  qw( Unspecified );
 
 extends q(Class::Usul::Programs);
 
 my %BUILDERS = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', 'MI' => 'Makefile.PL');
 my $BUILDER  = enum 'Builder' => [ qw( DZ MB MI ) ];
 my $VCS      = enum 'VCS'     => [ qw( git none svn ) ];
-
-# Private functions
-my $_builders = sub {
-   return (sort keys %BUILDERS);
-};
-
-my $_distname = sub {
-   (my $y = $_[ 0 ] || NUL) =~ s{ :: }{-}gmx; return $y;
-};
-
-my $_get_module_from = sub { # Return main module name from project file
-   return
-      (map    { s{ [-] }{::}gmx; $_ }
-       map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
-       map    { m{ \A \s* (?:module_name|module|name)
-                      \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
-       grep   { m{ \A \s*   (module|name) }imx }
-       split m{ [\n] }mx, $_[ 0 ])[ 0 ];
-};
-
-my $_parse_manifest_line = sub { # Robbed from ExtUtils::Manifest
-   my $line = shift; my ($file, $comment);
-
-   # May contain spaces if enclosed in '' (in which case, \\ and \' are escapes)
-   if (($file, $comment) = $line =~ m{ \A \' (\\[\\\']|.+)+ \' \s* (.*) }mx) {
-      $file =~ s{ \\ ([\\\']) }{$1}gmx;
-   }
-   else {
-       ($file, $comment) = $line =~ m{ \A (\S+) \s* (.*) }mx;
-   }
-
-   return [ $file, $comment ];
-};
-
-my $_get_project_file = sub {
-   my $dir = shift; my $prev;
-
-   while (not $prev or $prev ne $dir) { # Search for dist.ini first
-      for my $file (grep { $_->exists }
-                    map  { $dir->catfile( $BUILDERS{ $_ } ) } $_builders->()) {
-         return $file
-      }
-
-      $prev = $dir; $dir = $dir->parent;
-   }
-
-   return;
-};
 
 # Override defaults in base class
 has '+config_class' => default => sub { 'Module::Provision::Config' };
@@ -130,7 +82,7 @@ has 'dist_module'     => is => 'lazy', isa => Path, coerce => TRUE,
 has 'dist_version'    => is => 'lazy', isa => Object;
 
 has 'distname'        => is => 'lazy', isa => NonEmptySimpleStr,
-   builder            => sub { $_distname->( $_[ 0 ]->project ) };
+   builder            => sub { distname $_[ 0 ]->project };
 
 has 'exec_perms'      => is => 'lazy', isa => PositiveInt;
 
@@ -162,6 +114,50 @@ has 'testdir'         => is => 'lazy', isa => Path, coerce => TRUE,
 
 # Object attributes (private)
 has '_license_keys'   => is => 'lazy', isa => HashRef;
+
+# Private functions
+my $_builders = sub {
+   return (sort keys %BUILDERS);
+};
+
+my $_get_module_from = sub { # Return main module name from project file
+   return
+      (map    { s{ [-] }{::}gmx; $_ }
+       map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
+       map    { m{ \A \s* (?:module_name|module|name)
+                      \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
+       grep   { m{ \A \s*   (module|name) }imx }
+       split m{ [\n] }mx, $_[ 0 ])[ 0 ];
+};
+
+my $_parse_manifest_line = sub { # Robbed from ExtUtils::Manifest
+   my $line = shift; my ($file, $comment);
+
+   # May contain spaces if enclosed in '' (in which case, \\ and \' are escapes)
+   if (($file, $comment) = $line =~ m{ \A \' (\\[\\\']|.+)+ \' \s* (.*) }mx) {
+      $file =~ s{ \\ ([\\\']) }{$1}gmx;
+   }
+   else {
+       ($file, $comment) = $line =~ m{ \A (\S+) \s* (.*) }mx;
+   }
+
+   return [ $file, $comment ];
+};
+
+my $_get_project_file = sub {
+   my $dir = shift; my $prev;
+
+   while (not $prev or $prev ne $dir) { # Search for dist.ini first
+      for my $file (grep { $_->exists }
+                    map  { $dir->catfile( $BUILDERS{ $_ } ) } $_builders->()) {
+         return $file
+      }
+
+      $prev = $dir; $dir = $dir->parent;
+   }
+
+   return;
+};
 
 # Construction
 sub BUILD {

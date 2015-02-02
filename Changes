@@ -1,6 +1,6 @@
 Revision history for Module::Provision
 
-          - Aded module_metadate attribute
+          - Added module_metadate attribute
           - Can load multiple plugins. Comma separated list
           - Added loading of plugin module
           - Switched to private lexical subroutines

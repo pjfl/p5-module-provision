@@ -103,13 +103,13 @@ my $_parse_depends_line = sub {
          $module =~ m{ \A (?: lib | strict | warnings ) \z }mx and next;
          $module =~ m{ [^\.:\w] }mx and next;
 
-         push @{ $modules }, $module eq q(base) || $module eq q(parent)
+         push @{ $modules }, $module eq 'base' || $module eq 'parent'
                           ? ($module, $_parse_list->( $rest )) : $module;
       }
       elsif ($stmt =~ m{ \A (?: with | extends ) \s+ (.+) }mx) {
          push @{ $modules }, $_parse_list->( $1 );
       }
-      elsif ($stmt =~ m{ ensure_class_loaded \( \s* (.+?) \s* \) }mx) {
+      elsif ($stmt =~ m{ ensure_class_loaded [\(]? \s* (.+?) \s* [\)]? }mx) {
          my $module = $1;
             $module = $module =~ m{ \A [q\'\"] }mx ? eval $module : $module;
 
