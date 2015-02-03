@@ -43,7 +43,7 @@ my $_project_file_path = sub {
 around '_build_appbase' => sub {
    my ($orig, $self, @args) = @_; my $appbase = $orig->( $self, @args );
 
-   return !$appbase && $self->method eq 'dist'
+   return $self->method eq 'dist'
         ? $self->base->absolute( $self->initial_wd )->catdir( $self->distname )
         : $appbase;
 };

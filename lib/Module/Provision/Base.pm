@@ -177,9 +177,9 @@ sub BUILD {
    return;
 }
 
-sub _build_appbase {
-   my $self    = shift;
-   my $base    = $self->base->absolute( $self->initial_wd );
+sub _build_appbase { # Base + distname
+   my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
+
    my $appbase = $base->catdir( $self->distname );
 
    $appbase->exists and return $appbase;
@@ -188,7 +188,8 @@ sub _build_appbase {
    my $file         = $_get_project_file->( $self->initial_wd );
    my $grand_parent = $file && $file->parent && $file->parent->parent;
 
-   $grand_parent and $grand_parent->exists and return $grand_parent;
+   $grand_parent and $grand_parent->exists
+      and $grand_parent !~ m{ \.build \z }mx and return $grand_parent;
    return $appbase;
 }
 
@@ -270,7 +271,7 @@ sub _build_manifest_paths {
 }
 
 sub _build_module_abstract {
-   my $self = shift; my $meta = $self->module_metadata; my $abstract;
+   my $self = shift; my $meta = $self->module_metadata; my $abstract = NUL;
 
    $meta and ($abstract = $meta->pod( 'Name' ) // NUL)
       =~ s{ \A [^\-]+ \s* [\-] \s* }{}mx; chomp $abstract;
@@ -409,7 +410,7 @@ Permissions used to create files. Defaults to C<644>. Directories and
 programs have the execute bit turned on if the corresponding read bit
 is on
 
-=item C<plugin>
+=item C<plugins>
 
 Optional trait to load and apply
 

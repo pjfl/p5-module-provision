@@ -56,6 +56,7 @@ merchantability
 metadata
 pathname
 pathnames
+plugins
 pre
 selectable
 stderr

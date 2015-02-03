@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Fixed appbase logic, again
           - Added module_metadate attribute
           - Can load multiple plugins. Comma separated list
           - Added loading of plugin module

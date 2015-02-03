@@ -8,10 +8,10 @@ use Test::More;
 use Test::Requires { version => 0.88 };
 use Module::Build;
 
-my $notes = {}; my $perl_ver;
+my $builder; my $notes = {}; my $perl_ver;
 
 BEGIN {
-   my $builder = eval { Module::Build->current };
+   $builder  = eval { Module::Build->current };
    $builder and $notes = $builder->notes;
    $perl_ver = $notes->{min_perl_version} || 5.008;
 }
