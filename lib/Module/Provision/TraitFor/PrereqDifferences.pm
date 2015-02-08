@@ -11,9 +11,7 @@ use Module::Metadata;
 use Perl::Version;
 use Moo::Role;
 
-with q(Class::Usul::TraitFor::MetaData);
-
-requires qw( appldir builder chdir debug get_package_meta libdir
+requires qw( appldir builder chdir debug libdir load_meta
              manifest_paths next_argv output project_file run_cmd );
 
 # Private functions
@@ -25,7 +23,7 @@ my $_dist_from_module = sub {
 
 my $_draw_line = sub {
     return emit '-' x ($_[ 0 ] || 60);
- };
+};
 
 my $_extract_statements_from = sub {
    my $line = shift;
@@ -255,9 +253,7 @@ my $_filter_dependents = sub {
 
    my $perl_version = $used->{perl} || 5.008_008;
    my $core_modules = $Module::CoreList::version{ $perl_version };
-   my $dir          = $self->builder eq 'DZ'
-                    ? $self->distname.'-'.$self->dist_version : undef;
-   my $provides     = $self->get_package_meta( $dir )->provides;
+   my $provides     = $self->load_meta->provides;
 
    return $self->$_consolidate( { map   { $_ => $used->{ $_ }              }
                                   grep  { not exists $core_modules->{ $_ } }

@@ -8,6 +8,7 @@ use Class::Usul::Functions qw( app_prefix class2appdir classdir
                                distname first_char io is_arrayref throw );
 use Class::Usul::Options;
 use Class::Usul::Time      qw( time2str );
+use CPAN::Meta;
 use English                qw( -no_match_vars );
 use File::DataClass::Types qw( ArrayRef Directory HashRef NonEmptySimpleStr
                                Object OctalNum Path PositiveInt
@@ -347,6 +348,17 @@ sub chdir {
    return $dir;
 }
 
+sub load_meta {
+   my ($self, $dir) = @_;
+
+   $dir or $dir = $self->builder eq 'DZ'
+                ? io( $self->distname.'-'.$self->dist_version ) : undef;
+
+   my $path = $dir ? $dir->catfile( 'META.json' ) : io 'META.json';
+
+   return CPAN::Meta->load_file( "${path}" );
+}
+
 1;
 
 __END__
@@ -442,6 +454,12 @@ Load and apply optional traits
 
 Changes the current working directory to the one supplied and returns it.
 Throws if the operation was not successful
+
+=head2 load_meta
+
+   $cpan_meta_object = $self->load_meta( $optional_directory );
+
+Loads the F<META.json> file and returns and object
 
 =head1 Diagnostics
 
