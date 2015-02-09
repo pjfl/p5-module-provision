@@ -98,6 +98,8 @@ has 'initial_wd'      => is => 'ro',   isa => Directory,
 has 'libdir'          => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appldir, 'lib' ] };
 
+has 'license_keys'    => is => 'lazy', isa => HashRef;
+
 has 'manifest_paths'  => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
 has 'module_abstract' => is => 'lazy', isa => NonEmptySimpleStr;
@@ -112,9 +114,6 @@ has 'stash'           => is => 'lazy', isa => HashRef;
 
 has 'testdir'         => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->appldir, 't' ] };
-
-# Object attributes (private)
-has '_license_keys'   => is => 'lazy', isa => HashRef;
 
 # Private functions
 my $_builders = sub {
@@ -248,7 +247,7 @@ sub _build_homedir {
    return [ $_[ 0 ]->libdir, classdir $_[ 0 ]->project ];
 }
 
-sub _build__license_keys {
+sub _build_license_keys {
    return {
       perl       => 'Perl_5',
       perl_5     => 'Perl_5',
@@ -319,7 +318,7 @@ sub _build_stash {
             last_name      => lc ((split SPC, $author)[ -1 ]),
             lc_distname    => lc $self->distname,
             license        => $self->license,
-            license_class  => $self->_license_keys->{ $self->license },
+            license_class  => $self->license_keys->{ $self->license },
             module         => $project,
             perl           => $perl_ver,
             prefix         => (split m{ :: }mx, lc $project)[ -1 ],
