@@ -20,6 +20,10 @@ option 'editor'     => is => 'lazy', isa => NonEmptySimpleStr,
    default          => sub { $_[ 0 ]->config->editor }, format => 's';
 
 # Private functions
+my $_set_env_false = sub {
+   $ENV{ $_ } = FALSE for (@_); return;
+};
+
 my $_set_env_true = sub {
    $ENV{ $_ } = TRUE for (@_); return;
 };
@@ -163,6 +167,8 @@ sub prove : method {
 
    $self->output ( 'Testing [_1]', { args => [ $self->appldir ] } );
    $self->run_cmd( $cmd, $self->quiet ? {} : { out => 'stdout' } );
+
+   $_set_env_false->( @{ $self->config->test_env_vars } );
    return OK;
 }
 

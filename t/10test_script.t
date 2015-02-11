@@ -54,20 +54,15 @@ $prog = test_mp( 'MB', 'init_templates' ); $prog->run;
 
 ok -f catfile( qw( t code_templates index.json ) ), 'Creates template index';
 
-$prog->dist_pre_hook;
+$prog = test_mp( 'MB', 'dist' ); $prog->run;
 
 like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
-
-$prog->create_directories;
-
-ok -d catdir( qw( lib Foo ) ), 'Creates lib/Foo dir';
-ok -d 'inc', 'Creates inc dir';
-ok -d 't', 'Creates t dir';
-
-$prog->render_templates;
-
-ok -f catfile( qw( lib Foo Bar.pm ) ), 'Creates lib/Foo/Bar.pm';
-ok -f 'Build.PL', 'Creates Build.PL';
+ok -d catdir( $prog->appbase->name, qw( lib Foo ) ), 'Creates lib/Foo dir';
+ok -d catdir( $prog->appbase->name, 'inc' ), 'Creates inc dir';
+ok -d catdir( $prog->appbase->name, 't' ), 'Creates t dir';
+ok -f catfile( $prog->appbase->name, qw( lib Foo Bar.pm ) ),
+   'Creates lib/Foo/Bar.pm';
+ok -f catfile( $prog->appbase->name, 'Build.PL' ), 'Creates Build.PL';
 
 test_cleanup( $owd );
 
@@ -91,7 +86,7 @@ SKIP: {
    is $prog->run, 0, 'Dist MI returns zero';
 
    test_cleanup( $owd );
-}
+};
 
 done_testing;
 

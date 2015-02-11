@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+0.38.1    2015-02-11 17:50:11
 0.37.1    2015-02-11 16:02:39
           - Made _license_keys public
           - Replaced C::U::TraitFor::MetaData with CPAN::Meta
