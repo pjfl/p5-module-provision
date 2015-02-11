@@ -54,20 +54,20 @@ $prog = test_mp( 'MB', 'init_templates' ); $prog->run;
 
 ok -f catfile( qw( t code_templates index.json ) ), 'Creates template index';
 
-$prog = test_mp( 'MB', 'dist' ); $prog->run;
-
-like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
-ok -d catdir( $prog->appbase->name, qw( lib Foo ) ), 'Creates lib/Foo dir';
-ok -d catdir( $prog->appbase->name, 'inc' ), 'Creates inc dir';
-ok -d catdir( $prog->appbase->name, 't' ), 'Creates t dir';
-ok -f catfile( $prog->appbase->name, qw( lib Foo Bar.pm ) ),
-   'Creates lib/Foo/Bar.pm';
-ok -f catfile( $prog->appbase->name, 'Build.PL' ), 'Creates Build.PL';
-
-test_cleanup( $owd );
-
 SKIP: {
    $ENV{AUTHOR_TESTING} or skip 'extended testing', 1;
+
+   $prog = test_mp( 'MB', 'dist' ); $prog->run;
+
+   like $prog->appbase->name, qr{ Foo-Bar \z }mx, 'Sets appbase';
+   ok -d catdir( $prog->appbase->name, qw( lib Foo ) ), 'Creates lib/Foo dir';
+   ok -d catdir( $prog->appbase->name, 'inc' ), 'Creates inc dir';
+   ok -d catdir( $prog->appbase->name, 't' ), 'Creates t dir';
+   ok -f catfile( $prog->appbase->name, qw( lib Foo Bar.pm ) ),
+      'Creates lib/Foo/Bar.pm';
+   ok -f catfile( $prog->appbase->name, 'Build.PL' ), 'Creates Build.PL';
+
+   test_cleanup( $owd );
 
    $prog = test_mp( 'DZ' );
 
