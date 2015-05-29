@@ -1,16 +1,63 @@
 use strict;
 use warnings;
 
-use Module::Build ##{ $meta2{prereqs}->{configure}->{requires}->{'Module::Build'} ##};
+use Module::Build 0.4004;
 
 sub testing { $ENV{AUTOMATED_TESTING} || $ENV{PERL_CPAN_REPORTER_CONFIG}
                                       || $ENV{PERL5_CPANPLUS_IS_VERSION} }
 sub whimper { print {*STDOUT} $_[ 0 ]."\n"; exit 0 }
 
-my $perl_ver = ##{ $meta2{prereqs}->{runtime}->{requires}->{perl} ##};
-my $name     = '##{ $zilla->name ##}'; $name =~ s{ - }{::}gmx;
+my $perl_ver = 5.010001;
+my $name     = 'Module-Provision'; $name =~ s{ - }{::}gmx;
 my $prereqs  = {
-##{ $plugin->get_prereqs( 1 ) ##}
+  'build_requires' => {
+    'Module::Build' => '0.4004',
+    'Test::Requires' => '0.08',
+    'version' => '0.88'
+  },
+  'configure_requires' => {
+    'Module::Build' => '0.4004',
+    'version' => '0.88'
+  },
+  'requires' => {
+    'CPAN::Meta' => '2.142690',
+    'CPAN::Uploader' => '0.103004',
+    'Class::Null' => '2.101420',
+    'Class::Usul' => 'v0.59.0',
+    'Config::Tiny' => '2.20',
+    'Date::Format' => '2.24',
+    'Dist::Zilla' => '4.300033',
+    'Dist::Zilla::Plugin::AbstractFromPOD' => 'v0.2.0',
+    'Dist::Zilla::Plugin::LicenseFromModule' => '0.03',
+    'Dist::Zilla::Plugin::ManifestInRoot' => 'v0.1.0',
+    'Dist::Zilla::Plugin::Meta::Dynamic::Config' => '0.04',
+    'Dist::Zilla::Plugin::ModuleBuild::Custom' => '4.16',
+    'Dist::Zilla::Plugin::ReadmeAnyFromPod' => '0.141760',
+    'Dist::Zilla::Plugin::Signature' => '1.100930',
+    'Dist::Zilla::Plugin::VersionFromModule' => '0.08',
+    'File::DataClass' => 'v0.62.0',
+    'File::ShareDir' => '1.102',
+    'HTTP::Message' => '6.06',
+    'LWP' => '6.08',
+    'LWP::Protocol::https' => '6.03',
+    'Module::Install' => '1.12',
+    'Module::Install::AutoLicense' => '0.08',
+    'Module::Install::ReadmeFromPod' => '0.20',
+    'Module::Install::ReadmeMarkdownFromPod' => '0.03',
+    'Module::Metadata' => '1.000011',
+    'Moo' => '2.000001',
+    'Perl::Version' => '1.013',
+    'Pod::Eventual' => '0.094001',
+    'Software::License' => '0.103010',
+    'Template' => '2.26',
+    'Test::Requires' => '0.08',
+    'Try::Tiny' => '0.22',
+    'Type::Tiny' => '1.000004',
+    'Unexpected' => 'v0.38.0',
+    'local::lib' => '2.000014',
+    'namespace::autoclean' => '0.22',
+    'perl' => '5.010001'
+  },
 };
 
 if ($] < $perl_ver) { # Not interested in reports below min perl ver
@@ -24,7 +71,7 @@ Module::Build->new(
    'module_name' => $name,
    'notes'       => { min_perl_version => $perl_ver, testing => testing },
    %{ $prereqs },
-##{ $plugin->get_default('share_dir') ##}
+
 )->create_build_script;
 
 exit 0;
