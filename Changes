@@ -19,7 +19,7 @@ Revision history for Module::Provision
           - Can load multiple plugins. Comma separated list
           - Added loading of plugin module
           - Switched to private lexical subroutines
-
+0
 0.36.1    2014-10-28 13:45:12
           - Fixed spelling
 
