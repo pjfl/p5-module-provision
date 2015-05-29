@@ -2,7 +2,7 @@ package Module::Provision;
 
 use 5.010001;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.39.%d', q$Rev: 1 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.39.%d', q$Rev: 2 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -14,6 +14,7 @@ with    q(Module::Provision::TraitFor::VCS);
 with    q(Module::Provision::TraitFor::AddingFiles);
 with    q(Module::Provision::TraitFor::PrereqDifferences);
 with    q(Module::Provision::TraitFor::CPANDistributions);
+with    q(Module::Provision::TraitFor::Badges);
 
 1;
 
@@ -23,19 +24,21 @@ __END__
 
 =encoding utf8
 
+=begin html
+
+<a href="https://travis-ci.org/pjfl/p5-module-provision"><img src="https://travis-ci.org/pjfl/p5-module-provision.svg?branch=master" alt="Travis CI Badge"></a>
+<a href="http://badge.fury.io/pl/Module-Provision"><img src="https://badge.fury.io/pl/Module-Provision.svg" alt="CPAN Badge"></a>
+<a href="http://cpants.cpanauthors.org/dist/Module-Provision"><img src="http://cpants.cpanauthors.org/dist/Module-Provision.png" alt="Kwalitee Badge"></a>
+
+=end html
+
 =head1 Name
 
 Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.39.$Rev: 1 $ of L<Module::Provision>
-
-=begin markdown
-
-[![CPAN version](https://badge.fury.io/pl/Module-Provision.svg)](http://badge.fury.io/pl/Module-Provision)
-
-=end markdown
+This documents version v0.39.$Rev: 2 $ of L<Module::Provision>
 
 =head1 Synopsis
 

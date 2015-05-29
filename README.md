@@ -1,12 +1,16 @@
+<div>
+    <a href="https://travis-ci.org/pjfl/p5-module-provision"><img src="https://travis-ci.org/pjfl/p5-module-provision.svg?branch=master" alt="Travis CI Badge"></a>
+    <a href="http://badge.fury.io/pl/Module-Provision"><img src="https://badge.fury.io/pl/Module-Provision.svg" alt="CPAN Badge"></a>
+    <a href="http://cpants.cpanauthors.org/dist/Module-Provision"><img src="http://cpants.cpanauthors.org/dist/Module-Provision.png" alt="Kwalitee Badge"></a>
+</div>
+
 # Name
 
 Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.39.$Rev: 1 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
-
-[![CPAN version](https://badge.fury.io/pl/Module-Provision.svg)](http://badge.fury.io/pl/Module-Provision)
+This documents version v0.39.$Rev: 2 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
 
 # Synopsis
 

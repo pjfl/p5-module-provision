@@ -49,7 +49,7 @@ option 'perms'      => is => 'ro',   isa => OctalNum, coerce => TRUE,
    default          => '640', format => 'i';
 
 option 'plugins'    => is => 'ro',   isa => ArrayRef[NonEmptySimpleStr],
-   documentation    => 'Name of optional plugins to load, comma seprated list',
+   documentation    => 'Name of optional plugins to load, comma separated list',
    builder          => sub { [] }, format => 's', short => 'M',
    coerce           => sub { (is_arrayref $_[ 0 ])
                                 ? $_[ 0 ] : [ split m{ , }mx, $_[ 0 ] ] };
@@ -300,31 +300,32 @@ sub _build_stash {
 
    my $perl_code = $self->method eq 'dist' ? "use ${perl_ver};" : NUL;
 
-   return { abstract       => $self->module_abstract,
-            appdir         => class2appdir $self->distname,
-            author         => $author,
-            author_email   => $config->author_email,
-            author_id      => $config->author_id,
-            author_ID      => uc $config->author_id,
-            copyright      => $ENV{ORGANIZATION} || $author,
-            copyright_year => time2str( '%Y' ),
-            creation_date  => time2str,
-            dist_module    => $self->dist_module->abs2rel( $self->appldir ),
-            dist_version   => NUL.$self->dist_version,
-            distname       => $self->distname,
-            first_name     => lc ((split SPC, $author)[ 0 ]),
-            home_page      => $config->home_page,
-            initial_wd     => NUL.$self->initial_wd,
-            last_name      => lc ((split SPC, $author)[ -1 ]),
-            lc_distname    => lc $self->distname,
-            license        => $self->license,
-            license_class  => $self->license_keys->{ $self->license },
-            module         => $project,
-            perl           => $perl_ver,
-            prefix         => (split m{ :: }mx, lc $project)[ -1 ],
-            project        => $project,
-            use_perl       => $perl_code,
-            version        => $self->VERSION, };
+   return { abstract        => $self->module_abstract,
+            appdir          => class2appdir $self->distname,
+            author          => $author,
+            author_email    => $config->author_email,
+            author_id       => $config->author_id,
+            author_ID       => uc $config->author_id,
+            copyright       => $ENV{ORGANIZATION} || $author,
+            copyright_year  => time2str( '%Y' ),
+            creation_date   => time2str,
+            dist_module     => $self->dist_module->abs2rel( $self->appldir ),
+            dist_version    => NUL.$self->dist_version,
+            distname        => $self->distname,
+            first_name      => lc ((split SPC, $author)[ 0 ]),
+            home_page       => $config->home_page,
+            initial_wd      => NUL.$self->initial_wd,
+            last_name       => lc ((split SPC, $author)[ -1 ]),
+            lc_distname     => lc $self->distname,
+            license         => $self->license,
+            license_class   => $self->license_keys->{ $self->license },
+            module          => $project,
+            perl            => $perl_ver,
+            prefix          => (split m{ :: }mx, lc $project)[ -1 ],
+            project         => $project,
+            pub_repo_prefix => $config->pub_repo_prefix,
+            use_perl        => $perl_code,
+            version         => $self->VERSION, };
 }
 
 sub _build_vcs {

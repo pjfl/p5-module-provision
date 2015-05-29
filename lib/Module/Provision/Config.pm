@@ -2,12 +2,12 @@ package Module::Provision::Config;
 
 use namespace::autoclean;
 
-use Moo;
 use Class::Usul::Constants qw( NUL TRUE );
 use Class::Usul::Functions qw( fullname loginid logname untaint_cmdline
                                untaint_identifier );
 use File::DataClass::Types qw( ArrayRef HashRef NonEmptySimpleStr
-                               Path SimpleStr );
+                               Path SimpleStr Undef );
+use Moo;
 
 extends qw(Class::Usul::Config::Programs);
 
@@ -56,10 +56,12 @@ has 'min_perl_ver'     => is => 'lazy', isa => NonEmptySimpleStr,
 has 'module_abstract'  => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'One-line description of the modules purpose';
 
+has 'pub_repo_prefix'  => is => 'ro',   isa => SimpleStr, default => 'p5-';
+
 has 'repository'       => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'repository';
 
-has 'seed_file'        => is => 'lazy', isa => Path, coerce => TRUE,
+has 'seed_file'        => is => 'lazy', isa => Path | Undef, coerce => TRUE,
    builder             => sub { [ qw( ~ .ssh pause.key ) ] };
 
 has 'signing_key'      => is => 'lazy', isa => SimpleStr,
@@ -93,7 +95,7 @@ Module::Provision::Config - Attributes set from the config file
 
 =head1 Synopsis
 
-   use Moose;
+   use Moo;
 
    extends 'Class::Usul::Programs';
 
@@ -111,39 +113,104 @@ Defines the following attributes;
 
 =item C<author>
 
+A non empty simple string which defaults to the value of the environment
+variable C<AUTHOR>. If the environment variable is unset
+defaults to C<fullname> and then C<logname>
+
 =item C<author_email>
+
+A non empty simple string which defaults to the value of the environment
+variable C<EMAIL>. If the environment variable is unset
+defaults to C<dave@example.com>
 
 =item C<author_id>
 
+A non empty simple string which defaults to the author's login identity
+
 =item C<base>
+
+A path object which defaults to the authors home directory. The default
+directory in which to create new distributions
 
 =item C<builder>
 
+A non empty simple string default to C<MB>. Selects the build system to
+use when creating new distributions
+
 =item C<default_branches>
+
+A hash reference. The default branch names for the C<git> and C<svn> VCSs
+which are C<master> and C<trunk> respectively
 
 =item C<delete_files_uri>
 
+A non empty simple string which defaults to the value of the environment
+variable C<CPAN_DELETE_FILES_URI>. If the environment variable is unset
+defaults to C<https://pause.perl.org/pause/authenquery>. The URI of the
+PAUSE service
+
 =item C<editor>
+
+A non empty simple string which defaults to the value of the environment
+variable C<EDITOR>. If the environment variable is unset defaults to
+C<emacs>. Which editor to invoke which C<edit_project> is called
 
 =item C<home_page>
 
+A non empty simple string which default to C<http://example.com>. Override
+this in the configuration file to set the meta data used when creating a
+distribution
+
 =item C<hooks>
+
+An array reference of non empty simple strings which defaults to F<commit-msg>
+and F<pre-commit>. This list of Git hooks is operated on by the C<add_hooks>
+method
 
 =item C<license>
 
+A non empty simple string which defaults to C<perl>. The default license for
+new distributions
+
 =item C<min_perl_ver>
+
+Non empty simple string that is used as the default in the meta data of a
+newly minted distribution
 
 =item C<module_abstract>
 
+A non empty simple string which is used as the default abstract for newly
+minted modules
+
+=item C<pub_repo_prefix>
+
+A simple string which default to C<p5->. Prepended to the lower cased
+distribution name it forms the name of the public repository
+
 =item C<repository>
+
+A non empty simple string which defaults to C<repository>. Name of the
+L</appbase> subdirectory expected to contain a Git repository
 
 =item C<seed_file>
 
+File object reference or undefined. This optionally points to the file
+containing the key to decrypt the author's PAUSE account password which
+is stored in the F<~/.pause> file
+
 =item C<signing_key>
+
+Simple string that defaults to C<NUL>. If non null then this string is used
+as a fingerprint to find the author distribution signing key
 
 =item C<tag_message>
 
+Non empty simple string defaults to C<Released>. This is the default message
+to apply to the commit which creates a tagged release
+
 =item C<template_index>
+
+Name of the file containing the index of templates. Defaults to F<index.json>
 
 =item C<test_env_vars>
 

@@ -1,5 +1,9 @@
 Revision history for Module::Provision
 
+          - Documented configuration options
+          - Added public repo prefix to config options
+          - Added TraitFor::Badges
+
 0.39.1    2015-02-11 19:02:24
           - Fixed tests some more
 
