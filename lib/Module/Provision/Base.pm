@@ -2,11 +2,9 @@ package Module::Provision::Base;
 
 use namespace::autoclean;
 
-use Moo;
 use Class::Usul::Constants qw( EXCEPTION_CLASS NUL SPC TRUE );
 use Class::Usul::Functions qw( app_prefix class2appdir classdir
                                distname first_char io is_arrayref throw );
-use Class::Usul::Options;
 use Class::Usul::Time      qw( time2str );
 use CPAN::Meta;
 use English                qw( -no_match_vars );
@@ -18,6 +16,8 @@ use Perl::Version;
 use Try::Tiny;
 use Type::Utils            qw( enum );
 use Unexpected::Functions  qw( Unspecified );
+use Moo;
+use Class::Usul::Options;
 
 extends q(Class::Usul::Programs);
 
