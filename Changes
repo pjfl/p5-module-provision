@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Added cover method
           - Updated prereqs
           - Documented configuration options
           - Added public repo prefix to config options

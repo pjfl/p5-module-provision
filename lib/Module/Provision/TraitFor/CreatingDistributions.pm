@@ -33,6 +33,23 @@ my $_create_mask = sub {
    return oct '0777' ^ $_[ 0 ]->exec_perms;
 };
 
+my $_get_cover_command = sub {
+   my $self = shift;
+
+   ($self->builder eq 'DZ' or $self->builder eq 'MB')
+      and return 'perl Build.PL && ./Build testcover';
+
+   return;
+};
+
+my $_get_cover_build_command = sub {
+   my $self = shift;
+
+   $self->builder eq 'DZ' and return 'dzil build';
+
+   return;
+};
+
 my $_get_test_command = sub {
    return $_[ 1 ]                  ? 'prove -lv '.$_[ 1 ]
         : $_[ 0 ]->builder eq 'DZ' ? 'dzil test'
@@ -81,6 +98,26 @@ around '_build_vcs' => sub {
 };
 
 # Public Methods
+sub cover : method {
+   my $self = shift; $self->chdir( $self->appldir );
+
+   $self->output ( 'Testing coverage [_1]', { args => [ $self->appldir ] } );
+
+   my $cmd = $self->$_get_cover_build_command;
+
+   $cmd and $self->run_cmd( $cmd, $self->quiet ? {} : { out => 'stdout' } );
+   $_set_env_true->( @{ $self->config->test_env_vars } );
+   $ENV{DEVEL_COVER_OPTIONS} = '-ignore,MyModuleBuilder.pm,/home';
+   $self->builder eq 'DZ'
+      and $self->chdir( $self->distname.'-'.$self->dist_version );
+   $cmd = $self->$_get_cover_command;
+   $cmd and $self->run_cmd( $cmd, $self->quiet ? {} : { out => 'stdout' } );
+   $self->chdir( $self->appldir );
+   $_set_env_false->( @{ $self->config->test_env_vars } );
+   delete $ENV{DEVEL_COVER_OPTIONS};
+   return OK;
+}
+
 sub create_directories {
    my $self = shift; my $perms = $self->exec_perms;
 
@@ -187,9 +224,9 @@ sub select_project : method {
 
    $self->chdir( my $dir = $project->appldir );
 
-   my $io = IO::Handle->new; $io->fdopen( 3, 'w' );
+   my $fh = IO::Handle->new; $fh->fdopen( 3, 'w' );
 
-   emit_to $io, $dir; $io->close;
+   emit_to $fh, $dir; $fh->close;
 
    return Module::Provision->new
       ( method => 'edit_project', noask => TRUE, quiet => TRUE )->run;
@@ -211,7 +248,7 @@ __END__
 
 =pod
 
-=encoding utf8
+=encoding utf-8
 
 =head1 Name
 
@@ -248,6 +285,12 @@ variable
 =back
 
 =head1 Subroutines/Methods
+
+=head2 cover - Create test coverage statistics
+
+   $exit_code = $self->cover;
+
+Returns the exit code. Runs the distributions coverage tests
 
 =head2 create_directories
 
@@ -302,7 +345,8 @@ Calls L</generate_metadata> with the create flag set to C<FALSE>
 
    $exit_code = $self->prove;
 
-Returns the exit code
+Returns the exit code. Runs the distributions tests. If a specific test file
+is given on the command line, run only that that test
 
 =head2 select_project - List available projects and select one to edit
 
@@ -311,6 +355,8 @@ Returns the exit code
 Use from the shell like this:
 
    cd $(module_provision -q select_project 2>&1 1>/dev/tty)
+
+Display a list of projects, select one and edit it's project file
 
 =head2 show_tab_title - Display the tab title for the current distribution
 
