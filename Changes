@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Readded ShareDir to dist ini
           - Added cover method
           - Updated prereqs
           - Documented configuration options

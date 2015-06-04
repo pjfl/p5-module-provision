@@ -71,7 +71,9 @@ Module::Build->new(
    'module_name' => $name,
    'notes'       => { min_perl_version => $perl_ver, testing => testing },
    %{ $prereqs },
-
+  'share_dir' => {
+    'dist' => 'share'
+  },
 )->create_build_script;
 
 exit 0;
