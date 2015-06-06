@@ -38,7 +38,7 @@ __END__
 
 =head1 Name
 
-Module::Provision::MetaData - Create Perl distributions with VCS and selectable toolchain
+Module::Provision::MetaData - Provides module metadata
 
 =head1 Synopsis
 
@@ -49,15 +49,25 @@ Module::Provision::MetaData - Create Perl distributions with VCS and selectable 
 
 =head1 Configuration and Environment
 
-Defines the following attributes;
+Defines these attributes;
 
 =over 3
+
+=item C<provider>
+
+An instance of L<Module::Provision>
 
 =back
 
 =head1 Subroutines/Methods
 
+=head2 C<read_file>
+
+Returns a hash reference of metadata
+
 =head1 Diagnostics
+
+None
 
 =head1 Dependencies
 
