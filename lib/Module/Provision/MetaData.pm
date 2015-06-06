@@ -1,14 +1,32 @@
-package [% module %];
+package Module::Provision::MetaData;
 
-[% use_perl %]
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 1 $ =~ /\d+/gmx );
 
-use Class::Usul::Constants;
-use Class::Usul::Functions  qw( throw );
+use File::DataClass::Types qw( Object );
+use Module::Provision;
 use Moo;
 
-extends q(Class::Usul::Programs);
+has 'provider' => is => 'ro', isa => Object,
+   builder     => sub { Module::Provision->new },
+   handles     => [ 'appldir', 'dist_version', 'libdir' ];
+
+sub read_file { # PPI is just *so* slow
+   my $self     = shift;
+   my $pack_pat = qr{ \A package \s+ ([^\#]+) ; \z }mx;
+   my $version  = $self->dist_version->normal;
+   my $res      = {};
+
+   for my $file ($self->libdir->deep->all_files) {
+      for my $line (grep { m{ $pack_pat }mx } $file->chomp->getlines) {
+         my ($package) = $line =~ m{ $pack_pat }mx;
+
+         $package and $res->{ $package } = {
+            file => $file->abs2rel( $self->appldir ), version => $version };
+      }
+   }
+
+   return $res;
+}
 
 1;
 
@@ -20,11 +38,11 @@ __END__
 
 =head1 Name
 
-[% module %] - [% abstract %]
+Module::Provision::MetaData - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Synopsis
 
-   use [% module %];
+   use Module::Provision::MetaData;
    # Brief but working code examples
 
 =head1 Description
@@ -56,7 +74,7 @@ There are no known incompatibilities in this module
 =head1 Bugs and Limitations
 
 There are no known bugs in this module. Please report problems to
-http://rt.cpan.org/NoAuth/Bugs.html?Dist=[% distname %].
+http://rt.cpan.org/NoAuth/Bugs.html?Dist=Module-Provision.
 Patches are welcome
 
 =head1 Acknowledgements
@@ -65,11 +83,11 @@ Larry Wall - For the Perl programming language
 
 =head1 Author
 
-[% author %], C<< <[% author_email %]> >>
+Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) [% copyright_year %] [% copyright %]. All rights reserved
+Copyright (c) 2015 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>
