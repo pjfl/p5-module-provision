@@ -3,6 +3,7 @@ use t::boilerplate;
 use Test::More;
 use Cwd qw( getcwd );
 use File::DataClass::IO;
+use File::Spec::Functions qw( catdir catfile );
 
 use_ok 'Module::Provision';
 
