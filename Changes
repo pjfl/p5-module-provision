@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+0.40.1    2015-06-08 22:46:08
           - Added our own MetaData::Provider since PPI is *so* slow
           - Updated toolchain
           - Readded ShareDir to dist ini
