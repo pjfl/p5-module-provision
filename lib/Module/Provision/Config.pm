@@ -50,6 +50,9 @@ has 'hooks'            => is => 'lazy', isa => ArrayRef[NonEmptySimpleStr],
 has 'license'          => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'perl';
 
+has 'localdir'         => is => 'ro',   isa => NonEmptySimpleStr,
+   default             => 'local';
+
 has 'min_perl_ver'     => is => 'lazy', isa => NonEmptySimpleStr,
    default             => '5.010001';
 
@@ -171,6 +174,11 @@ method
 
 A non empty simple string which defaults to C<perl>. The default license for
 new distributions
+
+=item C<localdir>
+
+A non empty simple string which defaults to F<local>. The directory into which
+L<local::lib> should be installed
 
 =item C<min_perl_ver>
 
