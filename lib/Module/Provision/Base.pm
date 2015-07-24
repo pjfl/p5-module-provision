@@ -21,8 +21,8 @@ use Class::Usul::Options;
 
 extends q(Class::Usul::Programs);
 
-my %BUILDERS = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', 'MI' => 'Makefile.PL');
-my $BUILDER  = enum 'Builder' => [ qw( DZ MB MI ) ];
+my %BUILDERS = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', );
+my $BUILDER  = enum 'Builder' => [ qw( DZ MB ) ];
 my $VCS      = enum 'VCS'     => [ qw( git none svn ) ];
 
 # Override defaults in base class
@@ -38,7 +38,7 @@ option 'branch'     => is => 'lazy', isa => SimpleStr, format => 's',
    documentation    => 'The name of the initial branch to create', short => 'b';
 
 option 'builder'    => is => 'lazy', isa => $BUILDER, format => 's',
-   documentation    => 'Which build system to use: DZ, MB, or MI';
+   documentation    => 'Which build system to use: DZ or MB';
 
 option 'license'    => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
    documentation    => 'License used for the project',
@@ -351,10 +351,10 @@ sub chdir {
 sub load_meta {
    my ($self, $dir) = @_;
 
-   $dir or $dir = $self->builder eq 'DZ'
-                ? io( $self->distname.'-'.$self->dist_version ) : undef;
+   not $dir and $self->builder eq 'DZ'
+            and $dir = io $self->distname.'-'.$self->dist_version;
 
-   my $path = $dir ? $dir->catfile( 'META.json' ) : io 'META.json';
+   my $path = $dir ? $dir->catfile( 'META.json' ) : 'META.json';
 
    return CPAN::Meta->load_file( "${path}" );
 }
@@ -400,9 +400,8 @@ Git and F<trunk> for SVN
 
 =item C<builder>
 
-Which of the three build systems to use. Defaults to C<MB>, which is
-L<Module::Build>. Can be C<DZ> for L<Dist::Zilla> or C<MI> for
-L<Module::Install>
+Which of the two build systems to use. Set to C<MB>
+for L<Module::Build> or C<DZ> for L<Dist::Zilla>
 
 =item C<config_class>
 

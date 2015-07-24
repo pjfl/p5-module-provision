@@ -181,12 +181,6 @@ sub generate_metadata {
       $self->run_cmd( './Build distclean' );
       $mdf = 'README.md';
    }
-   elsif ($self->builder eq 'MI') {
-      $self->run_cmd( 'perl '.$self->project_file );
-      $self->run_cmd( 'make manifest', $verbose ? { out => 'stdout' } : {} );
-      $self->run_cmd( 'make clean' );
-      $mdf = 'README.mkdn';
-   }
 
    return $create ? $mdf : undef;
 }

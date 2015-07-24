@@ -5,7 +5,7 @@ use namespace::autoclean;
 use Class::Usul::Constants   qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
 use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
                                  is_encrypted );
-use Class::Usul::Functions   qw( ensure_class_loaded io throw );
+use Class::Usul::Functions   qw( ensure_class_loaded throw );
 use Class::Usul::Types       qw( NonEmptySimpleStr );
 use English                  qw( -no_match_vars );
 use HTTP::Request::Common    qw( POST );
@@ -24,12 +24,12 @@ has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
 
 # Private methods
 my $_convert_versions_to_paths = sub {
-   my ($self, $versions, $args) = @_; my $paths = []; $args ||= {};
+   my ($self, $versions, $args) = @_; my $paths = []; $args //= {};
 
    my $distname = $self->distname;
    my $subdir   = $args->{subdir} ? $args->{subdir}.'/' : NUL;
 
-   for my $version (@{ $versions || [] }) {
+   for my $version (@{ $versions // [] }) {
       for my $extn (qw(meta readme tar.gz)) {
          push @{ $paths }, "${subdir}${distname}-${version}.${extn}";
       }
@@ -51,22 +51,21 @@ my $_log_http_debug = sub {
 };
 
 my $_read_rc_file = sub {
-   my $self = shift; my $dir = $self->config->my_home; my $attr = {};
+   my $self = shift; my $conf = $self->config; my $attr = {};
 
-   for (io( [ $dir, '.pause' ] )->chomp->getlines) {
+   for ($conf->my_home->catfile( '.pause' )->chomp->getlines) {
       ($_ and $_ !~ m{ \A \s* \# }mx) or next;
 
       my ($k, $v) = m{ \A \s* (\w+) (?: \s+ (.+))? \z }mx;
 
-      exists $attr->{ $k }
-         and throw error => 'Multiple entries for [_1]', args => [ $k ];
+      exists $attr->{ $k } and throw 'Multiple entries for [_1]', [ $k ];
       $attr->{ $k } = $v // NUL;
    }
 
    my $pword; exists $attr->{password}
       and $pword = $attr->{password}
       and is_encrypted $pword
-      and $attr->{password} = decrypt_from_config $self->config, $pword;
+      and $attr->{password} = decrypt_from_config $conf, $pword;
 
    return $attr;
 };
@@ -80,11 +79,11 @@ my $_ua_string = sub {
 };
 
 my $_write_rc_file = sub {
-   my ($self, $attr) = @_;
+   my ($self, $attr) = @_; my $conf = $self->config;
 
-   my $file = $self->config->my_home->catfile( '.pause' );
+   my $file = $conf->my_home->catfile( '.pause' );
 
-   $attr->{password} = encrypt_for_config $self->config, $attr->{password};
+   $attr->{password} = encrypt_for_config $conf, $attr->{password};
 
    $file->println( "${_} ".$attr->{ $_ } ) for (sort keys %{ $attr });
 
@@ -147,7 +146,7 @@ my $_delete_files = sub {
    $agent->agent( $self->$_ua_string ); $agent->env_proxy;
    $args->{http_proxy} and $agent->proxy( http => $args->{http_proxy} );
 
-   my $uri     = $args->{delete_files_uri} || $self->config->delete_files_uri;
+   my $uri     = $args->{delete_files_uri} // $self->config->delete_files_uri;
    my $request = $self->$_get_delete_request( $files, $args, $uri );
 
    $self->info( 'POSTing delete files request to [_1]', { args => [ $uri ] } );

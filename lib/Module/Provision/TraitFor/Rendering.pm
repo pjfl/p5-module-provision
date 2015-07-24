@@ -85,17 +85,14 @@ sub _build_template_list {
       ( paths => [ $index ], storage_class => 'Any' )
       and return $self->$_merge_lists( $data );
    my $builders  = {
-      DZ => [ [ 'dist.ini',           '_appldir' ],
-              [ 'DZ_Build.PL',      [ '_appldir', 'Build.PL' ], ], ],
-      MB => [ [ 'Build.PL',           '_appldir' ], ],
-      MI => [ [ 'MI_Makefile.PL',   [ '_appldir', 'Makefile.PL' ], ], ], };
+      DZ => [ [ 'dist.ini',      '_appldir' ],
+              [ 'DZ_Build.PL', [ '_appldir', '.build.PL' ], ], ],
+      MB => [ [ 'Build.PL',      '_appldir' ], ], };
    my $templates = [ [ 'Changes',         '_appldir'     ],
                      [ 'MANIFEST.SKIP',   '_appldir'     ],
                      [ 'perl_module.pm',  '_dist_module' ],
-                     [ '01always_pass.t', '_testdir'     ],
                      [ '02pod.t',         '_testdir'     ],
                      [ '03podcoverage.t', '_testdir'     ],
-                     [ '04critic.t',      '_testdir'     ],
                      [ '05kwalitee.t',    '_testdir'     ],
                      [ '06yaml.t',        '_testdir'     ],
                      [ '07podspelling.t', '_testdir'     ],

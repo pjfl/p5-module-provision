@@ -63,12 +63,6 @@ SKIP: {
    is $prog->run, 0, 'Dist MB returns zero';
 
    test_cleanup( $owd );
-
-   $prog = test_mp( 'MI' );
-
-   is $prog->run, 0, 'Dist MI returns zero';
-
-   test_cleanup( $owd );
 };
 
 done_testing;
