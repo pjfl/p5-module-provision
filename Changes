@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+          - Default tag message tense reflects why not what
+          - Added Metadata. A Dist::Zilla meta data provider
           - Dropped support for Module::Install
           - Added Test::ReportMetaData to dist.ini and share/dist.ini
           - Deleted t/01always_pass.t

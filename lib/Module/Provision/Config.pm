@@ -71,7 +71,7 @@ has 'signing_key'      => is => 'lazy', isa => SimpleStr,
    default             => NUL;
 
 has 'tag_message'      => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'Released';
+   default             => 'Releasing';
 
 has 'template_index'   => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'index.json';
@@ -213,7 +213,7 @@ as a fingerprint to find the author distribution signing key
 
 =item C<tag_message>
 
-Non empty simple string defaults to C<Released>. This is the default message
+Non empty simple string defaults to C<Releasing>. This is the default message
 to apply to the commit which creates a tagged release
 
 =item C<template_index>

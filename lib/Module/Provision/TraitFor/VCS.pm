@@ -106,9 +106,9 @@ my $_get_svn_repository = sub {
 my $_get_version_numbers = sub {
    my ($self, @args) = @_; $args[ 0 ] and $args[ 1 ] and return @args;
 
-   my $prompt = $self->add_leader( $self->loc( 'Enter major/minor 0 or 1'  ) );
+   my $prompt = '+Enter major/minor 0 or 1';
    my $comp   = $self->get_line( $prompt, 1, TRUE, 0 );
-      $prompt = $self->add_leader( $self->loc( 'Enter increment/decrement' ) );
+      $prompt = '+Enter increment/decrement';
    my $bump   = $self->get_line( $prompt, 1, TRUE, 0 ) or return @args;
    my ($from, $ver);
 
