@@ -178,7 +178,7 @@ my $_add_tag_to_svn = sub {
 };
 
 my $_commit_release = sub {
-   my $self = shift; my $msg = $self->config->tag_message;
+   my ($self, $tag) = @_; my $msg = $self->config->tag_message." v${tag}";
 
    $self->vcs eq 'git' and $self->$_commit_release_to_git( $msg );
    $self->vcs eq 'svn' and $self->$_commit_release_to_svn( $msg );
@@ -294,8 +294,10 @@ sub get_emacs_state_file_path {
 sub release : method {
    my $self = shift;
 
-   $self->update_version;  $self->generate_metadata;
-   $self->$_commit_release; $self->$_add_tag( $self->_new_version );
+   $self->update_version;
+   $self->generate_metadata;
+   $self->$_commit_release( $self->_new_version );
+   $self->$_add_tag( $self->_new_version );
 
    return OK;
 }
@@ -328,7 +330,7 @@ __END__
 
 =pod
 
-=encoding utf8
+=encoding utf-8
 
 =head1 Name
 

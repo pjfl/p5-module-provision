@@ -1,5 +1,7 @@
 Revision history for Module::Provision
 
+          - Git commit hook no longer adding version tag to message
+          - Adding version to tag message when releasing
           - Default tag message tense reflects why not what
           - Added Metadata. A Dist::Zilla meta data provider
           - Dropped support for Module::Install
