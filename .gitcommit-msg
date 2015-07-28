@@ -27,7 +27,7 @@ if (-f $change_file) {
                              split    m{    [\n]     }mx,
                              ($entry || ' - Updated');
       $entry   =~ s{ \A [\-] \s* }{}mx;
-      $message = (split m{ [\-] }mx, $entry)[ 0 ];
+      $message = (split m{ [\-][ ] }mx, $entry)[ 0 ];
    }
 
    $message = substr $message, 0, 53;
