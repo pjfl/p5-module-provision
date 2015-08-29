@@ -53,7 +53,7 @@ around 'generate_metadata' => sub {
 sub module : method {
    my $self = shift; my $target = $self->$_get_target( 'libdir', \&classfile );
 
-   $self->output( 'Adding new module' );
+   $self->quiet or $self->output( 'Adding new module' );
    $target = $self->render_template( 'perl_module.pm', $target );
    $self->add_to_vcs( $target, 'module' );
    return OK;
@@ -62,7 +62,7 @@ sub module : method {
 sub program : method {
    my $self = shift; my $target = $self->$_get_target( 'binsdir' );
 
-   $self->output( 'Adding new program' );
+   $self->quiet or $self->output( 'Adding new program' );
    $target = $self->render_template( 'perl_program.pl', $target );
    chmod $self->exec_perms, $target->pathname;
    $self->add_to_vcs( $target, 'program' );
@@ -72,7 +72,7 @@ sub program : method {
 sub test : method {
    my $self = shift; my $target = $self->$_get_target( 'testdir' );
 
-   $self->output( 'Adding new test' );
+   $self->quiet or $self->output( 'Adding new test' );
    $target = $self->render_template( '10test_script.t', $target );
    $self->add_to_vcs( $target, 'test' );
    return OK;

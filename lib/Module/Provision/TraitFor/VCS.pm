@@ -12,7 +12,7 @@ use Moo::Role;
 
 requires qw( add_leader appbase appldir branch chdir config default_branch
              dist_version distname editor exec_perms generate_metadata
-             get_line loc next_argv output quiet run_cmd vcs );
+             get_line loc next_argv output quiet run_cmd update_version vcs );
 
 # Public attributes
 has 'no_auto_rev'  => is => 'ro',  isa => Bool, default => FALSE,

@@ -101,7 +101,8 @@ around '_build_vcs' => sub {
 sub cover : method {
    my $self = shift; $self->chdir( $self->appldir );
 
-   $self->output ( 'Testing coverage [_1]', { args => [ $self->appldir ] } );
+   $self->quiet or
+      $self->output( 'Testing coverage [_1]', { args => [ $self->appldir ] } );
 
    my $cmd = $self->$_get_cover_build_command;
 
@@ -121,7 +122,7 @@ sub cover : method {
 sub create_directories {
    my $self = shift; my $perms = $self->exec_perms;
 
-   $self->output( 'Creating directories' );
+   $self->quiet or $self->output( 'Creating directories' );
    $self->appldir->exists or $self->appldir->mkpath( $perms );
    $self->builder eq 'MB'
       and ($self->incdir->exists or $self->incdir->mkpath( $perms ));

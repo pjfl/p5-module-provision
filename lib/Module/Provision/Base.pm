@@ -30,9 +30,9 @@ has '+config_class' => default => sub { 'Module::Provision::Config' };
 
 # Object attributes (public)
 #   Visible to the command line
-option 'base'       => is => 'lazy', isa => Path, coerce => TRUE,
+option 'base'       => is => 'lazy', isa => Path, format => 's',
    documentation    => 'Directory containing new projects',
-   builder          => sub { $_[ 0 ]->config->base }, format => 's';
+   builder          => sub { $_[ 0 ]->config->base }, coerce => TRUE;
 
 option 'branch'     => is => 'lazy', isa => SimpleStr, format => 's',
    documentation    => 'The name of the initial branch to create', short => 'b';
@@ -44,9 +44,9 @@ option 'license'    => is => 'ro',   isa => NonEmptySimpleStr, format => 's',
    documentation    => 'License used for the project',
    builder          => sub { $_[ 0 ]->config->license };
 
-option 'perms'      => is => 'ro',   isa => OctalNum, coerce => TRUE,
+option 'perms'      => is => 'ro',   isa => OctalNum, format => 'i',
    documentation    => 'Default permission for file / directory creation',
-   default          => '640', format => 'i';
+   default          => '640', coerce => TRUE;
 
 option 'plugins'    => is => 'ro',   isa => ArrayRef[NonEmptySimpleStr],
    documentation    => 'Name of optional plugins to load, comma separated list',
@@ -148,9 +148,8 @@ my $_get_project_file = sub {
    my $dir = shift; my $prev;
 
    while (not $prev or $prev ne $dir) { # Search for dist.ini first
-      for my $file (grep { $_->exists }
-                    map  { $dir->catfile( $BUILDERS{ $_ } ) } $_builders->()) {
-         return $file
+      for my $file (map { $dir->catfile( $BUILDERS{ $_ } ) } $_builders->()) {
+         $file->exists and return $file
       }
 
       $prev = $dir; $dir = $dir->parent;
@@ -169,8 +168,9 @@ sub BUILD {
 
       try   { Role::Tiny->apply_roles_to_object( $self, $plugin ) }
       catch {
-         $_ =~ m{ \ACan\'t \s+ locate }mx or throw $_;
-         throw 'Module [_1] not found in @INC', [ $plugin ];
+         $_ =~ m{ \ACan\'t \s+ locate }mx
+            and throw 'Package [_1] not found in @INC', [ $plugin ];
+         throw $_;
       };
    }
 
@@ -178,8 +178,8 @@ sub BUILD {
 }
 
 sub _build_appbase { # Base + distname
-   my $self = shift; my $base = $self->base->absolute( $self->initial_wd );
-
+   my $self    = shift;
+   my $base    = $self->base->absolute( $self->initial_wd );
    my $appbase = $base->catdir( $self->distname );
 
    $appbase->exists and return $appbase;
@@ -188,8 +188,9 @@ sub _build_appbase { # Base + distname
    my $file         = $_get_project_file->( $self->initial_wd );
    my $grand_parent = $file && $file->parent && $file->parent->parent;
 
-   $grand_parent and $grand_parent->exists
-      and $grand_parent !~ m{ \.build \z }mx and return $grand_parent;
+   $grand_parent and $grand_parent !~ m{ \.build \z }mx
+      and $grand_parent->exists and return $grand_parent;
+
    return $appbase;
 }
 
@@ -221,16 +222,15 @@ sub _build_branch {
 sub _build_builder {
    my $self = shift; my $appldir = $self->appldir;
 
-   for (grep { $_->[ 1 ]->exists }
-        map  { [ $_, $appldir->catfile( $BUILDERS{ $_ } ) ] } $_builders->()) {
-      return $_->[ 0 ];
+   for (map { [ $appldir->catfile( $BUILDERS{ $_ } ), $_ ] } $_builders->()) {
+      $_->[ 0 ]->exists and return $_->[ 1 ];
    }
 
-   return undef;
+   return;
 }
 
 sub _build_default_branch {
-   return $_[ 0 ]->config->default_branches->{ $_[ 0 ]->vcs } || NUL;
+   return $_[ 0 ]->config->default_branches->{ $_[ 0 ]->vcs } // NUL;
 }
 
 sub _build_dist_version {

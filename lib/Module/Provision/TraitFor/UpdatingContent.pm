@@ -36,11 +36,9 @@ sub update_copyright_year : method {
 
    my $prefix = $self->loc( 'Copyright (c)' );
 
-   $prefix or throw Unspecified, [ 'prefix' ];
-   $from   or throw Unspecified, [ 'from'   ];
-   $to     or throw Unspecified, [ 'to'     ];
-
-   $self->output( 'Updating copyright year' );
+   $from or throw Unspecified, [ 'from' ];
+   $to   or throw Unspecified, [ 'to'   ];
+   $self->quiet or $self->output( 'Updating copyright year' );
 
    for my $path (@{ $self->manifest_paths }) {
       $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
@@ -54,7 +52,7 @@ sub update_version : method {
 
    my $ignore = $self->$_get_ignore_rev_regex;
 
-   $self->output( 'Updating version numbers' );
+   $self->quiet or $self->output( 'Updating version numbers' );
 
    ($from, $to) = $self->update_version_pre_hook( $from, $to );
 

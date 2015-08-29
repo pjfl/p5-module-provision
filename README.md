@@ -10,7 +10,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.40.$Rev: 5 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
+This documents version v0.40.$Rev: 8 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
 
 # Synopsis
 
@@ -299,6 +299,12 @@ files in the `MANIFEST`
 Substitutes the existing version number for the new version number in all
 files in the `MANIFEST`. Prompts for the major/minor and bump if the
 version numbers are not provided
+
+## `select_method`
+
+The pod coverage test falsely triggers on this module if this entry is
+removed. Caused by adding `requires` `select_method` to
+[Module::Provision::TraitFor::Badges](https://metacpan.org/pod/Module::Provision::TraitFor::Badges)
 
 # Diagnostics
 

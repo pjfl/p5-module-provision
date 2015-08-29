@@ -2,7 +2,7 @@ package Module::Provision;
 
 use 5.010001;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 7 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 8 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -38,7 +38,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.40.$Rev: 7 $ of L<Module::Provision>
+This documents version v0.40.$Rev: 8 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -328,6 +328,12 @@ Substitutes the existing version number for the new version number in all
 files in the F<MANIFEST>. Prompts for the major/minor and bump if the
 version numbers are not provided
 
+=head2 C<select_method>
+
+The pod coverage test falsely triggers on this module if this entry is
+removed. Caused by adding C<around> C<select_method> to
+L<Module::Provision::TraitFor::Badges>
+
 =head1 Diagnostics
 
 Add C<-D> to command line to turn on debug output
@@ -360,7 +366,7 @@ There are no known incompatibilities in this module
 
 There are no known bugs in this module.  Please report problems to
 http://rt.cpan.org/NoAuth/Bugs.html?Dist=Module-Provision.  Source
-code is on Github git://github.com/pjfl/Module-Provision.git. Patches
+code is on Github git://github.com/pjfl/p5-module-provision.git. Patches
 and pull requests are welcome
 
 =head1 Acknowledgements

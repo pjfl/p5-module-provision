@@ -1,10 +1,10 @@
 Revision history for Module::Provision                           .
 
-          - Allows dashes in changlog entries
+          - TraitFor::Badges sets requires and now even quieter
+          - Allow dashes in changlog entries
           - Git commit hook no longer adding version tag to message
           - Adding version to tag message when releasing
           - Default tag message tense reflects why not what
-          - Added Metadata. A Dist::Zilla meta data provider
           - Dropped support for Module::Install
           - Added Test::ReportMetaData to dist.ini and share/dist.ini
           - Deleted t/01always_pass.t

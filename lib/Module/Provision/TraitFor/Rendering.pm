@@ -16,21 +16,21 @@ requires qw( add_leader appldir builder config dist_module exec_perms file
              incdir initial_wd loc log perms stash testdir vcs yorn );
 
 # Object attributes (public)
-option 'force'        => is => 'ro',   isa => Bool, default => FALSE,
+option 'force'        => is => 'ro',   isa => Bool,
    documentation      => 'Overwrite files if they already exist',
-   short              => 'f';
+   default            => FALSE, short => 'f';
 
-option 'templates'    => is => 'ro',   isa => SimpleStr, default => NUL,
+option 'templates'    => is => 'ro',   isa => SimpleStr, format => 's',
    documentation      => 'Non default location of the code templates',
-   format             => 's';
+   default            => NUL;
 
-has 'template_dir'    => is => 'lazy', isa => Directory,
-   coerce             => Directory->coercion, init_arg => undef;
+has 'template_dir'    => is => 'lazy', isa => Directory, coerce => TRUE,
+   init_arg           => undef;
 
 has 'template_list'   => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
 # Object attributes (private)
-has '_template_index' => is => 'lazy', isa => Path, coerce => Path->coercion,
+has '_template_index' => is => 'lazy', isa => Path, coerce => TRUE,
    init_arg           => undef;
 
 # Private methods
@@ -167,7 +167,7 @@ sub render_template {
 }
 
 sub render_templates {
-   my $self = shift; $self->output( 'Rendering templates' );
+   my $self = shift; $self->quiet or $self->output( 'Rendering templates' );
 
    for my $tuple (map { $self->expand_tuple( $_ ) } @{ $self->template_list }) {
       $self->render_template( @{ $tuple } );

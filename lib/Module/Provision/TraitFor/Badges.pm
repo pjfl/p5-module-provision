@@ -5,17 +5,24 @@ use namespace::autoclean;
 use Class::Usul::Constants qw( OK TRUE );
 use Moo::Role;
 
-my $_out = sub {
-   $_[ 0 ]->output( $_[ 1 ], { cl => $_[ 2 ], nl => $_[ 2 ], no_lead => TRUE });
+requires qw( output quiet select_method stash );
+
+around 'select_method' => sub {
+   my ($orig, $self, @args) = @_; my $method = $orig->( $self, @args );
+
+   $method eq 'get_badge_markup' and $self->quiet( TRUE );
+
+   return $method;
 };
 
 sub get_badge_markup : method {
-   my $self = shift; my $s = $self->stash; $self->quiet( TRUE );
-
+   my $self     = shift;
+   my $s        = $self->stash;
+   my $distname = $s->{distname};
    my $reponame = $s->{pub_repo_prefix}.$s->{lc_distname};
    my $travis   = 'https://travis-ci.org/'.$s->{author_id};
-   my $distname = $s->{distname};
-   my $out      = sub { $self->$_out( @_ ) };
+   my $args     = sub { { cl => $_[ 0 ], nl => $_[ 0 ], no_lead => TRUE } };
+   my $out      = sub { $self->output( $_[ 0 ], $args->( $_[ 1 ] ) ) };
 
    $out->( '=begin html', TRUE );
    $out->( "<a href=\"${travis}/${reponame}\">"
@@ -45,8 +52,10 @@ Module::Provision::TraitFor::Badges - Generate badge markup to paste into POD
 
 =head1 Synopsis
 
-   use Module::Provision::TraitFor::Badges;
-   # Brief but working code examples
+   use Moo;
+
+   extends 'Module::Provision::Base';
+   with    'Module::Provision::TraitFor::Badges';
 
 =head1 Description
 
