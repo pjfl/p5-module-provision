@@ -15,7 +15,7 @@ use Unexpected::Functions    qw( PathNotFound Unspecified );
 use Moo::Role;
 
 requires qw( add_leader config debug distname dist_version dumper
-             info loc log next_argv output yorn );
+             info loc log next_argv output run_cmd yorn );
 
 # Private attributes
 has '_debug_http_method' => is => 'ro', isa => NonEmptySimpleStr,
@@ -36,6 +36,20 @@ my $_convert_versions_to_paths = sub {
    }
 
    return $paths;
+};
+
+my $_dist_path = sub {
+   my ($self, $ver) = @_; my $file;
+
+   if ($ver) { $file = $self->distname."-${ver}.tar.gz" }
+   else {
+      $file = $self->distname.'-'.$self->dist_version.'.tar.gz';
+      -f $file or $file = $self->distname.'-v'.$self->dist_version.'.tar.gz';
+   }
+
+   -f $file or throw PathNotFound, [ $file ];
+
+   return $file
 };
 
 my $_log_http_debug = sub {
@@ -156,23 +170,16 @@ my $_delete_files = sub {
 
 # Public methods
 sub cpan_upload : method {
-   my $self = shift; my $ver = $self->next_argv; my $file;
+   my ($self, $ver) = @_; $ver //= $self->next_argv;
 
-   if ($ver) { $file = $self->distname."-${ver}.tar.gz" }
-   else {
-      $file = $self->distname.'-'.$self->dist_version.'.tar.gz';
-      -f $file or $file = $self->distname.'-v'.$self->dist_version.'.tar.gz';
-   }
-
-   -f $file or throw PathNotFound, [ $file ];
-
-   ensure_class_loaded( 'CPAN::Uploader' );
-
+   my $file   = $self->$_dist_path( $ver );
    my $args   = $self->$_read_rc_file; $args->{subdir} //= lc $self->distname;
    my $prompt = $self->add_leader( $self->loc( 'Really upload to CPAN' ) );
 
    exists $args->{dry_run}
        or $args->{dry_run} = not $self->yorn( $prompt, FALSE, TRUE, 0 );
+
+   ensure_class_loaded( 'CPAN::Uploader' );
 
    CPAN::Uploader->upload_file( $file, $args );
    return OK;
@@ -204,6 +211,21 @@ sub set_cpan_password : method {
 
    $args->{password} = $self->next_argv or throw Unspecified, [ 'password' ];
    $self->$_write_rc_file( $args );
+   return OK;
+}
+
+sub test_upload : method {
+   my ($self, $ver) = @_; $ver //= $self->next_argv;
+
+   my $conf   = $self->config;
+   my $id     = $conf->remote_test_id;
+   my $script = $conf->remote_script;
+   my $file   = $self->$_dist_path( $ver );
+   my $args   = { in => 'stdin', out => 'stdout', };
+
+   $self->run_cmd( [ 'scp', $file, "${id}:/tmp" ] );
+   $self->run_cmd( [ 'ssh', '-t', $id, "${script} ${file}" ], $args );
+
    return OK;
 }
 
@@ -249,6 +271,12 @@ Uses L<CPAN::Uploader> to do the heavy lifting
    $exit_code = $self->delete_cpan_files;
 
 You must specify the version of the distribution to delete
+
+=head2 test_upload - Upload and install distribution on the test server
+
+   $exit_code = $self->test_upload;
+
+Upload and install distribution on the test server
 
 =head2 set_cpan_password - Set the PAUSE server password
 

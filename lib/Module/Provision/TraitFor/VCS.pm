@@ -10,9 +10,10 @@ use Scalar::Util           qw( blessed );
 use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
 
-requires qw( add_leader appbase appldir branch chdir config default_branch
-             dist_version distname editor exec_perms generate_metadata
-             get_line loc next_argv output quiet run_cmd update_version vcs );
+requires qw( add_leader appbase appldir branch build_distribution chdir config
+             cpan_upload default_branch dist_version distname editor exec_perms
+             extra_argv generate_metadata get_line loc next_argv output quiet
+             run_cmd test_upload update_version vcs );
 
 # Public attributes
 has 'no_auto_rev'  => is => 'ro',  isa => Bool, default => FALSE,
@@ -150,6 +151,25 @@ my $_initialize_svn = sub {
    $self->run_cmd( "svn commit ${branch} -m '${msg}'" );
    $self->chdir( $self->appldir );
    $self->run_cmd( 'svn update' );
+   return;
+};
+
+my $_push_to_git_remote = sub {
+   my $self = shift; my $info = $self->run_cmd( 'git remote -v' )->stdout;
+
+   (grep { m{ \(push\) \z }mx } split m{ \n }mx, $info)[ 0 ] or return;
+
+   my $params = $self->quiet ? {} : { out => 'stdout' };
+
+   $self->run_cmd( 'git push --all',  $params );
+   $self->run_cmd( 'git push --tags', $params );
+   return;
+};
+
+my $_push_to_remote = sub {
+   my $self = shift;
+
+   $self->vcs eq 'git' and $self->$_push_to_git_remote;
    return;
 };
 
@@ -294,11 +314,19 @@ sub get_emacs_state_file_path {
 sub release : method {
    my $self = shift;
 
+   $self->extra_argv->[ 0 ]
+      and $self->extra_argv->[ 0 ] eq 'test' and $self->next_argv
+      and not $self->build_distribution
+      and $self->test_upload( $self->dist_version );
    $self->update_version;
    $self->generate_metadata;
    $self->$_commit_release( $self->_new_version );
    $self->$_add_tag( $self->_new_version );
-
+   $self->extra_argv->[ 0 ]
+      and $self->extra_argv->[ 0 ] eq 'upload' and $self->next_argv
+      and not $self->build_distribution
+      and $self->cpan_upload( $self->_new_version );
+   $self->$_push_to_remote;
    return OK;
 }
 

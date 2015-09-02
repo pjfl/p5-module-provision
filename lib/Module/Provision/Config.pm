@@ -61,6 +61,12 @@ has 'module_abstract'  => is => 'lazy', isa => NonEmptySimpleStr,
 
 has 'pub_repo_prefix'  => is => 'ro',   isa => SimpleStr, default => 'p5-';
 
+has 'remote_test_id'   => is => 'ro',   isa => NonEmptySimpleStr,
+   default             => 'test@testhost';
+
+has 'remote_script'    => is => 'ro',   isa => NonEmptySimpleStr,
+   default             => 'install_perl_module';
+
 has 'repository'       => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'repository';
 

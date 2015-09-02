@@ -2,7 +2,7 @@ package Module::Provision;
 
 use 5.010001;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 8 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 9 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -10,10 +10,10 @@ extends q(Module::Provision::Base);
 with    q(Module::Provision::TraitFor::Rendering);
 with    q(Module::Provision::TraitFor::CreatingDistributions);
 with    q(Module::Provision::TraitFor::UpdatingContent);
-with    q(Module::Provision::TraitFor::VCS);
-with    q(Module::Provision::TraitFor::AddingFiles);
 with    q(Module::Provision::TraitFor::PrereqDifferences);
 with    q(Module::Provision::TraitFor::CPANDistributions);
+with    q(Module::Provision::TraitFor::VCS);
+with    q(Module::Provision::TraitFor::AddingFiles);
 with    q(Module::Provision::TraitFor::Badges);
 
 1;
@@ -38,7 +38,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.40.$Rev: 8 $ of L<Module::Provision>
+This documents version v0.40.$Rev: 9 $ of L<Module::Provision>
 
 =head1 Synopsis
 

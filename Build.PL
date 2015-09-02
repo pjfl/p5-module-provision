@@ -8,7 +8,6 @@ my $name     = 'Module-Provision'; $name =~ s{ - }{::}gmx;
 my $prereqs  = {
   'build_requires' => {
     'Module::Build' => '0.4004',
-    'Test::Requires' => '0.08',
     'version' => '0.88'
   },
   'configure_requires' => {
@@ -53,8 +52,11 @@ my $prereqs  = {
   },
   'test_requires' => {
     'File::Spec' => '0',
+    'Module::Build' => '0.4004',
     'Module::Metadata' => '1.000011',
-    'Sys::Hostname' => '0'
+    'Sys::Hostname' => '0',
+    'Test::Requires' => '0.08',
+    'version' => '0.88'
   },
 };
 my $testing  = sub { $ENV{AUTOMATED_TESTING}
@@ -64,7 +66,8 @@ my $whimper  = sub { print {*STDOUT} $_[ 0 ]."\n"; exit 0 };
 my $stop     = sub {
    $testing->() or $whimper->( $_[ 0 ] );
    $prereqs->{build_requires} = { %{ $prereqs->{configure_requires} } };
-   $prereqs->{build_requires}->{ 'Test::Requires' } = 0.06;
+   $prereqs->{test_requires } = { %{ $prereqs->{configure_requires} } };
+   $prereqs->{test_requires }->{ 'Test::Requires' } = 0.06;
    delete $prereqs->{requires};
 };
 

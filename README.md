@@ -10,7 +10,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.40.$Rev: 8 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
+This documents version v0.40.$Rev: 9 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
 
 # Synopsis
 
@@ -303,7 +303,7 @@ version numbers are not provided
 ## `select_method`
 
 The pod coverage test falsely triggers on this module if this entry is
-removed. Caused by adding `requires` `select_method` to
+removed. Caused by adding `around` `select_method` to
 [Module::Provision::TraitFor::Badges](https://metacpan.org/pod/Module::Provision::TraitFor::Badges)
 
 # Diagnostics
@@ -328,7 +328,7 @@ There are no known incompatibilities in this module
 
 There are no known bugs in this module.  Please report problems to
 http://rt.cpan.org/NoAuth/Bugs.html?Dist=Module-Provision.  Source
-code is on Github git://github.com/pjfl/Module-Provision.git. Patches
+code is on Github git://github.com/pjfl/p5-module-provision.git. Patches
 and pull requests are welcome
 
 # Acknowledgements

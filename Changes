@@ -1,5 +1,7 @@
 Revision history for Module::Provision                           .
 
+          - Release can optionally push to remote and upload test and CPAN
+          - Install dist on test server vi test-upload command
           - TraitFor::Badges sets requires and now even quieter
           - Allow dashes in changlog entries
           - Git commit hook no longer adding version tag to message

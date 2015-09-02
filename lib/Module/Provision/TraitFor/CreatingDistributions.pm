@@ -98,6 +98,29 @@ around '_build_vcs' => sub {
 };
 
 # Public Methods
+sub build_distribution : method {
+   my ($self, $verbose) = @_;
+
+   if ($self->builder eq 'DZ') {
+      $self->run_cmd( 'dzil build', $verbose ? { out => 'stdout' } : {} );
+   }
+   elsif ($self->builder eq 'MB') {
+      $self->run_cmd( 'perl Build.PL' );
+      $self->run_cmd( './Build dist', $verbose ? { out => 'stdout' } : {} );
+   }
+
+   return OK;
+}
+
+sub clean_distribution : method {
+   my ($self, $verbose) = @_;
+
+   if ($self->builder eq 'DZ') { $self->run_cmd( 'dzil clean' ) }
+   elsif ($self->builder eq 'MB') { $self->run_cmd( './Build distclean' ) }
+
+   return OK;
+}
+
 sub cover : method {
    my $self = shift; $self->chdir( $self->appldir );
 
@@ -168,21 +191,16 @@ sub edit_project : method {
 sub generate_metadata {
    my ($self, $create) = @_; $self->chdir( $self->appldir );
 
-   my $mdf; my $verbose = $create ? FALSE : TRUE;
+   my $verbose = $create ? FALSE : TRUE; my $mdf = 'README.md';
 
-   if ($self->builder eq 'DZ') {
-      $self->run_cmd( 'dzil build', $verbose ? { out => 'stdout' } : {} );
-      $self->run_cmd( 'dzil clean' );
-      $mdf = 'README.md';
-   }
+      if ($self->builder eq 'DZ') { $self->build_distribution( $verbose ) }
    elsif ($self->builder eq 'MB') {
       $self->run_cmd( 'perl '.$self->project_file );
       $self->run_cmd( './Build manifest', $verbose ? { out => 'stdout' } : {} );
       $self->run_cmd( './Build distmeta', $verbose ? { out => 'stdout' } : {} );
-      $self->run_cmd( './Build distclean' );
-      $mdf = 'README.md';
    }
 
+   $self->clean_distribution( $verbose );
    return $create ? $mdf : undef;
 }
 
@@ -219,9 +237,7 @@ sub select_project : method {
 
    $self->chdir( my $dir = $project->appldir );
 
-   my $fh = IO::Handle->new; $fh->fdopen( 3, 'w' );
-
-   emit_to $fh, $dir; $fh->close;
+   io()->fdopen( 3, 'w' )->print( $dir )->close;
 
    return Module::Provision->new
       ( method => 'edit_project', noask => TRUE, quiet => TRUE )->run;
@@ -280,6 +296,18 @@ variable
 =back
 
 =head1 Subroutines/Methods
+
+=head2 build_distribution - Build a CPAN distribution tarball
+
+   $self->build_distribution( $verbose );
+
+Builds a CPAN distribution tarball
+
+=head2 clean_distribution - Cleans up after a distribution build
+
+   $self->clean_distribution( $verbose );
+
+Cleans up after a distribution build
 
 =head2 cover - Create test coverage statistics
 
