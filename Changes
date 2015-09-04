@@ -1,5 +1,6 @@
 Revision history for Module::Provision                           .
 
+          - Clear dist_version and module_metadata after update_version
           - Release can optionally push to remote and upload test and CPAN
           - Install dist on test server vi test-upload command
           - TraitFor::Badges sets requires and now even quieter

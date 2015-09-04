@@ -80,7 +80,7 @@ has 'default_branch'  => is => 'lazy', isa => SimpleStr;
 has 'dist_module'     => is => 'lazy', isa => Path, coerce => TRUE,
    builder            => sub { [ $_[ 0 ]->homedir.'.pm' ] };
 
-has 'dist_version'    => is => 'lazy', isa => Object;
+has 'dist_version'    => is => 'lazy', isa => Object, clearer => TRUE;
 
 has 'distname'        => is => 'lazy', isa => NonEmptySimpleStr,
    builder            => sub { distname $_[ 0 ]->project };
@@ -106,7 +106,8 @@ has 'module_abstract' => is => 'lazy', isa => NonEmptySimpleStr;
 
 has 'module_metadata' => is => 'lazy', isa => Object | Undef, builder => sub {
    Module::Metadata->new_from_file
-      ( $_[ 0 ]->dist_module->abs2rel( $_[ 0 ]->appldir ), collect_pod => 1 ) };
+      ( $_[ 0 ]->dist_module->abs2rel( $_[ 0 ]->appldir ), collect_pod => 1 ) },
+   clearer            => TRUE;
 
 has 'project_file'    => is => 'lazy', isa => NonEmptySimpleStr;
 

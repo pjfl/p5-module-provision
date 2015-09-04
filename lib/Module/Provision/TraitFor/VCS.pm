@@ -4,7 +4,7 @@ use namespace::autoclean;
 
 use Class::Usul::Constants qw( EXCEPTION_CLASS FALSE OK TRUE );
 use Class::Usul::Functions qw( io is_win32 throw );
-use Class::Usul::Types     qw( Bool Str );
+use Class::Usul::Types     qw( Bool HashRef Str );
 use Perl::Version;
 use Scalar::Util           qw( blessed );
 use Unexpected::Functions  qw( Unspecified );
@@ -16,10 +16,13 @@ requires qw( add_leader appbase appldir branch build_distribution chdir config
              run_cmd test_upload update_version vcs );
 
 # Public attributes
-has 'no_auto_rev'  => is => 'ro',  isa => Bool, default => FALSE,
-   documentation   => 'Do not turn on Revision keyword expansion';
+has 'no_auto_rev'     => is => 'ro',  isa => Bool, default => FALSE,
+   documentation      => 'Do not turn on Revision keyword expansion';
 
-has '_new_version' => is => 'rwp', isa => Str;
+# Private attributes
+has '_cmd_line_flags' => is => 'ro',  isa => HashRef, builder => sub { {} };
+
+has '_new_version'    => is => 'rwp', isa => Str;
 
 # Private functions
 my $_get_state_file_name = sub {
@@ -82,7 +85,7 @@ my $_add_to_svn = sub {
 my $_commit_release_to_git = sub {
    my ($self, $msg) = @_;
 
-   $self->run_cmd( 'git add .'  ); $self->run_cmd( "git commit -m '${msg}'" );
+   $self->run_cmd( 'git add .' ); $self->run_cmd( "git commit -m '${msg}'" );
 
    return;
 };
@@ -184,6 +187,10 @@ my $_svn_ignore_meta_files = sub {
    return;
 };
 
+my $_wrap = sub {
+   my $self = shift; my $method = shift; return not $self->$method( @_ );
+};
+
 my $_add_tag_to_svn = sub {
    my ($self, $tag) = @_; my $params = $self->quiet ? {} : { out => 'stdout' };
 
@@ -264,6 +271,46 @@ around 'dist_post_hook' => sub {
    return $r;
 };
 
+before 'release_distribution' => sub {
+   my $self = shift;
+
+   for my $k (qw( test upload nopush )) {
+      $self->extra_argv->[ 0 ] and $self->extra_argv->[ 0 ] eq $k
+          and $self->next_argv and $self->_cmd_line_flags->{ $k } = TRUE;
+   }
+
+   return;
+};
+
+around 'release_distribution' => sub {
+   my ($orig, $self) = @_;
+
+   $self->_cmd_line_flags->{test}
+      and $self->$_wrap( 'build_distribution' )
+      and $self->$_wrap( 'test_upload', $self->dist_version );
+
+   return $orig->( $self );
+};
+
+around 'release_distribution' => sub {
+   my ($orig, $self) = @_; my $res = $orig->( $self );
+
+   $self->_cmd_line_flags->{upload}
+      and $self->$_wrap( 'build_distribution' )
+      and $self->$_wrap( 'cpan_upload' )
+      and $self->$_wrap( 'clean_distribution' );
+
+   return $res;
+};
+
+around 'release_distribution' => sub {
+   my ($orig, $self) = @_; my $res = $orig->( $self );
+
+   $self->_cmd_line_flags->{nopush} or $self->$_push_to_remote;
+
+   return $res;
+};
+
 around 'substitute_version' => sub {
    my ($next, $self, $path, @args) = @_; my $r = $self->$next( $path, @args );
 
@@ -278,7 +325,10 @@ around 'update_version_pre_hook' => sub {
 };
 
 around 'update_version_post_hook' => sub {
-   my ($next, $self, @args) = @_; $self->_set__new_version( $args[ 1 ] );
+   my ($next, $self, @args) = @_;
+
+   $self->_set__new_version( $args[ 1 ] );
+   $self->clear_dist_version; $self->clear_module_metadata;
 
    my $result = $self->$next( @args );
 
@@ -312,29 +362,24 @@ sub get_emacs_state_file_path {
 }
 
 sub release : method {
+   my $self = shift; $self->release_distribution; return OK;
+}
+
+sub release_distribution {
    my $self = shift;
 
-   $self->extra_argv->[ 0 ]
-      and $self->extra_argv->[ 0 ] eq 'test' and $self->next_argv
-      and not $self->build_distribution
-      and $self->test_upload( $self->dist_version );
    $self->update_version;
    $self->generate_metadata;
    $self->$_commit_release( $self->_new_version );
    $self->$_add_tag( $self->_new_version );
-   $self->extra_argv->[ 0 ]
-      and $self->extra_argv->[ 0 ] eq 'upload' and $self->next_argv
-      and not $self->build_distribution
-      and $self->cpan_upload( $self->_new_version );
-   $self->$_push_to_remote;
-   return OK;
+   return TRUE;
 }
 
 sub set_branch : method {
    my $self = shift; my $bfile = $self->branch_file;
 
    my $old_branch = $self->branch;
-   my $new_branch = $self->next_argv || $self->default_branch;
+   my $new_branch = $self->next_argv // $self->default_branch;
 
    not $new_branch and $bfile->exists and $bfile->unlink and return OK;
        $new_branch and $bfile->println( $new_branch );
