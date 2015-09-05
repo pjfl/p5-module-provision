@@ -90,6 +90,7 @@ sub _build_template_list {
       MB => [ [ 'Build.PL',      '_appldir' ], ], };
    my $templates = [ [ 'Changes',         '_appldir'     ],
                      [ 'MANIFEST.SKIP',   '_appldir'     ],
+                     [ 'travis.yml',    [ '_appldir', '.travis.yml' ] ],
                      [ 'perl_module.pm',  '_dist_module' ],
                      [ '02pod.t',         '_testdir'     ],
                      [ '03podcoverage.t', '_testdir'     ],
