@@ -9,6 +9,7 @@ use Perl::Version;
 use Scalar::Util           qw( blessed );
 use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
+use Class::Usul::Options;
 
 requires qw( add_leader appbase appldir branch build_distribution chdir config
              cpan_upload default_branch dist_version distname editor exec_perms
@@ -16,13 +17,13 @@ requires qw( add_leader appbase appldir branch build_distribution chdir config
              run_cmd test_upload update_version vcs );
 
 # Public attributes
-has 'no_auto_rev'     => is => 'ro',  isa => Bool, default => FALSE,
-   documentation      => 'Do not turn on Revision keyword expansion';
+option 'no_auto_rev' => is => 'ro',  isa => Bool, default => FALSE,
+   documentation     => 'Do not turn on Revision keyword expansion';
 
 # Private attributes
-has '_cmd_line_flags' => is => 'ro',  isa => HashRef, builder => sub { {} };
+has '_cmd_line_opts' => is => 'ro',  isa => HashRef, builder => sub { {} };
 
-has '_new_version'    => is => 'rwp', isa => Str;
+has '_new_version'   => is => 'rwp', isa => Str;
 
 # Private functions
 my $_get_state_file_name = sub {
@@ -276,7 +277,7 @@ before 'release_distribution' => sub {
 
    for my $k (qw( test upload nopush )) {
       $self->extra_argv->[ 0 ] and $self->extra_argv->[ 0 ] eq $k
-          and $self->next_argv and $self->_cmd_line_flags->{ $k } = TRUE;
+          and $self->next_argv and $self->_cmd_line_opts->{ $k } = TRUE;
    }
 
    return;
@@ -285,7 +286,7 @@ before 'release_distribution' => sub {
 around 'release_distribution' => sub {
    my ($orig, $self) = @_;
 
-   $self->_cmd_line_flags->{test}
+   $self->_cmd_line_opts->{test}
       and $self->$_wrap( 'build_distribution' )
       and $self->$_wrap( 'test_upload', $self->dist_version );
 
@@ -295,7 +296,7 @@ around 'release_distribution' => sub {
 around 'release_distribution' => sub {
    my ($orig, $self) = @_; my $res = $orig->( $self );
 
-   $self->_cmd_line_flags->{upload}
+   $self->_cmd_line_opts->{upload}
       and $self->$_wrap( 'build_distribution' )
       and $self->$_wrap( 'cpan_upload' )
       and $self->$_wrap( 'clean_distribution' );
@@ -306,7 +307,7 @@ around 'release_distribution' => sub {
 around 'release_distribution' => sub {
    my ($orig, $self) = @_; my $res = $orig->( $self );
 
-   $self->_cmd_line_flags->{nopush} or $self->$_push_to_remote;
+   $self->_cmd_line_opts->{nopush} or $self->$_push_to_remote;
 
    return $res;
 };
@@ -440,7 +441,7 @@ where it resets the revision number file
 Requires these attributes to be defined in the consuming class;
 C<appldir>, C<distname>, C<vcs>
 
-Defines the following attributes;
+Defines the following command line options;
 
 =over 3
 
@@ -475,7 +476,14 @@ state file
 
    $exit_code = $self->release;
 
-Updates the distribution version, commits the change and tags the new release
+Calls L</release_distribution>. Will optionally install the distribution
+on a test server, upload the distribution to CPAN and push the repository
+to the origin
+
+=head2 release_distribution
+
+Updates the distribution version, regenerates the metadata, commits the change
+and tags the new release
 
 =head2 set_branch - Set the VCS branch name
 

@@ -3,13 +3,13 @@
 use strict;
 use warnings;
 
-use English               qw( -no_match_vars );
-use File::Spec::Functions qw( catdir catfile updir );
-use FindBin               qw( $Bin );
-use lib               catdir( $Bin, updir, 'lib' );
+use English qw( -no_match_vars );
+use FindBin qw( $Bin );
+use File::Spec;
 
 BEGIN {
-   my $path = catfile( $Bin, '[% prefix %]-localenv' );
+   my $bind = $Bin; $bind =~ m{ \A ([^\$%&\*;<>\`|]+) \z }mx and $bind = $1;
+   my $path = File::Spec->catfile( $bind, '[% prefix %]-localenv' );
 
    -f $path and (do $path or die $EVAL_ERROR || "Path ${path} not done\n");
 }
@@ -24,11 +24,11 @@ __END__
 
 =encoding utf-8
 
-=head1 NAME
+=head1 Name
 
 [% program_name %] - [% abstract %]
 
-=head1 SYNOPSIS
+=head1 Synopsis
 
 =over 3
 
@@ -40,17 +40,17 @@ I<Command line description>
 
 Display man page / method help  / usage strings
 
-=item B<[% program_name %]> B<list_methods>
+=item B<[% program_name %]> B<list-methods>
 
 Lists the methods available in this program
 
 =back
 
-=head1 DESCRIPTION
+=head1 Description
 
 I<Program description>
 
-=head1 REQUIRED ARGUMENTS
+=head1 Required arguments
 
 =over 3
 
@@ -58,7 +58,7 @@ I<Program description>
 
 =back
 
-=head1 OPTIONS
+=head1 Options
 
 =over 3
 
@@ -68,19 +68,19 @@ Turn debugging on
 
 =back
 
-=head1 DIAGNOSTICS
+=head1 Diagnostics
 
 Prints errors to stderr
 
-=head1 EXIT STATUS
+=head1 Exit status
 
 Returns zero on success, non zero on failure
 
-=head1 CONFIGURATION
+=head1 Configuration
 
 Uses the constructor's C<appclass> attribute to locate a configuration file
 
-=head1 DEPENDENCIES
+=head1 Dependencies
 
 =over 3
 
@@ -88,20 +88,20 @@ Uses the constructor's C<appclass> attribute to locate a configuration file
 
 =back
 
-=head1 INCOMPATIBILITIES
+=head1 Incompatibilities
 
 None
 
-=head1 BUGS AND LIMITATIONS
+=head1 Bugs and limitations
 
 Please report problems to
 http://rt.cpan.org/NoAuth/Bugs.html?Dist=[% distname %]
 
-=head1 AUTHOR
+=head1 Author
 
 [% author %], C<< <[% author_email %]> >>
 
-=head1 LICENSE AND COPYRIGHT
+=head1 License and copyright
 
 Copyright (c) [% copyright_year %] [% copyright %]
 

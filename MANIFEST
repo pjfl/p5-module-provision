@@ -34,6 +34,7 @@ share/gitpre-commit
 share/perl_localenv
 share/perl_module.pm
 share/perl_program.pl
+share/travis.yml
 t/02pod.t
 t/03podcoverage.t
 t/05kwalitee.t

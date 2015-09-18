@@ -96,7 +96,7 @@ __END__
 
 =pod
 
-=encoding utf8
+=encoding utf-8
 
 =head1 Name
 
@@ -200,6 +200,16 @@ minted modules
 
 A simple string which default to C<p5->. Prepended to the lower cased
 distribution name it forms the name of the public repository
+
+=item C<remote_test_id>
+
+A non empty simple string that defaults to C<test@testhost>. The identity
+and host used to perform test installations
+
+=item C<remote_script>
+
+A non empty simple string that defaults to C<install_perl_module>. The command
+to execute on the test installation server
 
 =item C<repository>
 
