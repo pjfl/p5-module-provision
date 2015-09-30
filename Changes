@@ -1,5 +1,8 @@
 Revision history for Module::Provision                           .
 
+          - Smarter changelog parsing in git hook
+            Will not include this line
+          - Fewer test dependencies in boilerplate
           - Added configuration options for remote testing
           - Include Travis integration in new distributions
           - Clear dist_version and module_metadata after update_version
