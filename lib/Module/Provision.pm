@@ -2,7 +2,7 @@ package Module::Provision;
 
 use 5.010001;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 13 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 14 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -38,7 +38,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.40.$Rev: 13 $ of L<Module::Provision>
+This documents version v0.40.$Rev: 14 $ of L<Module::Provision>
 
 =head1 Synopsis
 
