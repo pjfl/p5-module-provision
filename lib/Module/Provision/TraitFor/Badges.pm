@@ -19,7 +19,9 @@ sub get_badge_markup : method {
    my $self     = shift;
    my $s        = $self->stash;
    my $distname = $s->{distname};
-   my $reponame = $s->{pub_repo_prefix}.$s->{lc_distname};
+   my $distdir  = $s->{lc_distname};
+   my $reponame = $s->{pub_repo_prefix}.$distdir;
+   my $coverage = $self->config->coverage_server;
    my $travis   = 'https://travis-ci.org/'.$s->{author_id};
    my $args     = sub { { cl => $_[ 0 ], nl => $_[ 0 ], no_lead => TRUE } };
    my $out      = sub { $self->output( $_[ 0 ], $args->( $_[ 1 ] ) ) };
@@ -28,6 +30,9 @@ sub get_badge_markup : method {
    $out->( "<a href=\"${travis}/${reponame}\">"
          . "<img src=\"${travis}/${reponame}.svg?branch=master\""
          . ' alt="Travis CI Badge"></a>' );
+   $out->( "<a href=\"${coverage}/report/${distdir}/latest\">"
+         . "<img src=\"${coverage}/badge/${distdir}/latest\""
+         . ' alt="Coverage Badge"></a>' );
    $out->( "<a href=\"http://badge.fury.io/pl/${distname}\">"
          . "<img src=\"https://badge.fury.io/pl/${distname}.svg\""
          . ' alt="CPAN Badge"></a>' );

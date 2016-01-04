@@ -31,6 +31,9 @@ has 'base'             => is => 'lazy', isa => Path, coerce => TRUE,
 has 'builder'          => is => 'lazy', isa => NonEmptySimpleStr,
    default             => 'MB';
 
+has 'coverage_server'  => is => 'ro',   isa => NonEmptySimpleStr,
+   default             => 'http://localhost:5000/coverage';
+
 has 'default_branches' => is => 'lazy', isa => HashRef,
    builder             => sub { { git => 'master', svn => 'trunk' } };
 
@@ -145,6 +148,10 @@ directory in which to create new distributions
 
 A non empty simple string default to C<MB>. Selects the build system to
 use when creating new distributions
+
+=item C<coverage_server>
+
+The HTTP address of the coverage server. Used by the badge markup feature
 
 =item C<default_branches>
 

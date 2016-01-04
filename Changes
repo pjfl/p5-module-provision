@@ -1,5 +1,6 @@
 Revision history for Module::Provision                           .
 
+          - Added coverage server to badge output
           - Refactored smoker exceptions to dump file
           - Smarter changelog parsing in git hook
             Will not include this line
