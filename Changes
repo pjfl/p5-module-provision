@@ -1,5 +1,6 @@
 Revision history for Module::Provision                           .
 
+          - Fixed wrong quote char error in gitpre-commit
           - Added coverage server to badge output
           - Refactored smoker exceptions to dump file
           - Smarter changelog parsing in git hook
