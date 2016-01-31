@@ -14,7 +14,6 @@ lib/Module/Provision/TraitFor/PrereqDifferences.pm
 lib/Module/Provision/TraitFor/Rendering.pm
 lib/Module/Provision/TraitFor/UpdatingContent.pm
 lib/Module/Provision/TraitFor/VCS.pm
-share/01always_pass.t
 share/02pod.t
 share/03podcoverage.t
 share/05kwalitee.t

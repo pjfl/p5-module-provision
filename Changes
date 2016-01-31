@@ -1,5 +1,7 @@
 Revision history for Module::Provision                           .
 
+          - Prereq diff remove section also shows version update
+          - Can now run mp test release upload in that order
           - Fixed wrong quote char error in gitpre-commit
           - Added coverage server to badge output
           - Refactored smoker exceptions to dump file

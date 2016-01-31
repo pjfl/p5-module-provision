@@ -42,10 +42,17 @@ Module::Provision::MetaData - Provides module metadata
 
 =head1 Synopsis
 
-   use Module::Provision::MetaData;
-   # Brief but working code examples
+   ; In dist.ini
+   ; authordep Module::Provision
+   [MetaProvides::FromFile]
+   inherit_version = 0
+   file            = some_file.ini
+   reader_name     = Module::Provision::MetaData
 
 =head1 Description
+
+Provides module metadata. For use when a distribution grows too large for
+L<PPI> to extract the package names in a reasonable time frame
 
 =head1 Configuration and Environment
 
@@ -63,7 +70,7 @@ An instance of L<Module::Provision>
 
 =head2 C<read_file>
 
-Returns a hash reference of metadata
+Returns a hash reference of metadata. Ignores any passed parameters
 
 =head1 Diagnostics
 
@@ -73,7 +80,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<File::DataClass>
 
 =back
 
@@ -97,7 +104,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>

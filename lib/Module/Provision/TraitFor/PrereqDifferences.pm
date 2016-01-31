@@ -2,7 +2,7 @@ package Module::Provision::TraitFor::PrereqDifferences;
 
 use namespace::autoclean;
 
-use Class::Usul::Constants qw( FALSE OK TRUE );
+use Class::Usul::Constants qw( FALSE NUL OK TRUE );
 use Class::Usul::Functions qw( classfile ensure_class_loaded
                                is_member emit io );
 use Config::Tiny;
@@ -22,7 +22,7 @@ my $_dist_from_module = sub {
 };
 
 my $_draw_line = sub {
-    return emit '-' x ($_[ 0 ] || 60);
+    return emit '-' x ($_[ 0 ] // 60);
 };
 
 my $_extract_statements_from = sub {
@@ -53,7 +53,7 @@ my $_read_non_pod_lines = sub {
    my $path = shift; my $p = Pod::Eventual::Simple->read_file( $path );
 
    return join "\n", map  { $_->{content} }
-                     grep { $_->{type} eq q(nonpod) } @{ $p };
+                     grep { $_->{type} eq 'nonpod' } @{ $p };
 };
 
 my $_recover_module_name = sub {
@@ -81,7 +81,7 @@ my $_emit_diffs = sub {
       emit $table; $_draw_line->();
 
       for (sort keys %{ $diffs->{ $table } }) {
-         emit "'$_' => ".$diffs->{ $table }->{ $_ }.",";
+         emit "${_} = ".$diffs->{ $table }->{ $_ };
       }
 
       $_draw_line->();
@@ -179,15 +179,18 @@ my $_compare_prereqs_with_used = sub {
       if (exists $prereqs->{ $_ }) {
          if ($_version_diff->( $prereqs->{ $_ }, $depends->{ $_ } )) {
             $result->{ $update_key }->{ $_ }
-               = $prereqs->{ $_ }.q( => ).$depends->{ $_ };
+               = $prereqs->{ $_ }.' => '.$depends->{ $_ };
          }
       }
       else { $result->{ $add_key }->{ $_ } = $depends->{ $_ } }
    }
 
-   for (keys %{ $prereqs }) {
-      exists $depends->{ $_ }
-         or $result->{ $remove_key }->{ $_ } = $prereqs->{ $_ };
+   for (grep { not exists $depends->{ $_ } } keys %{ $prereqs }) {
+      my $ver   = $self->$_version_from_module( $_ );
+      my $vdiff = $_version_diff->( $prereqs->{ $_ }, $ver );
+
+      $result->{ $remove_key }->{ $_ }
+         = $prereqs->{ $_ }.($vdiff ? " => ${ver}" : NUL);
    }
 
    return $result;
@@ -249,15 +252,16 @@ my $_dependencies = sub {
 };
 
 my $_filter_dependents = sub {
-   my ($self, $used) = @_;
+   my ($self, $used) = @_; my $excludes = 't::boilerplate';
 
-   my $perl_version = $used->{perl} || 5.008_008;
+   my $perl_version = $used->{perl} // 5.008_008;
    my $core_modules = $Module::CoreList::version{ $perl_version };
    my $provides     = $self->load_meta->provides;
 
    return $self->$_consolidate( { map   { $_ => $used->{ $_ }              }
                                   grep  { not exists $core_modules->{ $_ } }
                                   grep  { not exists $provides->{ $_ }     }
+                                  grep  { not m{ \A $excludes \z }mx }
                                   keys %{ $used } } );
 };
 
@@ -284,11 +288,11 @@ sub _filter_requires_paths {
 sub prereq_diffs : method {
    my $self = shift;
 
-   ensure_class_loaded( 'CPAN' );
-   ensure_class_loaded( 'Module::CoreList' );
-   ensure_class_loaded( 'Pod::Eventual::Simple' );
+   ensure_class_loaded 'CPAN';
+   ensure_class_loaded 'Module::CoreList';
+   ensure_class_loaded 'Pod::Eventual::Simple';
 
-   my $field   = $self->next_argv || 'requires';
+   my $field   = $self->next_argv // 'requires';
    my $filter  = "_filter_${field}_paths";
    my $sources = $self->$filter( $self->$_source_paths );
    my $depends = $self->$_filter_dependents( $self->$_dependencies( $sources ));
@@ -373,7 +377,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>

@@ -2,15 +2,25 @@ package Module::Provision::TraitFor::AddingFiles;
 
 use namespace::autoclean;
 
-use Class::Usul::Constants qw( EXCEPTION_CLASS OK );
+use Class::Usul::Constants qw( EXCEPTION_CLASS OK TRUE );
 use Class::Usul::Functions qw( classfile throw );
 use Scalar::Util           qw( blessed );
 use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
 
-requires qw( add_to_vcs appldir binsdir exec_perms expand_tuple libdir
-             loc method module_abstract next_argv output project
-             render_template stash template_dir template_list testdir );
+requires qw( add_to_vcs appldir binsdir cmd_line_flags exec_perms expand_tuple
+             libdir loc method module_abstract next_argv output project
+             release render_template stash template_dir template_list testdir );
+
+# Construction
+around 'generate_metadata' => sub {
+   my ($orig, $self, @args) = @_; my $mdf = $orig->( $self, @args );
+
+   $mdf and $self->appldir->catfile( $mdf )->exists
+        and $self->add_to_vcs( $mdf );
+
+   return $mdf;
+};
 
 # Private methods
 my $_program_abstract = sub {
@@ -39,14 +49,13 @@ my $_get_target = sub {
    return $target;
 };
 
-# Construction
-around 'generate_metadata' => sub {
-   my ($orig, $self, @args) = @_; my $mdf = $orig->( $self, @args );
+my $_add_test_script = sub {
+   my $self = shift; my $target = $self->$_get_target( 'testdir' );
 
-   $mdf and $self->appldir->catfile( $mdf )->exists
-        and $self->add_to_vcs( $mdf );
-
-   return $mdf;
+   $self->quiet or $self->output( 'Adding new test' );
+   $target = $self->render_template( '10test_script.t', $target );
+   $self->add_to_vcs( $target, 'test' );
+   return OK;
 };
 
 # Public methods
@@ -70,12 +79,9 @@ sub program : method {
 }
 
 sub test : method {
-   my $self = shift; my $target = $self->$_get_target( 'testdir' );
+   my $self = shift; my $flags = $self->cmd_line_flags; $flags->{test} = TRUE;
 
-   $self->quiet or $self->output( 'Adding new test' );
-   $target = $self->render_template( '10test_script.t', $target );
-   $self->add_to_vcs( $target, 'test' );
-   return OK;
+   return $flags->{release} ? $self->release : $self->$_add_test_script;
 }
 
 sub update_file : method {
@@ -196,7 +202,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>

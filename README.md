@@ -10,7 +10,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.40.$Rev: 11 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
+This documents version v0.40.$Rev: 17 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
 
 # Synopsis
 
@@ -343,7 +343,7 @@ Peter Flanigan, `<pjfl@cpan.org>`
 
 # License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See [perlartistic](https://metacpan.org/pod/perlartistic)

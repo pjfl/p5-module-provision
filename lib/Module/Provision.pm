@@ -2,7 +2,7 @@ package Module::Provision;
 
 use 5.010001;
 use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 16 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.40.%d', q$Rev: 17 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -38,7 +38,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.40.$Rev: 16 $ of L<Module::Provision>
+This documents version v0.40.$Rev: 17 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -381,7 +381,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>

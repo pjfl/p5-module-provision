@@ -16,14 +16,27 @@ requires qw( add_leader appbase appldir branch build_distribution chdir config
              extra_argv generate_metadata get_line loc next_argv output quiet
              run_cmd test_upload update_version vcs );
 
+# Attribute constructors
+my $_build_cmd_line_flags = sub {
+   my $self = shift; my $opts = {};
+
+   for my $k (qw( release test upload nopush )) {
+      $self->extra_argv->[ 0 ] and $self->extra_argv->[ 0 ] eq $k
+          and $self->next_argv and $opts->{ $k } = TRUE;
+   }
+
+   return $opts;
+};
+
 # Public attributes
-option 'no_auto_rev' => is => 'ro',  isa => Bool, default => FALSE,
+option 'no_auto_rev' => is => 'ro',   isa => Bool, default => FALSE,
    documentation     => 'Do not turn on Revision keyword expansion';
 
-# Private attributes
-has '_cmd_line_opts' => is => 'ro',  isa => HashRef, builder => sub { {} };
+has 'cmd_line_flags' => is => 'lazy', isa => HashRef[Bool],
+   builder           => $_build_cmd_line_flags;
 
-has '_new_version'   => is => 'rwp', isa => Str;
+# Private attributes
+has '_new_version'   => is => 'rwp',  isa => Str;
 
 # Private functions
 my $_get_state_file_name = sub {
@@ -272,21 +285,10 @@ around 'dist_post_hook' => sub {
    return $r;
 };
 
-before 'release_distribution' => sub {
-   my $self = shift;
-
-   for my $k (qw( test upload nopush )) {
-      $self->extra_argv->[ 0 ] and $self->extra_argv->[ 0 ] eq $k
-          and $self->next_argv and $self->_cmd_line_opts->{ $k } = TRUE;
-   }
-
-   return;
-};
-
 around 'release_distribution' => sub {
    my ($orig, $self) = @_;
 
-   $self->_cmd_line_opts->{test}
+   $self->cmd_line_flags->{test}
       and $self->$_wrap( 'build_distribution' )
       and $self->$_wrap( 'test_upload', $self->dist_version );
 
@@ -296,7 +298,7 @@ around 'release_distribution' => sub {
 around 'release_distribution' => sub {
    my ($orig, $self) = @_; my $res = $orig->( $self );
 
-   $self->_cmd_line_opts->{upload}
+   $self->cmd_line_flags->{upload}
       and $self->$_wrap( 'build_distribution' )
       and $self->$_wrap( 'cpan_upload' )
       and $self->$_wrap( 'clean_distribution' );
@@ -307,7 +309,7 @@ around 'release_distribution' => sub {
 around 'release_distribution' => sub {
    my ($orig, $self) = @_; my $res = $orig->( $self );
 
-   $self->_cmd_line_opts->{nopush} or $self->$_push_to_remote;
+   $self->cmd_line_flags->{nopush} or $self->$_push_to_remote;
 
    return $res;
 };
@@ -527,7 +529,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>
