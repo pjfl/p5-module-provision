@@ -1,5 +1,8 @@
 Revision history for Module::Provision                           .
 
+0.41.1    2016-04-04 13:14:24
+          - Setting LWP::Protocol::https version to 0
+            Ten months RT#104150. Module abandoned?
           - Prereq diff remove section also shows version update
           - Can now run mp test release upload in that order
           - Fixed wrong quote char error in gitpre-commit
