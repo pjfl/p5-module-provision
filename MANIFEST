@@ -10,6 +10,7 @@ lib/Module/Provision/TraitFor/AddingFiles.pm
 lib/Module/Provision/TraitFor/Badges.pm
 lib/Module/Provision/TraitFor/CPANDistributions.pm
 lib/Module/Provision/TraitFor/CreatingDistributions.pm
+lib/Module/Provision/TraitFor/EnvControl.pm
 lib/Module/Provision/TraitFor/PrereqDifferences.pm
 lib/Module/Provision/TraitFor/Rendering.pm
 lib/Module/Provision/TraitFor/UpdatingContent.pm
@@ -24,6 +25,7 @@ share/Build.PL
 share/Changes
 share/DZ_Build.PL
 share/MANIFEST.SKIP
+share/bad_toolchain_DZ_Build.PL
 share/boilerplate.pm
 share/data_dumper.pm
 share/dist.ini
