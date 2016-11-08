@@ -13,10 +13,20 @@ sub trace : method {
    my $self   = shift;
    my $token  = $self->next_argv // NUL;
    my $prefix = env_prefix $self->project;
+   my @keys   = ( 'DBIC_TRACE', "${prefix}_DEBUG", "${prefix}_TRACE", );
 
    my ($key, $value);
 
-   if ($token eq 'dbic') {
+   if ($token eq 'show') {
+      emit "PATH = ".$ENV{PATH};
+
+      for my $k (grep { m{ PERL }mx } sort keys %ENV) {
+         emit "${k} = ".$ENV{ $k };
+      }
+
+      for my $k (@keys) { emit "${k} = ".($ENV{ $k } // NUL) }
+   }
+   elsif ($token eq 'dbic') {
       $key = 'DBIC_TRACE'; $value = $ENV{ $key } ? FALSE : TRUE;
    }
    elsif ($token) {
@@ -25,7 +35,8 @@ sub trace : method {
    }
    else { $key = "${prefix}_DEBUG"; $value = $ENV{ $key } ? FALSE : TRUE }
 
-   emit "${key}=${value}; export ${key}";
+   $key and emit "${key}=${value}; export ${key}";
+
    return OK;
 }
 

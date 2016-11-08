@@ -1,5 +1,6 @@
 Revision history for Module::Provision                           .
 
+          - Trace method will show selected env variables
           - Adds trace method to control environment variables
           - Boilerplate now also pattern matches hosts
 
