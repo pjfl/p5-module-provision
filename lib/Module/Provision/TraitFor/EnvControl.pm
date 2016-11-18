@@ -31,7 +31,7 @@ sub trace : method {
    }
    elsif ($token) {
       $key = "${prefix}_TRACE";
-      $value = $token eq $ENV{ $key } // NUL ? '""' : $token;
+      $value = $token eq ($ENV{ $key } // NUL) ? '""' : $token;
    }
    else { $key = "${prefix}_DEBUG"; $value = $ENV{ $key } ? FALSE : TRUE }
 
