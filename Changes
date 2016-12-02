@@ -1,5 +1,6 @@
 Revision history for Module::Provision                           .
 
+          - Adds whitelist t::boilerplate to share
           - CVE-2016-1238 adds inline sublass to Build.PL
           - Trace method will show selected env variables
           - Adds trace method to control environment variables
