@@ -27,6 +27,7 @@ share/DZ_Build.PL
 share/MANIFEST.SKIP
 share/bad_toolchain_DZ_Build.PL
 share/boilerplate.pm
+share/boilerplate_whitelist.pm
 share/data_dumper.pm
 share/dist.ini
 share/gitcommit-msg
