@@ -12,86 +12,136 @@ use Moo;
 extends qw(Class::Usul::Config::Programs);
 
 # Object attributes (public)
-has 'author'           => is => 'lazy', isa => NonEmptySimpleStr,
-   builder             => sub {
+has 'author' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   builder => sub {
       my $author =  untaint_cmdline $ENV{AUTHOR} || fullname || logname;
-         $author =~ s{ [\'] }{\'}gmx; return $author };
 
-has 'author_email'     => is => 'lazy', isa => NonEmptySimpleStr,
-   builder             => sub {
+      $author =~ s{ [\'] }{\'}gmx;
+      return $author;
+   };
+
+has 'author_email' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   builder => sub {
       my $email =  untaint_cmdline $ENV{EMAIL} || 'dave@example.com';
-         $email =~ s{ [\'] }{\'}gmx; return $email };
 
-has 'author_id'        => is => 'lazy', isa => NonEmptySimpleStr,
-   builder             => sub { loginid };
+      $email =~ s{ [\'] }{\'}gmx;
+      return $email;
+   };
 
-has 'base'             => is => 'lazy', isa => Path, coerce => TRUE,
-   builder             => sub { $_[ 0 ]->my_home };
+has 'author_id' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   builder => sub { loginid };
 
-has 'builder'          => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'MB';
+has 'base' =>
+   is      => 'lazy',
+   isa     => Path,
+   builder => sub { $_[0]->my_home },
+   coerce  => TRUE;
 
-has 'coverage_server'  => is => 'ro',   isa => NonEmptySimpleStr,
-   default             => 'http://localhost:5000/coverage';
+has 'builder' => is => 'lazy', isa => NonEmptySimpleStr, default => 'MB';
 
-has 'default_branches' => is => 'lazy', isa => HashRef,
-   builder             => sub { { git => 'master', svn => 'trunk' } };
+has 'coverage_server' =>
+   is      => 'ro',
+   isa     => NonEmptySimpleStr,
+   default => 'http://localhost:5000/coverage';
 
-has 'delete_files_uri' => is => 'lazy', isa => NonEmptySimpleStr,
-   builder             => sub { untaint_cmdline $ENV{CPAN_DELETE_FILES_URI}
-                                || 'https://pause.perl.org/pause/authenquery' };
+has 'default_branches' =>
+   is      => 'lazy',
+   isa     => HashRef,
+   builder => sub { { git => 'master', svn => 'trunk' } };
 
-has 'editor'           => is => 'lazy', isa => NonEmptySimpleStr,
-   builder             => sub { untaint_identifier $ENV{EDITOR} || 'emacs' };
+has 'delete_files_uri' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   builder => sub {
+      return untaint_cmdline $ENV{CPAN_DELETE_FILES_URI}
+         || 'https://pause.perl.org/pause/authenquery';
+   };
 
-has 'home_page'        => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'http://example.com';
+has 'editor' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   builder => sub { untaint_identifier $ENV{EDITOR} || 'emacs' };
 
-has 'hooks'            => is => 'lazy', isa => ArrayRef[NonEmptySimpleStr],
-   builder             => sub { [ 'commit-msg', 'pre-commit' ] };
+has 'home_page' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => 'http://example.com';
 
-has 'license'          => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'perl';
+has 'hooks' =>
+   is      => 'lazy',
+   isa     => ArrayRef[NonEmptySimpleStr],
+   builder => sub { ['commit-msg', 'pre-commit'] };
 
-has 'localdir'         => is => 'ro',   isa => NonEmptySimpleStr,
-   default             => 'local';
+has 'license' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => 'perl';
 
-has 'min_perl_ver'     => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => '5.010001';
+has 'localdir' =>
+   is      => 'ro',
+   isa     => NonEmptySimpleStr,
+   default => 'local';
 
-has 'module_abstract'  => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'One-line description of the modules purpose';
+has 'min_perl_ver' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => '5.010001';
 
-has 'pub_repo_prefix'  => is => 'ro',   isa => SimpleStr, default => 'p5-';
+has 'module_abstract' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => 'One-line description of the modules purpose';
 
-has 'remote_test_id'   => is => 'ro',   isa => NonEmptySimpleStr,
-   default             => 'test@testhost';
+has 'pub_repo_prefix'=> is => 'ro', isa => SimpleStr, default => 'p5-';
 
-has 'remote_script'    => is => 'ro',   isa => NonEmptySimpleStr,
-   default             => 'install_perl_module';
+has 'remote_test_id' =>
+   is      => 'ro',
+   isa     => NonEmptySimpleStr,
+   default => 'test@testhost';
 
-has 'repository'       => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'repository';
+has 'remote_script' =>
+   is      => 'ro',
+   isa     => NonEmptySimpleStr,
+   default => 'install_perl_module';
 
-has 'seed_file'        => is => 'lazy', isa => Path | Undef, coerce => TRUE,
-   builder             => sub { [ qw( ~ .ssh pause.key ) ] };
+has 'repository' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => 'repository';
 
-has 'signing_key'      => is => 'lazy', isa => SimpleStr,
-   default             => NUL;
+has 'seed_file' =>
+   is      => 'lazy',
+   isa     => Path | Undef,
+   builder => sub { [ qw( ~ .ssh pause.key ) ] },
+   coerce  => TRUE;
 
-has 'tag_message'      => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'Releasing';
+has 'signing_key' => is => 'lazy', isa => SimpleStr, default => NUL;
 
-has 'template_index'   => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'index.json';
+has 'tag_message' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => 'Releasing';
 
-has 'test_env_vars'    => is => 'lazy', isa => ArrayRef,
-   documentation       => 'Set these environment vars to true when testing',
-   builder             => sub {
-      [ qw( AUTHOR_TESTING TEST_MEMORY TEST_SPELLING ) ] };
+has 'template_index' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => 'index.json';
 
-has 'vcs'              => is => 'lazy', isa => NonEmptySimpleStr,
-   default             => 'git';
+has 'test_env_vars' =>
+   is            => 'lazy',
+   isa           => ArrayRef,
+   documentation => 'Set these environment vars to true when testing',
+   builder       => sub {
+      return [ qw( AUTHOR_TESTING TEST_MEMORY TEST_SPELLING ) ];
+   };
+
+has 'vcs' => is => 'lazy', isa => NonEmptySimpleStr, default => 'git';
 
 1;
 

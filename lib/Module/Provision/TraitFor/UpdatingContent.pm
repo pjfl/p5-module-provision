@@ -9,59 +9,52 @@ use Moo::Role;
 
 requires qw( appldir loc manifest_paths next_argv output );
 
-# Private methods
-my $_get_ignore_rev_regex = sub {
-   my $self = shift;
-
-   my $ignore_rev = $self->appldir->catfile( '.gitignore-rev' )->chomp;
-
-   return $ignore_rev->exists ? join '|', $ignore_rev->getlines : undef;
-};
-
-my $_get_update_args = sub {
-   return ($_[ 0 ]->next_argv, $_[ 0 ]->next_argv);
-};
-
 # Public methods
 sub substitute_version {
    my ($self, $path, $from, $to) = @_;
 
-   $path->substitute( "\Q\'${from}.%d\',\E", "\'${to}.%d\'," );
-   $path->substitute( "\Q v${from}.\$Rev\E", " v${to}.\$Rev" );
+   $path->substitute("\Q\'${from}.%d\',\E", "\'${to}.%d\',");
+   $path->substitute("\Q v${from}.\$Rev\E", " v${to}.\$Rev");
    return;
 }
 
 sub update_copyright_year : method {
-   my $self = shift; my ($from, $to) = $self->$_get_update_args;
+   my $self = shift;
 
-   my $prefix = $self->loc( 'Copyright (c)' );
+   my ($from, $to) = $self->_get_update_args;
 
-   $from or throw Unspecified, [ 'from' ];
-   $to   or throw Unspecified, [ 'to'   ];
-   $self->quiet or $self->output( 'Updating copyright year' );
+   my $prefix = $self->loc('Copyright (c)');
 
-   for my $path (@{ $self->manifest_paths }) {
-      $path->substitute( "\Q${prefix} ${from}\E", "${prefix} ${to}" );
+   throw Unspecified, ['from'] unless $from;
+   throw Unspecified, ['to'] unless $to;
+
+   $self->output('Updating copyright year') unless $self->quiet;
+
+   for my $path (@{$self->manifest_paths}) {
+      $path->substitute("\Q${prefix} ${from}\E", "${prefix} ${to}");
    }
 
    return OK;
 }
 
 sub update_version : method {
-   my $self = shift; my ($from, $to) = $self->$_get_update_args;
+   my $self = shift;
 
-   my $ignore = $self->$_get_ignore_rev_regex;
+   my ($from, $to) = $self->_get_update_args;
 
-   $self->quiet or $self->output( 'Updating version numbers' );
+   my $ignore = $self->_get_ignore_rev_regex;
 
-   ($from, $to) = $self->update_version_pre_hook( $from, $to );
+   $self->output('Updating version numbers') unless $self->quiet;
 
-   for my $path (@{ $self->manifest_paths }) {
-      $ignore and $path =~ m{ (?: $ignore ) }mx and next;
-      $self->substitute_version( $path, $from, $to );
+   ($from, $to) = $self->update_version_pre_hook($from, $to);
+
+   for my $path (@{$self->manifest_paths}) {
+      next if $ignore and $path =~ m{ (?: $ignore ) }mx;
+
+      $self->substitute_version($path, $from, $to);
    }
 
-   $self->update_version_post_hook( $from, $to );
+   $self->update_version_post_hook($from, $to);
    return OK;
 }
 
@@ -71,9 +64,22 @@ sub update_version_post_hook { # Can be modified by applied traits
 sub update_version_pre_hook { # Can be modified by applied traits
    my ($self, @args) = @_;
 
-   ($args[ 0 ] and $args[ 1 ]) or throw 'Insufficient arguments';
+   throw 'Insufficient arguments' unless $args[0] && $args[1];
 
    return @args;
+}
+
+# Private methods
+sub _get_ignore_rev_regex {
+   my $self = shift;
+
+   my $ignore_rev = $self->appldir->catfile('.gitignore-rev')->chomp;
+
+   return $ignore_rev->exists ? join '|', $ignore_rev->getlines : undef;
+}
+
+sub _get_update_args {
+   return ($_[0]->next_argv, $_[0]->next_argv);
 }
 
 1;

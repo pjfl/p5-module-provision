@@ -6,9 +6,11 @@ use File::DataClass::Types qw( Object );
 use Module::Provision;
 use Moo;
 
-has 'provider' => is => 'ro', isa => Object,
-   builder     => sub { Module::Provision->new },
-   handles     => [ 'appldir', 'dist_version', 'libdir' ];
+has 'provider' =>
+   is      => 'ro',
+   isa     => Object,
+   builder => sub { Module::Provision->new },
+   handles => ['appldir', 'dist_version', 'libdir'];
 
 sub read_file { # PPI is just *so* slow
    my $self     = shift;
@@ -20,8 +22,10 @@ sub read_file { # PPI is just *so* slow
       for my $line (grep { m{ $pack_pat }mx } $file->chomp->getlines) {
          my ($package) = $line =~ m{ $pack_pat }mx;
 
-         $package and $res->{ $package } = {
-            file => $file->abs2rel( $self->appldir ), version => $version };
+         $res->{$package} = {
+            file    => $file->abs2rel($self->appldir),
+            version => $version,
+         } if $package;
       }
    }
 

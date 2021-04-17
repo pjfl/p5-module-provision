@@ -3,9 +3,10 @@ package Module::Provision::TraitFor::Rendering;
 use namespace::autoclean;
 
 use Class::Usul::Constants qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
-use Class::Usul::Functions qw( app_prefix is_arrayref distname io throw );
+use Class::Usul::Functions qw( app_prefix distname io throw );
 use File::DataClass::Types qw( ArrayRef Bool Directory Path SimpleStr );
 use File::ShareDir           ( );
+use Ref::Util              qw( is_arrayref );
 use Scalar::Util           qw( blessed weaken );
 use Template;
 use Unexpected::Functions  qw( Unspecified );
@@ -16,74 +17,146 @@ requires qw( add_leader appldir builder config dist_module exec_perms file
              incdir initial_wd loc log perms stash testdir vcs yorn );
 
 # Object attributes (public)
-option 'force'        => is => 'ro',   isa => Bool,
-   documentation      => 'Overwrite files if they already exist',
-   default            => FALSE, short => 'f';
+option 'force'   =>
+   is            => 'ro',
+   isa           => Bool,
+   documentation => 'Overwrite files if they already exist',
+   default       => FALSE,
+   short         => 'f';
 
-option 'templates'    => is => 'ro',   isa => SimpleStr, format => 's',
-   documentation      => 'Non default location of the code templates',
-   default            => NUL;
+option 'templates' =>
+   is            => 'ro',
+   isa           => SimpleStr,
+   documentation => 'Non default location of the code templates',
+   default       => NUL,
+   format        => 's';
 
-has 'template_dir'    => is => 'lazy', isa => Directory, coerce => TRUE,
-   init_arg           => undef;
+has 'template_dir' =>
+   is       => 'lazy',
+   isa      => Directory,
+   init_arg => undef,
+   coerce   => TRUE;
 
-has 'template_list'   => is => 'lazy', isa => ArrayRef, init_arg => undef;
+has 'template_list' => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
 # Object attributes (private)
-has '_template_index' => is => 'lazy', isa => Path, coerce => TRUE,
-   init_arg           => undef;
+has '_template_index' =>
+   is       => 'lazy',
+   isa      => Path,
+   init_arg => undef,
+   coerce   => TRUE;
 
-# Private methods
-my $_deref_tmpl = sub {
-   my ($self, $car) = @_; '_' ne substr $car, 0, 1 and return $car;
+# Public methods
+sub dump_stash : method {
+   my $self = shift;
 
-   my $reader = substr $car, 1; return $self->$reader();
-};
+   $self->dumper($self->stash);
 
-my $_merge_lists = sub {
-   my ($self, $args) = @_; my $list = $args->{templates};
+   return OK;
+}
 
-   push @{ $list }, @{ $args->{builders}->{ $self->builder } };
-   $self->vcs ne 'none' and push @{ $list }, @{ $args->{vcs}->{ $self->vcs } };
+sub expand_tuple {
+   my ($self, $tuple) = @_;
 
-   return $list;
-};
+   for (my $i = 0, my $max = @{$tuple}; $i < $max; $i++) {
+      if (is_arrayref $tuple->[$i]) {
+         $tuple->[$i]->[0] = $self->_deref_tmpl($tuple->[$i]->[0]);
+         $tuple->[$i] = io($tuple->[$i]);
+      }
+      else {
+         $tuple->[$i] = $self->_deref_tmpl($tuple->[$i]);
+      }
+   }
 
-my $_template_args = sub {
-   my $self = shift; weaken( $self ); my $args = { ABSOLUTE => TRUE, };
+   return $tuple;
+}
 
-   $args->{VARIABLES}->{loc} = sub { $self->loc( @_ ) };
+sub init_templates : method {
+   my $self = shift;
 
-   return $args;
-};
+   $self->template_list;
+   return OK;
+}
+
+sub render_template {
+   my ($self, $template, $target) = @_;
+
+   throw Unspecified, ['Template'] unless $template;
+   throw Unspecified, ['Template target'] unless $target;
+
+   $target = $target->catfile($template)
+      if $target->exists and $target->is_dir;
+
+   $template = $self->template_dir->catfile($template);
+
+   return $self->log->warn($self->loc('Path [_1] not found', $template))
+      unless $template->exists;
+
+   my $file  = $target->filename;
+
+   if ($target->exists && !$self->force) {
+      my $prompt = $self->loc('File [_1] exists, overwrite?', $file);
+
+      return $target
+         unless $self->yorn($self->add_leader($prompt), FALSE, TRUE);
+   }
+
+   my $tmplt = Template->new($self->_template_args) or throw $Template::ERROR;
+   my $text  = NUL;
+
+   throw $tmplt->error()
+      unless $tmplt->process($template->pathname, $self->stash, \$text);
+
+   $target->perms($self->perms)->print($text);
+   $target->close;
+   return $target;
+}
+
+sub render_templates {
+   my $self = shift;
+
+   $self->output('Rendering templates') unless $self->quiet;
+
+   for my $tuple (map { $self->expand_tuple($_) } @{$self->template_list}) {
+      $self->render_template(@{$tuple});
+   }
+
+   return;
+}
 
 # Construction
 sub _build_template_dir {
    my $self  = shift;
    my $class = blessed $self;
    my $tgt   = $self->templates
-             ? io( [ $self->templates ] )->absolute( $self->initial_wd )
-             : io( [ $self->config->my_home, '.'.(app_prefix $class) ] );
+             ? io([ $self->templates ])->absolute($self->initial_wd)
+             : io([ $self->config->my_home, '.'.(app_prefix $class) ]);
 
-   $tgt->exists and return $tgt; $tgt->mkpath( $self->exec_perms );
+   return $tgt if $tgt->exists;
 
-   my $dist  = io( File::ShareDir::dist_dir( distname $class ) );
+   $tgt->mkpath($self->exec_perms);
 
-   $_->copy( $tgt ) for ($dist->all_files);
+   my $dist = io(File::ShareDir::dist_dir(distname $class));
+
+   $_->copy($tgt) for ($dist->all_files);
 
    return $tgt;
 }
 
 sub _build__template_index {
-   return $_[ 0 ]->template_dir->catfile( $_[ 0 ]->config->template_index );
+   return $_[0]->template_dir->catfile($_[0]->config->template_index);
 }
 
 sub _build_template_list {
-   my $self = shift; my $index = $self->_template_index;
+   my $self  = shift;
+   my $index = $self->_template_index;
+   my $data;
 
-   my $data; $index->exists and $data = $self->file->data_load
-      ( paths => [ $index ], storage_class => 'Any' )
-      and return $self->$_merge_lists( $data );
+   if ($index->exists) {
+      $data = $self->file->data_load(paths => [$index], storage_class => 'Any');
+      return $self->_merge_lists($data);
+   }
+
    my $builders  = {
       DZ => [ [ 'dist.ini',      '_appldir' ],
               [ 'DZ_Build.PL', [ '_appldir', '.build.PL' ], ], ],
@@ -105,76 +178,45 @@ sub _build_template_list {
                [ 'gitpre-commit', [ '_appldir', '.gitpre-commit' ] ], ],
       svn => [], };
 
-   $self->output( 'Creating index [_1]', { args => [ $index ] } );
+   $self->output('Creating index [_1]', { args => [$index] });
    $data = { builders => $builders, templates => $templates, vcs => $vcs };
-   $self->file->data_dump
-      ( data => $data, path => $index, storage_class => 'Any' );
-   return $self->$_merge_lists( $data );
+   $self->file->data_dump(
+      data => $data, path => $index, storage_class => 'Any'
+   );
+
+   return $self->_merge_lists($data);
 }
 
-# Public methods
-sub dump_stash : method {
-   my $self = shift; $self->dumper( $self->stash ); return OK;
+# Private methods
+sub _deref_tmpl {
+   my ($self, $car) = @_;
+
+   return $car if '_' ne substr $car, 0, 1;
+
+   my $reader = substr $car, 1;
+
+   return $self->$reader();
 }
 
-sub expand_tuple {
-   my ($self, $tuple) = @_;
+sub _merge_lists {
+   my ($self, $args) = @_;
 
-   for (my $i = 0, my $max = @{ $tuple }; $i < $max; $i++) {
-      if (is_arrayref $tuple->[ $i ]) {
-         $tuple->[ $i ]->[ 0 ] = $self->$_deref_tmpl( $tuple->[ $i ]->[ 0 ] );
-         $tuple->[ $i ] = io( $tuple->[ $i ] );
-      }
-      else {
-         $tuple->[ $i ] = $self->$_deref_tmpl( $tuple->[ $i ] );
-      }
-   }
+   my $list = $args->{templates};
 
-   return $tuple;
+   push @{$list}, @{$args->{builders}->{$self->builder}};
+
+   push @{$list}, @{$args->{vcs}->{$self->vcs}} if $self->vcs ne 'none';
+
+   return $list;
 }
 
-sub init_templates : method {
-   my $self = shift; $self->template_list; return OK;
-}
+sub _template_args {
+   my $self = shift; weaken( $self );
+   my $args = { ABSOLUTE => TRUE, };
 
-sub render_template {
-   my ($self, $template, $target) = @_;
+   $args->{VARIABLES}->{loc} = sub { $self->loc(@_) };
 
-   $template or throw Unspecified, [ 'Template' ];
-   $target   or throw Unspecified, [ 'Template target' ];
-
-   $target->exists and $target->is_dir
-      and $target = $target->catfile( $template );
-   $template = $self->template_dir->catfile( $template );
-
-   $template->exists or
-      return $self->log->warn( $self->loc( 'Path [_1] not found', $template ) );
-
-   my $file  = $target->filename; my $prompt;
-
-   $target->exists and not $self->force
-      and $prompt = $self->loc( 'File [_1] exists, overwrite?', $file )
-      and not $self->yorn( $self->add_leader( $prompt ), FALSE, TRUE )
-      and return $target;
-
-   my $tmplt = Template->new( $self->$_template_args )
-      or throw $Template::ERROR;
-   my $text  = NUL;
-
-   $tmplt->process( $template->pathname, $self->stash, \$text )
-      or throw $tmplt->error();
-   $target->perms( $self->perms )->print( $text ); $target->close;
-   return $target;
-}
-
-sub render_templates {
-   my $self = shift; $self->quiet or $self->output( 'Rendering templates' );
-
-   for my $tuple (map { $self->expand_tuple( $_ ) } @{ $self->template_list }) {
-      $self->render_template( @{ $tuple } );
-   }
-
-   return;
+   return $args;
 }
 
 1;

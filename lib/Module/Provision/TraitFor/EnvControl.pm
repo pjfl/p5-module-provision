@@ -21,21 +21,25 @@ sub trace : method {
       emit "PATH = ".$ENV{PATH};
 
       for my $k (grep { m{ PERL }mx } sort keys %ENV) {
-         emit "${k} = ".$ENV{ $k };
+         emit "${k} = ".$ENV{$k};
       }
 
-      for my $k (@keys) { emit "${k} = ".($ENV{ $k } // NUL) }
+      for my $k (@keys) { emit "${k} = ".($ENV{$k} // NUL) }
    }
    elsif ($token eq 'dbic') {
-      $key = 'DBIC_TRACE'; $value = $ENV{ $key } ? FALSE : TRUE;
+      $key   = 'DBIC_TRACE';
+      $value = $ENV{$key} ? FALSE : TRUE;
    }
    elsif ($token) {
-      $key = "${prefix}_TRACE";
-      $value = $token eq ($ENV{ $key } // NUL) ? '""' : $token;
+      $key   = "${prefix}_TRACE";
+      $value = $token eq ($ENV{$key} // NUL) ? '""' : $token;
    }
-   else { $key = "${prefix}_DEBUG"; $value = $ENV{ $key } ? FALSE : TRUE }
+   else {
+      $key   = "${prefix}_DEBUG";
+      $value = $ENV{$key} ? FALSE : TRUE;
+   }
 
-   $key and emit "${key}=${value}; export ${key}";
+   emit "${key}=${value}; export ${key}" if $key;
 
    return OK;
 }

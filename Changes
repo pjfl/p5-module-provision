@@ -1,5 +1,7 @@
 Revision history for Module::Provision                           .
 
+          - Refactored coding style
+
 0.42.1    2017-05-08 20:29:42
           - Adds whitelist t::boilerplate to share
           - CVE-2016-1238 adds inline sublass to Build.PL

@@ -23,6 +23,7 @@ requires "Module::Metadata" => "1.000011";
 requires "Moo" => "2.000001";
 requires "Perl::Version" => "1.013";
 requires "Pod::Eventual" => "0.094001";
+requires "Ref::Util" => "0.203";
 requires "Software::License" => "0.103010";
 requires "Template" => "2.26";
 requires "Test::Requires" => "0.08";

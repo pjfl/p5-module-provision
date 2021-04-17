@@ -40,6 +40,7 @@ my $prereqs  = {
     'Moo' => '2.000001',
     'Perl::Version' => '1.013',
     'Pod::Eventual' => '0.094001',
+    'Ref::Util' => '0.203',
     'Software::License' => '0.103010',
     'Template' => '2.26',
     'Test::Requires' => '0.08',

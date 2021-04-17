@@ -8,9 +8,11 @@ use Moo::Role;
 requires qw( output quiet select_method stash );
 
 around 'select_method' => sub {
-   my ($orig, $self, @args) = @_; my $method = $orig->( $self, @args );
+   my ($orig, $self, @args) = @_;
 
-   $method eq 'get_badge_markup' and $self->quiet( TRUE );
+   my $method = $orig->($self, @args);
+
+   $self->quiet(TRUE) if $method eq 'get_badge_markup';
 
    return $method;
 };
@@ -23,8 +25,8 @@ sub get_badge_markup : method {
    my $reponame = $s->{pub_repo_prefix}.$distdir;
    my $coverage = $self->config->coverage_server;
    my $travis   = 'https://travis-ci.org/'.$s->{author_id};
-   my $args     = sub { { cl => $_[ 0 ], nl => $_[ 0 ], no_lead => TRUE } };
-   my $out      = sub { $self->output( $_[ 0 ], $args->( $_[ 1 ] ) ) };
+   my $args     = sub { { cl => $_[0], nl => $_[0], no_lead => TRUE } };
+   my $out      = sub { $self->output($_[0], $args->($_[1])) };
 
    $out->( '=begin html', TRUE );
    $out->( "<a href=\"${travis}/${reponame}\">"
