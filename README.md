@@ -10,7 +10,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.42.$Rev: 1 $ of [Module::Provision](https://metacpan.org/pod/Module::Provision)
+This documents version v0.42.$Rev: 2 $ of [Module::Provision](https://metacpan.org/pod/Module%3A%3AProvision)
 
 # Synopsis
 
@@ -47,7 +47,7 @@ This documents version v0.42.$Rev: 1 $ of [Module::Provision](https://metacpan.o
 
 # Description
 
-[Module::Provision](https://metacpan.org/pod/Module::Provision) is used to create a skeletal CPAN distribution,
+[Module::Provision](https://metacpan.org/pod/Module%3A%3AProvision) is used to create a skeletal CPAN distribution,
 including basic builder scripts, tests, documentation, and module
 code. It creates a VCS repository and, with Git as the VCS, installs
 some hooks that mimic the RCS Revision keyword expansion
@@ -61,7 +61,7 @@ overridden by the values in the configuration file
 
 If the default builder (`MB`) is used, then the project file
 `Build.PL` loads `inc::Bob` which instantiates an inline subclass of
-[Module::Build](https://metacpan.org/pod/Module::Build). The code for the subclass is in
+[Module::Build](https://metacpan.org/pod/Module%3A%3ABuild). The code for the subclass is in
 `inc::SubClass`. The file `inc::CPANTesting` allows for fine grained
 control over which tests are run by which CPAN Testing smokers
 
@@ -103,7 +103,7 @@ The alias:
 
     alias ident='ack "@\(#\)"'
 
-uses the [App::Ack](https://metacpan.org/pod/App::Ack) program to implement the old SYSV R4 `ident`
+uses the [App::Ack](https://metacpan.org/pod/App%3A%3AAck) program to implement the old SYSV R4 `ident`
 command
 
 The templates for the project files `dist.ini`, `Build.PL`, and
@@ -119,7 +119,7 @@ Emacs:
 
 Perl mode is preferred over C-Perl mode since the former has better
 syntax highlighting. Tabs are expanded to three spaces. The
-`tab-title` variable is used by [Yakuake::Sessions](https://metacpan.org/pod/Yakuake::Sessions) to set the tab
+`tab-title` variable is used by [Yakuake::Sessions](https://metacpan.org/pod/Yakuake%3A%3ASessions) to set the tab
 title for the terminal emulator. The `load-project-state` Lisp looks
 like this:
 
@@ -151,9 +151,9 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 
 The configuration file defaults to
 `~/.module_provision/module_provision.json`. All of the attributes
-listed in [Module::Provision::Config](https://metacpan.org/pod/Module::Provision::Config) can be set from the
+listed in [Module::Provision::Config](https://metacpan.org/pod/Module%3A%3AProvision%3A%3AConfig) can be set from the
 configuration file in addition to the attributes listed in
-[Class::Usul::Config::Programs](https://metacpan.org/pod/Class::Usul::Config::Programs) and [Class::Usul::Config](https://metacpan.org/pod/Class::Usul::Config). A typical
+[Class::Usul::Config::Programs](https://metacpan.org/pod/Class%3A%3AUsul%3A%3AConfig%3A%3APrograms) and [Class::Usul::Config](https://metacpan.org/pod/Class%3A%3AUsul%3A%3AConfig). A typical
 file looks like;
 
     {
@@ -169,7 +169,7 @@ file looks like;
 Creating `logs` and `tmp` directories in `~/.module_provision` will cause
 the log and temporary files to use them instead of `/tmp`
 
-Extends [Module::Provision::Base](https://metacpan.org/pod/Module::Provision::Base). Applies these traits;
+Extends [Module::Provision::Base](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ABase). Applies these traits;
 `AddingFiles`, `CreatingDistributions`, `Rendering`,
 `UpdatingContent`, and `VCS`
 
@@ -304,7 +304,7 @@ version numbers are not provided
 
 The pod coverage test falsely triggers on this module if this entry is
 removed. Caused by adding `around` `select_method` to
-[Module::Provision::TraitFor::Badges](https://metacpan.org/pod/Module::Provision::TraitFor::Badges)
+[Module::Provision::TraitFor::Badges](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ATraitFor%3A%3ABadges)
 
 # Diagnostics
 
@@ -312,12 +312,12 @@ Add `-D` to command line to turn on debug output
 
 # Dependencies
 
-- [Module::Provision::Base](https://metacpan.org/pod/Module::Provision::Base)
-- [Module::Provision::TraitFor::AddingFiles](https://metacpan.org/pod/Module::Provision::TraitFor::AddingFiles)
-- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/pod/Module::Provision::TraitFor::CreatingDistributions)
-- [Module::Provision::TraitFor::Rendering](https://metacpan.org/pod/Module::Provision::TraitFor::Rendering)
-- [Module::Provision::TraitFor::UpdatingContent](https://metacpan.org/pod/Module::Provision::TraitFor::UpdatingContent)
-- [Module::Provision::TraitFor::VCS](https://metacpan.org/pod/Module::Provision::TraitFor::VCS)
+- [Module::Provision::Base](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ABase)
+- [Module::Provision::TraitFor::AddingFiles](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ATraitFor%3A%3AAddingFiles)
+- [Module::Provision::TraitFor::CreatingDistributions](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ATraitFor%3A%3ACreatingDistributions)
+- [Module::Provision::TraitFor::Rendering](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ATraitFor%3A%3ARendering)
+- [Module::Provision::TraitFor::UpdatingContent](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ATraitFor%3A%3AUpdatingContent)
+- [Module::Provision::TraitFor::VCS](https://metacpan.org/pod/Module%3A%3AProvision%3A%3ATraitFor%3A%3AVCS)
 - [Moo](https://metacpan.org/pod/Moo)
 
 # Incompatibilities
@@ -335,7 +335,7 @@ and pull requests are welcome
 
 Larry Wall - For the Perl programming language
 
-[Module::Starter](https://metacpan.org/pod/Module::Starter) - For some of the documentation and tests
+[Module::Starter](https://metacpan.org/pod/Module%3A%3AStarter) - For some of the documentation and tests
 
 # Author
 

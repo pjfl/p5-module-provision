@@ -216,7 +216,7 @@ sub _filter_requires_paths {
    my $pattern = $file eq 'dist.ini' ? '(?: Build.PL | Makefile.PL )' : $file;
 
    return [
-      grep { not m{ \A (?: inc | t ) \b }mx
+      grep { not m{ \A (?: inc | t | xt ) \b }mx
          and not m{ \A $pattern \z }mx } @{$paths}
    ];
 }
@@ -277,6 +277,8 @@ sub _version_diff {
 
    $prereq =~ s{ (\. [0-9]+?) 0+ \z }{$1}mx;
    $depend =~ s{ (\. [0-9]+?) 0+ \z }{$1}mx;
+
+   return TRUE unless $prereq && $depend;
 
    my $oldver = Perl::Version->new($prereq); $oldver->components(2);
    my $newver = Perl::Version->new($depend); $newver->components(2);
