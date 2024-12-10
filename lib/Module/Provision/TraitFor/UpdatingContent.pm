@@ -37,6 +37,23 @@ sub update_copyright_year : method {
    return OK;
 }
 
+sub update_email : method {
+   my $self = shift;
+
+   my ($from, $to) = $self->_get_update_args;
+
+   throw Unspecified, ['from'] unless $from;
+   throw Unspecified, ['to'] unless $to;
+
+   $self->output('Updating email address') unless $self->quiet;
+
+   for my $path (@{$self->manifest_paths}) {
+      $path->substitute("\QC<< <${from}> >>\E", "C<< <${to}> >>");
+   }
+
+   return OK;
+}
+
 sub update_version : method {
    my $self = shift;
 
@@ -128,6 +145,13 @@ L<File::DataClass::IO>
 
 Substitutes the existing copyright year for the new copyright year in all
 files in the F<MANIFEST>
+
+=head2 update_email - Updates the email address in the author string
+
+   $exit_code = $self->update_email;
+
+Substitutes the existing email address for the new email address in all files
+in the F<MANIFEST>
 
 =head2 update_version - Updates the version numbers in all files
 
