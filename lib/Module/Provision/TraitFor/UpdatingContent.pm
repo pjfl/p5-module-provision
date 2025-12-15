@@ -1,7 +1,5 @@
 package Module::Provision::TraitFor::UpdatingContent;
 
-use namespace::autoclean;
-
 use Class::Usul::Constants qw( EXCEPTION_CLASS OK );
 use Class::Usul::Functions qw( throw );
 use Unexpected::Functions  qw( Unspecified );
@@ -54,6 +52,28 @@ sub update_email : method {
    return OK;
 }
 
+sub update_js_version : method {
+   my $self = shift;
+
+   my ($from, $to) = $self->_get_update_args;
+
+   throw Unspecified, ['from'] unless $from;
+   throw Unspecified, ['to'] unless $to;
+
+   $self->output('Updating JS version numbers') unless $self->quiet;
+
+   my $js_dir = $self->appldir->catdir(qw(share js));
+   my @paths  = ();
+
+   $js_dir->filter(sub { m{ \.js \z }mx })->visit(sub { push @paths, shift });
+
+   for my $path (@paths) {
+      $path->substitute("\Q\@version ${from}\E", "\@version ${to}");
+   }
+
+   return OK;
+}
+
 sub update_version : method {
    my $self = shift;
 
@@ -98,6 +118,8 @@ sub _get_ignore_rev_regex {
 sub _get_update_args {
    return ($_[0]->next_argv, $_[0]->next_argv);
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -152,6 +174,12 @@ files in the F<MANIFEST>
 
 Substitutes the existing email address for the new email address in all files
 in the F<MANIFEST>
+
+=head2 update_js_version - Updates the version number in the JS files
+
+   $exit_code = $self->update_js_version;
+
+Replaces the version number in the JS files with the current one
 
 =head2 update_version - Updates the version numbers in all files
 
