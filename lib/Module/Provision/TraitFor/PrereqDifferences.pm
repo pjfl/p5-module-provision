@@ -1,12 +1,11 @@
 package Module::Provision::TraitFor::PrereqDifferences;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( FALSE NUL OK TRUE );
-use Class::Usul::Functions qw( classfile ensure_class_loaded
-                               is_member emit io );
+use Class::Usul::Cmd::Constants qw( FALSE NUL OK TRUE );
+use Class::Usul::Cmd::Util      qw( classfile ensure_class_loaded
+                                    is_member emit );
+use English                     qw( -no_match_vars );
+use File::DataClass::IO         qw( io );
 use Config::Tiny;
-use English                qw( -no_match_vars );
 use Module::Metadata;
 use Perl::Version;
 use Moo::Role;
@@ -336,6 +335,8 @@ sub _parse_depends_line {
    return $modules;
 }
 
+use namespace::autoclean;
+
 1;
 
 __END__
@@ -380,7 +381,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<CPAN>
 

@@ -1,9 +1,7 @@
 package Module::Provision::TraitFor::EnvControl;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( FALSE NUL OK TRUE );
-use Class::Usul::Functions qw( emit env_prefix );
+use Class::Usul::Cmd::Constants qw( FALSE NUL OK TRUE );
+use Class::Usul::Cmd::Util      qw( emit env_prefix );
 use Moo::Role;
 
 requires qw( next_argv project );
@@ -43,6 +41,8 @@ sub trace : method {
 
    return OK;
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -89,7 +89,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =back
 

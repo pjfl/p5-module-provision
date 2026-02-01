@@ -1,20 +1,20 @@
 package Module::Provision::TraitFor::Rendering;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
-use Class::Usul::Functions qw( app_prefix distname io throw );
-use File::DataClass::Types qw( ArrayRef Bool Directory Path SimpleStr );
-use File::ShareDir           ( );
-use Ref::Util              qw( is_arrayref );
-use Scalar::Util           qw( blessed weaken );
+use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
+use File::DataClass::Types      qw( ArrayRef Bool Directory Path SimpleStr );
+use Class::Usul::Cmd::Util      qw( app_prefix distname dump_file load_file
+                                    throw );
+use File::DataClass::IO         qw( io );
+use Ref::Util                   qw( is_arrayref );
+use Scalar::Util                qw( blessed weaken );
+use Unexpected::Functions       qw( Unspecified );
+use File::ShareDir                ( );
 use Template;
-use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
-use Class::Usul::Options;
+use Class::Usul::Cmd::Options;
 
-requires qw( add_leader appldir builder config dist_module exec_perms file
-             incdir initial_wd loc log perms stash testdir vcs yorn );
+requires qw( add_leader appldir builder config dist_module exec_perms
+             incdir initial_wd log perms stash testdir vcs yorn );
 
 # Object attributes (public)
 option 'force'   =>
@@ -89,13 +89,13 @@ sub render_template {
 
    $template = $self->template_dir->catfile($template);
 
-   return $self->log->warn($self->loc('Path [_1] not found', $template))
+   return $self->log->warn("Path ${template} not found")
       unless $template->exists;
 
    my $file  = $target->filename;
 
    if ($target->exists && !$self->force) {
-      my $prompt = $self->loc('File [_1] exists, overwrite?', $file);
+      my $prompt = "File ${file} exists, overwrite?";
 
       return $target
          unless $self->yorn($self->add_leader($prompt), FALSE, TRUE);
@@ -130,7 +130,7 @@ sub _build_template_dir {
    my $class = blessed $self;
    my $tgt   = $self->templates
              ? io([ $self->templates ])->absolute($self->initial_wd)
-             : io([ $self->config->my_home, '.'.(app_prefix $class) ]);
+             : io([ $self->config->my_home, '.' . (app_prefix $class) ]);
 
    return $tgt if $tgt->exists;
 
@@ -150,12 +150,8 @@ sub _build__template_index {
 sub _build_template_list {
    my $self  = shift;
    my $index = $self->_template_index;
-   my $data;
 
-   if ($index->exists) {
-      $data = $self->file->data_load(paths => [$index], storage_class => 'Any');
-      return $self->_merge_lists($data);
-   }
+   return $self->_merge_lists(load_file($index)) if $index->exists;
 
    my $builders  = {
       DZ => [ [ 'dist.ini',      '_appldir' ],
@@ -179,10 +175,10 @@ sub _build_template_list {
       svn => [], };
 
    $self->output('Creating index [_1]', { args => [$index] });
-   $data = { builders => $builders, templates => $templates, vcs => $vcs };
-   $self->file->data_dump(
-      data => $data, path => $index, storage_class => 'Any'
-   );
+
+   my $data = { builders => $builders, templates => $templates, vcs => $vcs };
+
+   dump_file($index, $data);
 
    return $self->_merge_lists($data);
 }
@@ -214,10 +210,12 @@ sub _template_args {
    my $self = shift; weaken( $self );
    my $args = { ABSOLUTE => TRUE, };
 
-   $args->{VARIABLES}->{loc} = sub { $self->loc(@_) };
+   $args->{VARIABLES}->{loc} = sub { @_ };
 
    return $args;
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -314,7 +312,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<File::DataClass>
 

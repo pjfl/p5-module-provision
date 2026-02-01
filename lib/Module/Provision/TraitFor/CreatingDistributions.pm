@@ -1,14 +1,13 @@
 package Module::Provision::TraitFor::CreatingDistributions;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( FAILED FALSE OK SPC TRUE );
-use Class::Usul::Functions qw( emit emit_to io trim );
-use Class::Usul::Types     qw( ArrayRef NonEmptySimpleStr );
-use English                qw( -no_match_vars );
+use Class::Usul::Cmd::Constants qw( FAILED FALSE OK SPC TRUE );
+use Class::Usul::Cmd::Types     qw( ArrayRef NonEmptySimpleStr );
+use Class::Usul::Cmd::Util      qw( emit emit_to trim );
+use File::DataClass::IO         qw( io );
+use English                     qw( -no_match_vars );
 use IO::Handle;
 use Moo::Role;
-use Class::Usul::Options;
+use Class::Usul::Cmd::Options;
 
 requires qw( appbase appldir branch builder chdir config exec_perms
              homedir incdir method output next_argv project_file
@@ -178,7 +177,7 @@ sub edit_project : method {
    my $self = shift;
    my $path = $self->_project_file_path;
 
-   $self->run_cmd($self->editor.SPC.$path, { async => TRUE });
+   $self->run_cmd($self->editor.SPC.$path);
    return OK;
 }
 
@@ -301,6 +300,8 @@ sub _get_test_command {
 sub _project_file_path {
    return $_[0]->appldir->catfile($_[0]->project_file);
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -444,7 +445,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<Moose::Role>
 

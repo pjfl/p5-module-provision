@@ -1,8 +1,6 @@
 package Module::Provision::TraitFor::Badges;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( OK TRUE );
+use Class::Usul::Cmd::Constants qw( OK TRUE );
 use Moo::Role;
 
 requires qw( output quiet select_method stash );
@@ -44,6 +42,8 @@ sub get_badge_markup : method {
    $out->( '=end html', TRUE );
    return OK;
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -87,7 +87,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =back
 

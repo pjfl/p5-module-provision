@@ -1,21 +1,21 @@
 package Module::Provision::TraitFor::CPANDistributions;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants   qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
-use Class::Usul::Crypt::Util qw( decrypt_from_config encrypt_for_config
-                                 is_encrypted );
-use Class::Usul::Functions   qw( ensure_class_loaded throw );
-use Class::Usul::Types       qw( NonEmptySimpleStr );
-use English                  qw( -no_match_vars );
-use HTTP::Request::Common    qw( POST );
+use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
+use HTTP::Request::Common       qw( POST );
+use Class::Usul::Cmd::Types     qw( NonEmptySimpleStr );
+use Class::Usul::Cmd::Util      qw( ensure_class_loaded throw );
+use English                     qw( -no_match_vars );
+use Scalar::Util                qw( blessed );
+use Unexpected::Functions       qw( PathNotFound Unspecified );
 use HTTP::Status;
-use Scalar::Util             qw( blessed );
-use Unexpected::Functions    qw( PathNotFound Unspecified );
+
+use Class::Usul::Crypt::Util    qw( decrypt_from_config encrypt_for_config
+                                    is_encrypted );
+
 use Moo::Role;
 
 requires qw( add_leader config debug distname dist_version dumper
-             info loc log next_argv output run_cmd yorn );
+             info log next_argv output run_cmd yorn );
 
 # Private attributes
 has '_debug_http_method' =>
@@ -37,7 +37,7 @@ sub cpan_upload : method {
 
    $args->{subdir} //= lc $self->distname;
 
-   my $prompt = $self->add_leader($self->loc('Really upload to CPAN'));
+   my $prompt = $self->add_leader('Really upload to CPAN');
 
    $args->{dry_run} = !$self->yorn($prompt, FALSE, TRUE, 0)
       unless exists $args->{dry_run};
@@ -55,7 +55,7 @@ sub delete_cpan_files : method {
    $args->{subdir} //= lc $self->distname;
 
    my $files  = $self->_convert_versions_to_paths($self->extra_argv, $args);
-   my $prompt = $self->loc('Really delete files from CPAN');
+   my $prompt = 'Really delete files from CPAN';
 
    $prompt = $self->add_leader($prompt);
 
@@ -265,6 +265,8 @@ sub _write_rc_file {
    return;
 }
 
+use namespace::autoclean;
+
 1;
 
 __END__
@@ -330,7 +332,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<CPAN::Uploader>
 

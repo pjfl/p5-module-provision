@@ -1,7 +1,5 @@
 package Module::Provision::MetaData;
 
-use namespace::autoclean;
-
 use File::DataClass::Types qw( Object );
 use Module::Provision;
 use Moo;
@@ -31,6 +29,8 @@ sub read_file { # PPI is just *so* slow
 
    return $res;
 }
+
+use namespace::autoclean;
 
 1;
 

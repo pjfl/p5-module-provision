@@ -10,7 +10,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 # Version
 
-This documents version v0.42.$Rev: 2 $ of [Module::Provision](https://metacpan.org/pod/Module%3A%3AProvision)
+This documents version v0.42.$Rev: 5 $ of [Module::Provision](https://metacpan.org/pod/Module%3A%3AProvision)
 
 # Synopsis
 
@@ -150,10 +150,8 @@ This Lisp code will do likewise when a `dist.ini` file is edited:
 # Configuration and Environment
 
 The configuration file defaults to
-`~/.module_provision/module_provision.json`. All of the attributes
-listed in [Module::Provision::Config](https://metacpan.org/pod/Module%3A%3AProvision%3A%3AConfig) can be set from the
-configuration file in addition to the attributes listed in
-[Class::Usul::Config::Programs](https://metacpan.org/pod/Class%3A%3AUsul%3A%3AConfig%3A%3APrograms) and [Class::Usul::Config](https://metacpan.org/pod/Class%3A%3AUsul%3A%3AConfig). A typical
+`~/.module_provision/module_provision.json`. All of the attributes listed in
+[Module::Provision::Config](https://metacpan.org/pod/Module%3A%3AProvision%3A%3AConfig) can be set from the configuration file. A typical
 file looks like;
 
     {

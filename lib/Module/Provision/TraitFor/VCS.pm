@@ -1,19 +1,18 @@
 package Module::Provision::TraitFor::VCS;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( EXCEPTION_CLASS FALSE OK TRUE );
-use Class::Usul::Functions qw( io is_win32 throw );
-use Class::Usul::Types     qw( Bool HashRef Str );
+use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS FALSE OK TRUE );
+use Class::Usul::Cmd::Types     qw( Bool HashRef Str );
+use Class::Usul::Cmd::Util      qw( is_win32 throw );
+use File::DataClass::IO         qw( io );
+use Scalar::Util                qw( blessed );
+use Unexpected::Functions       qw( Unspecified );
 use Perl::Version;
-use Scalar::Util           qw( blessed );
-use Unexpected::Functions  qw( Unspecified );
 use Moo::Role;
-use Class::Usul::Options;
+use Class::Usul::Cmd::Options;
 
 requires qw( add_leader appbase appldir branch build_distribution chdir config
              cpan_upload default_branch dist_version distname editor exec_perms
-             extra_argv generate_metadata get_line loc next_argv output quiet
+             extra_argv generate_metadata get_line next_argv output quiet
              run_cmd test_upload update_version vcs );
 
 # Public attributes
@@ -199,7 +198,7 @@ sub _add_git_hooks {
 sub _add_tag_to_git {
    my ($self, $tag) = @_;
 
-   my $message = $self->loc($self->config->tag_message);
+   my $message = $self->config->tag_message;
    my $sign    = $self->config->signing_key;
 
    $sign = "-u ${sign}" if $sign;
@@ -314,7 +313,7 @@ sub _initialize_svn {
 
    my $branch = $self->branch;
    my $url    = 'file://'.$repository->catdir( $branch );
-   my $msg    = $self->loc('Initialised by [_1]', $class);
+   my $msg    = "Initialised by ${class}";
 
    $self->run_cmd("svn import ${branch} ${url} -m '${msg}'");
 
@@ -328,7 +327,7 @@ sub _initialize_svn {
       $self->run_cmd( "svn propset svn:keywords 'Id Revision Auth' ${target}" );
    }
 
-   $msg = $self->loc('Add RCS keywords to project files');
+   $msg = 'Add RCS keywords to project files';
    $self->run_cmd("svn commit ${branch} -m '${msg}'");
    $self->chdir($self->appldir);
    $self->run_cmd('svn update');
@@ -382,7 +381,7 @@ sub _add_tag_to_svn {
    my $repo    = $self->_get_svn_repository;
    my $from    = "${repo}/trunk";
    my $to      = "${repo}/tags/v${tag}";
-   my $message = $self->loc($self->config->tag_message)." v${tag}";
+   my $message = $self->config->tag_message ." v${tag}";
    my $cmd     = "svn copy --parents -m '${message}' ${from} ${to}";
 
    $self->run_cmd($cmd, $params);
@@ -400,8 +399,9 @@ sub _commit_release {
 }
 
 sub _initialize_git {
-   my $self = shift;
-   my $msg  = $self->loc('Initialised by [_1]', blessed $self);
+   my $self  = shift;
+   my $class = blessed $self;
+   my $msg   = "Initialised by ${class}";
 
    $self->chdir($self->appldir);
    $self->run_cmd('git init');
@@ -467,6 +467,8 @@ sub _tag_from_version {
 
    return $ver->component(0).'.'.$ver->component(1);
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -569,7 +571,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<Moose::Role>
 

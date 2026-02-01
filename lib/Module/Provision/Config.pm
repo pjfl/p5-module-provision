@@ -1,17 +1,43 @@
 package Module::Provision::Config;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( NUL TRUE );
-use Class::Usul::Functions qw( fullname loginid logname untaint_cmdline
-                               untaint_identifier );
-use File::DataClass::Types qw( ArrayRef HashRef NonEmptySimpleStr
-                               Path SimpleStr Undef );
+use Class::Usul::Cmd::Constants qw( NUL TRUE );
+use File::DataClass::Types      qw( ArrayRef HashRef NonEmptySimpleStr
+                                    Path SimpleStr Undef );
+use Class::Usul::Cmd::Util      qw( app_prefix fullname load_file loginid
+                                    logname untaint_cmdline
+                                    untaint_identifier );
+use File::DataClass::IO         qw( io );
+use File::HomeDir;
 use Moo;
 
-extends qw(Class::Usul::Config::Programs);
+around 'BUILDARGS' => sub {
+   my ($orig, $self, @args) = @_;
+
+   my $attr = $orig->($self, @args);
+   my $path = $attr->{config_path};
+
+   if ($path) { $path = io($path) }
+   else {
+      my $home   = io(File::HomeDir->my_home);
+      my $prefix = app_prefix $attr->{appclass};
+      my $file   = $attr->{config_file} // "${prefix}.json";
+      my $dir    = $attr->{config_dir} // ".${prefix}";
+
+      $path = $home->catdir($dir)->catfile($file);
+   }
+
+   if ($path->exists) {
+      my $loaded = load_file($path) // {};
+
+      $attr = { %{$loaded}, %{$attr} }; # Yes this way round. Leave it alone
+   }
+
+   return $attr;
+};
 
 # Object attributes (public)
+has 'appclass' => is => 'ro', isa => SimpleStr, required => TRUE;
+
 has 'author' =>
    is      => 'lazy',
    isa     => NonEmptySimpleStr,
@@ -40,7 +66,7 @@ has 'author_id' =>
 has 'base' =>
    is      => 'lazy',
    isa     => Path,
-   builder => sub { $_[0]->my_home },
+   builder => sub { shift->my_home },
    coerce  => TRUE;
 
 has 'builder' => is => 'lazy', isa => NonEmptySimpleStr, default => 'MB';
@@ -98,6 +124,12 @@ has 'module_abstract' =>
    isa     => NonEmptySimpleStr,
    default => 'One-line description of the modules purpose';
 
+has 'my_home' =>
+   is      => 'lazy',
+   isa     => Path,
+   coerce  => TRUE,
+   default => sub { File::HomeDir->my_home };
+
 has 'pub_repo_prefix'=> is => 'ro', isa => SimpleStr, default => 'p5-';
 
 has 'remote_test_id' =>
@@ -143,6 +175,8 @@ has 'test_env_vars' =>
 
 has 'vcs' => is => 'lazy', isa => NonEmptySimpleStr, default => 'git';
 
+use namespace::autoclean;
+
 1;
 
 __END__
@@ -158,10 +192,6 @@ Module::Provision::Config - Attributes set from the config file
 =head1 Synopsis
 
    use Moo;
-
-   extends 'Class::Usul::Programs';
-
-   has '+config_class' => default => sub { 'Module::Provision::Config' };
 
 =head1 Description
 
@@ -317,7 +347,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<File::DataClass>
 

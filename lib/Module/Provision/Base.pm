@@ -1,33 +1,29 @@
 package Module::Provision::Base;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( EXCEPTION_CLASS NUL SPC TRUE );
-use Class::Usul::Functions qw( app_prefix class2appdir classdir
-                               distname first_char io throw );
-use Class::Usul::Time      qw( time2str );
+use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS NUL SPC TRUE );
+use File::DataClass::Types      qw( ArrayRef Directory HashRef NonEmptySimpleStr
+                                    Object OctalNum Path PositiveInt
+                                    SimpleStr Undef Str );
+use Class::Usul::Cmd::Util      qw( distname throw time2str );
+use English                     qw( -no_match_vars );
+use File::DataClass::IO         qw( io );
+use File::Spec::Functions       qw( catdir );
+use Ref::Util                   qw( is_arrayref );
+use Type::Utils                 qw( enum );
+use Unexpected::Functions       qw( Unspecified );
 use CPAN::Meta;
-use English                qw( -no_match_vars );
-use File::DataClass::Types qw( ArrayRef Directory HashRef NonEmptySimpleStr
-                               Object OctalNum Path PositiveInt
-                               SimpleStr Undef );
 use Module::Metadata;
+use Module::Provision::Config;
 use Perl::Version;
-use Ref::Util              qw( is_arrayref );
 use Try::Tiny;
-use Type::Utils            qw( enum );
-use Unexpected::Functions  qw( Unspecified );
 use Moo;
-use Class::Usul::Options;
+use Class::Usul::Cmd::Options;
 
-extends q(Class::Usul::Programs);
+extends q(Class::Usul::Cmd);
 
 my %BUILDERS = ( 'DZ' => 'dist.ini', 'MB' => 'Build.PL', );
 my $BUILDER  = enum 'Builder' => [ qw( DZ MB ) ];
 my $VCS      = enum 'VCS'     => [ qw( git none svn ) ];
-
-# Override defaults in base class
-has '+config_class' => default => sub { 'Module::Provision::Config' };
 
 # Object attributes (public)
 # Visible to the command line
@@ -36,7 +32,7 @@ option 'base'    =>
    isa           => Path,
    format        => 's',
    documentation => 'Directory containing new projects',
-   builder       => sub { $_[0]->config->base },
+   default       => sub { shift->config->base },
    coerce        => TRUE;
 
 option 'branch'  =>
@@ -55,7 +51,7 @@ option 'license' =>
    is            => 'ro',
    isa           => NonEmptySimpleStr,
    documentation => 'License used for the project',
-   builder       => sub { $_[0]->config->license },
+   default       => sub { shift->config->license },
    format        => 's';
 
 option 'perms'   =>
@@ -70,7 +66,7 @@ option 'plugins' =>
    is            => 'ro',
    isa           => ArrayRef[NonEmptySimpleStr],
    documentation => 'Name of optional plugins to load, comma separated list',
-   builder       => sub { [] },
+   default       => sub { [] },
    coerce        => sub { is_arrayref $_[0] ? $_[0] : [split m{ , }mx, $_[0]] },
    format        => 's',
    short         => 'M';
@@ -85,7 +81,7 @@ option 'repository' =>
    is            => 'ro',
    isa           => NonEmptySimpleStr,
    documentation => 'Directory containing the SVN repository',
-   builder       => sub { $_[0]->config->repository },
+   default       => sub { shift->config->repository },
    format        => 's';
 
 option 'vcs'     =>
@@ -102,21 +98,28 @@ has 'appldir' => is => 'lazy', isa => Path, coerce => TRUE;
 has 'branch_file' =>
    is      => 'lazy',
    isa     => Path,
-   builder => sub { [ $_[0]->appbase, '.branch' ] },
+   default => sub { [ $_[0]->appbase, '.branch' ] },
    coerce  => TRUE;
 
 has 'binsdir' =>
    is      => 'lazy',
    isa     => Path,
-   builder => sub { [ $_[0]->appldir, 'bin' ] },
+   default => sub { [ $_[0]->appldir, 'bin' ] },
    coerce  => TRUE;
 
-has 'default_branch' => is => 'lazy', isa => SimpleStr;
+has 'default_branch' =>
+   is      => 'lazy',
+   isa     => SimpleStr,
+   default => sub {
+      my $self = shift;
+
+      return $self->config->default_branches->{$self->vcs} // NUL;
+   };
 
 has 'dist_module' =>
    is      => 'lazy',
    isa     => Path,
-   builder => sub { [ $_[0]->homedir.'.pm' ] },
+   default => sub { [ $_[0]->homedir.'.pm' ] },
    coerce  => TRUE;
 
 has 'dist_version' => is => 'lazy', isa => Object, clearer => TRUE;
@@ -124,16 +127,27 @@ has 'dist_version' => is => 'lazy', isa => Object, clearer => TRUE;
 has 'distname' =>
    is      => 'lazy',
    isa     => NonEmptySimpleStr,
-   builder => sub { distname $_[0]->project };
+   default => sub { distname $_[0]->project };
 
-has 'exec_perms' => is => 'lazy', isa => PositiveInt;
+has 'exec_perms' =>
+   is      => 'lazy',
+   isa     => PositiveInt,
+   default => sub {
+      my $self = shift;
 
-has 'homedir' => is => 'lazy', isa => Path, coerce => TRUE;
+      return (($self->perms & oct '0444') >> 2) | $self->perms;
+   };
+
+has 'homedir' =>
+   is      => 'lazy',
+   isa     => Path,
+   coerce  => TRUE,
+   default => sub { [ $_[0]->libdir, _classdir($_[0]->project) ] };
 
 has 'incdir' =>
    is      => 'lazy',
    isa     => Path,
-   builder => sub { [ $_[0]->appldir, 'inc' ] },
+   default => sub { [ $_[0]->appldir, 'inc' ] },
    coerce  => TRUE;
 
 has 'initial_wd' => is => 'ro', isa => Directory, builder => sub { io()->cwd };
@@ -141,40 +155,55 @@ has 'initial_wd' => is => 'ro', isa => Directory, builder => sub { io()->cwd };
 has 'libdir' =>
    is      => 'lazy',
    isa     => Path,
-   builder => sub { [ $_[0]->appldir, 'lib' ] },
+   default => sub { [ $_[0]->appldir, 'lib' ] },
    coerce  => TRUE;
 
 has 'license_keys' => is => 'lazy', isa => HashRef;
 
 has 'manifest_paths' => is => 'lazy', isa => ArrayRef, init_arg => undef;
 
-has 'module_abstract' => is => 'lazy', isa => NonEmptySimpleStr;
+has 'module_abstract' => is => 'lazy', isa => Str;
 
 has 'module_metadata' =>
    is      => 'lazy',
    isa     => Object | Undef,
-   builder => sub {
+   default => sub {
       return Module::Metadata->new_from_file(
          $_[0]->dist_module->abs2rel($_[0]->appldir), collect_pod => 1
       );
    },
    clearer => TRUE;
 
-has 'project_file' => is => 'lazy', isa => NonEmptySimpleStr;
+has 'project_file' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => sub { my $key = shift->builder; $BUILDERS{$key} };
 
 has 'stash' => is => 'lazy', isa => HashRef;
 
 has 'testdir' =>
    is      => 'lazy',
-   isa     => Path, coerce => TRUE,
-   builder => sub { [ $_[0]->appldir, 't' ] };
+   isa     => Path,
+   coerce  => TRUE,
+   default => sub { [ shift->appldir, 't' ] };
 
 # Construction
+around 'BUILDARGS' => sub {
+   my ($orig, $self, @args) = @_;
+
+   my $attr = $orig->($self, @args);
+   my $args = { appclass => 'Module::Provision' };
+
+   $attr->{config} = Module::Provision::Config->new($args);
+
+   return $attr;
+};
+
 sub BUILD {
    my $self = shift;
 
    for my $plugin (@{$self->plugins}) {
-      if (first_char $plugin eq '+') { $plugin = substr $plugin, 1 }
+      if ('+' eq substr $plugin, 0, 1) { $plugin = substr $plugin, 1 }
       else { $plugin = "Module::Provision::TraitFor::${plugin}" }
 
       try   { Role::Tiny->apply_roles_to_object($self, $plugin) }
@@ -246,7 +275,7 @@ sub _build_appldir {
 }
 
 sub _build_branch {
-   my $self = shift;
+   my $self   = shift;
    my $branch = $ENV{BRANCH};
 
    return $branch if $branch;
@@ -257,7 +286,7 @@ sub _build_branch {
 }
 
 sub _build_builder {
-   my $self = shift;
+   my $self    = shift;
    my $appldir = $self->appldir;
 
    for (map { [ $appldir->catfile($BUILDERS{$_}), $_ ] } _builders()) {
@@ -267,23 +296,11 @@ sub _build_builder {
    return;
 }
 
-sub _build_default_branch {
-   return $_[0]->config->default_branches->{ $_[0]->vcs } // NUL;
-}
-
 sub _build_dist_version {
    my $self = shift;
    my $meta = $self->module_metadata;
 
    return Perl::Version->new($meta ? $meta->version : '0.1.1');
-}
-
-sub _build_exec_perms {
-   return (($_[0]->perms & oct '0444') >> 2) | $_[0]->perms;
-}
-
-sub _build_homedir {
-   return [ $_[0]->libdir, classdir $_[0]->project ];
 }
 
 sub _build_license_keys {
@@ -321,9 +338,10 @@ sub _build_module_abstract {
 
    $abstract =~ s{ \A [^\-]+ \s* [\-] \s* }{}mx;
 
+   $abstract ||= $self->config->module_abstract;
    chomp $abstract;
 
-   return $self->loc($abstract || $self->config->module_abstract);
+   return $abstract;
 }
 
 sub _build_project {
@@ -338,10 +356,6 @@ sub _build_project {
    return $module;
 }
 
-sub _build_project_file {
-   return $BUILDERS{$_[0]->builder};
-}
-
 sub _build_stash {
    my $self      = shift;
    my $config    = $self->config;
@@ -352,7 +366,7 @@ sub _build_stash {
 
    return {
       abstract        => $self->module_abstract,
-      appdir          => class2appdir $self->distname,
+      appdir          => lc distname $self->distname,
       author          => $author,
       author_email    => $config->author_email,
       author_id       => $config->author_id,
@@ -397,6 +411,10 @@ sub _builders {
    return (sort keys %BUILDERS);
 }
 
+sub _classdir {
+   return catdir( split m{ :: }mx, shift // q() );
+}
+
 sub _get_module_from { # Return main module name from project file
    return
       (map    { s{ [-] }{::}gmx; $_ }
@@ -438,6 +456,8 @@ sub _get_project_file {
 
    return;
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -548,7 +568,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<File::DataClass>
 

@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Begin removal of Class::Usul dependency
           - Can update JS version numbers
           - Added update-email method
           - Adds xt to exclusion list. Markdown changed % encodes colons

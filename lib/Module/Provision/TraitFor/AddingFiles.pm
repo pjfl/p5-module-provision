@@ -1,15 +1,13 @@
 package Module::Provision::TraitFor::AddingFiles;
 
-use namespace::autoclean;
-
-use Class::Usul::Constants qw( EXCEPTION_CLASS OK TRUE );
-use Class::Usul::Functions qw( classfile throw );
-use Scalar::Util           qw( blessed );
-use Unexpected::Functions  qw( Unspecified );
+use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS OK TRUE );
+use Class::Usul::Cmd::Util      qw( classfile throw );
+use Scalar::Util                qw( blessed );
+use Unexpected::Functions       qw( Unspecified );
 use Moo::Role;
 
 requires qw( add_to_vcs appldir binsdir cmd_line_flags exec_perms expand_tuple
-             libdir loc method module_abstract next_argv output project
+             libdir method module_abstract next_argv output project
              release render_template stash template_dir template_list testdir );
 
 # Construction
@@ -82,7 +80,7 @@ sub update_file : method {
 
 # Private methods
 sub _program_abstract {
-   return $_[0]->loc('One-line description of the programs purpose');
+   return 'One-line description of the programs purpose';
 }
 
 sub _get_target {
@@ -117,6 +115,8 @@ sub _add_test_script {
    $self->add_to_vcs($target, 'test');
    return OK;
 }
+
+use namespace::autoclean;
 
 1;
 
@@ -187,7 +187,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<Moose::Role>
 

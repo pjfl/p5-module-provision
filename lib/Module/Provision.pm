@@ -1,8 +1,7 @@
 package Module::Provision;
 
 use 5.010001;
-use namespace::autoclean;
-use version; our $VERSION = qv( sprintf '0.42.%d', q$Rev: 4 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.42.%d', q$Rev: 5 $ =~ /\d+/gmx );
 
 use Moo;
 
@@ -16,6 +15,8 @@ with    q(Module::Provision::TraitFor::VCS);
 with    q(Module::Provision::TraitFor::AddingFiles);
 with    q(Module::Provision::TraitFor::Badges);
 with    q(Module::Provision::TraitFor::EnvControl);
+
+use namespace::autoclean;
 
 1;
 
@@ -39,7 +40,7 @@ Module::Provision - Create Perl distributions with VCS and selectable toolchain
 
 =head1 Version
 
-This documents version v0.42.$Rev: 4 $ of L<Module::Provision>
+This documents version v0.42.$Rev: 5 $ of L<Module::Provision>
 
 =head1 Synopsis
 
@@ -179,10 +180,8 @@ This Lisp code will do likewise when a F<dist.ini> file is edited:
 =head1 Configuration and Environment
 
 The configuration file defaults to
-F<~/.module_provision/module_provision.json>. All of the attributes
-listed in L<Module::Provision::Config> can be set from the
-configuration file in addition to the attributes listed in
-L<Class::Usul::Config::Programs> and L<Class::Usul::Config>. A typical
+F<~/.module_provision/module_provision.json>. All of the attributes listed in
+L<Module::Provision::Config> can be set from the configuration file. A typical
 file looks like;
 
    {

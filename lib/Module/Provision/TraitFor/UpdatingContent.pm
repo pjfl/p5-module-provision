@@ -1,11 +1,11 @@
 package Module::Provision::TraitFor::UpdatingContent;
 
-use Class::Usul::Constants qw( EXCEPTION_CLASS OK );
-use Class::Usul::Functions qw( throw );
-use Unexpected::Functions  qw( Unspecified );
+use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS OK );
+use Class::Usul::Cmd::Util      qw( throw );
+use Unexpected::Functions       qw( Unspecified );
 use Moo::Role;
 
-requires qw( appldir loc manifest_paths next_argv output );
+requires qw( appldir manifest_paths next_argv output );
 
 # Public methods
 sub substitute_version {
@@ -21,7 +21,7 @@ sub update_copyright_year : method {
 
    my ($from, $to) = $self->_get_update_args;
 
-   my $prefix = $self->loc('Copyright (c)');
+   my $prefix = 'Copyright (c)';
 
    throw Unspecified, ['from'] unless $from;
    throw Unspecified, ['to'] unless $to;
@@ -208,7 +208,7 @@ None
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Class::Usul::Cmd>
 
 =item L<Moose::Role>
 
