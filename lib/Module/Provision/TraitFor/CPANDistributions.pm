@@ -3,14 +3,11 @@ package Module::Provision::TraitFor::CPANDistributions;
 use Class::Usul::Cmd::Constants qw( EXCEPTION_CLASS FALSE NUL OK TRUE );
 use HTTP::Request::Common       qw( POST );
 use Class::Usul::Cmd::Types     qw( NonEmptySimpleStr );
-use Class::Usul::Cmd::Util      qw( ensure_class_loaded throw );
+use Class::Usul::Cmd::Util      qw( decrypt encrypt ensure_class_loaded throw );
 use English                     qw( -no_match_vars );
 use Scalar::Util                qw( blessed );
 use Unexpected::Functions       qw( PathNotFound Unspecified );
 use HTTP::Status;
-
-use Class::Usul::Crypt::Util    qw( decrypt_from_config encrypt_for_config
-                                    is_encrypted );
 
 use Moo::Role;
 
@@ -212,8 +209,7 @@ sub _read_rc_file {
    }
 
    if (my $pword = $attr->{password}) {
-      $attr->{password} = decrypt_from_config $conf, $pword
-         if is_encrypted $pword;
+      $attr->{password} = decrypt NUL, $pword;
    }
 
    return $attr;
@@ -258,7 +254,7 @@ sub _write_rc_file {
    my $conf = $self->config;
    my $file = $conf->my_home->catfile('.pause');
 
-   $attr->{password} = encrypt_for_config $conf, $attr->{password};
+   $attr->{password} = encrypt NUL, $attr->{password};
 
    $file->println("${_} ".$attr->{$_}) for (sort keys %{$attr});
 
