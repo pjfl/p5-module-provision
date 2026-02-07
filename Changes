@@ -1,5 +1,6 @@
 Revision history for Module::Provision
 
+          - Adds back async to run_cmd call
           - Depends on Class::Usul::Cmd not Class::Usul
           - Begin removal of Class::Usul dependency
           - Can update JS version numbers

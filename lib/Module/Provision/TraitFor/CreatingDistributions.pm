@@ -177,7 +177,7 @@ sub edit_project : method {
    my $self = shift;
    my $path = $self->_project_file_path;
 
-   $self->run_cmd($self->editor.SPC.$path);
+   $self->run_cmd($self->editor.SPC.$path, { async => TRUE });
    return OK;
 }
 
